@@ -1,0 +1,122 @@
+.stage-translate {
+    animation: stage-animation 550s infinite;
+}
+
+#terry-animation {
+    background-size: cover;
+    margin-bottom: -10%;
+}
+
+.train-bump {
+    animation: train-animation 2s infinite linear;
+    animation-delay: 4.8s;
+}
+
+.misc-translate {
+    animation: misc-animation 20s infinite linear;
+}
+
+.terry-idle {
+    height: 238px;
+    width: 140px;
+    max-width: 140px;
+    max-height: 238px;
+    background: url('terry-idle.png');
+    background-repeat: no-repeat;
+    animation: terry-idle 1.2s steps(8) infinite;
+}
+
+.terry-forward {
+    height: 238px;
+    width: 140px;
+    max-width: 140px;
+    max-height: 238px;
+    background: url('terry-walk.png');
+    background-repeat: no-repeat;
+    animation: terry-walk .7s steps(4) infinite;
+}
+
+@keyframes terry-idle {
+    from {
+        background-position-x: 0%;
+    }
+
+    to {
+        background-position-x: 99%;
+    }
+}
+
+@keyframes terry-walk {
+    from {
+        background-position-x: 0%;
+    }
+
+    to {
+        background-position: 134%;
+    }
+}
+
+@keyframes misc-animation {
+    from {
+        background-position-x: 0%;
+    }
+
+    to {
+        background-position-x: 1000%;
+    }
+}
+
+@keyframes stage-animation {
+    from {
+        background-position-x: 0%;
+    }
+
+    to {
+        background-position-x: 1000%;
+    }
+}
+
+@keyframes train-animation {
+    0% {}
+
+    5% {
+        margin-top: 10px;
+        transform: translateY(-10px);
+    }
+
+    10% {
+        margin-top: 0px;
+        transform: translateY(0px);
+    }
+
+    15% {
+        margin-top: 10px;
+        transform: translateY(-10px);
+    }
+
+    25%,
+    40% {
+        margin-top: 0px;
+        transform: translateY(0px);
+    }
+
+    45% {
+        margin-top: 10px;
+        transform: translateY(-10px);
+    }
+
+    50% {
+        margin-top: 0px;
+        transform: translateY(0px);
+    }
+
+    55% {
+        margin-top: 10px;
+        transform: translateY(-10px);
+    }
+
+    60% {
+        margin-top: 0px;
+        transform: translateY(0px);
+    }
+}
