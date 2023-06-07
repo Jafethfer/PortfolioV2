@@ -16,6 +16,7 @@ setInterval(checkKeys, 30);
 console.log(terryStage.getBoundingClientRect())
 
 function playAudio() {
+    x.volume = 0.20;
     x.play();
     terryStage.classList.add("stage-translate");
     miscLayer.classList.add("misc-translate");
