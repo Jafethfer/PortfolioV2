@@ -8,24 +8,24 @@
 <body>
     <button class="absolute top-0" onclick="playAudio()">Music</button>
     <audio loop id="bg-music">
-        <source id="bg-music-src" src="./terry-stage-ost.mp3" type="audio/mp3">
+        <source id="bg-music-src" src="./assets/sfx/terry-stage-ost.mp3" type="audio/mp3">
     </audio>
     <div style="display: flex; justify-content: center; align-items: center;width: 100vw;height: 100vh;">
         <div id="terry-stage-base-layer" class="aspect-video bg-repeat-x flex items-end"
-            style="width: 75%;position: relative; background-image: url(./terry-stage-base-layer.png); background-size: 290%;">
+            style="width: 75%;position: relative; background-image: url(./assets/img/terry-stage-base-layer.png); background-size: 290%;">
             <div id="misc-layer" class="w-full absolute bottom-[20%] bg-repeat-x h-[34%]"
-                style="background-image: url(./terry-stage-misc.png); background-size: 220%;">
+                style="background-image: url(./assets/img/terry-stage-misc.png); background-size: 220%;">
             </div>
             <div class="w-full relative">
                 <div id="terry-animation" class="terry-idle relative z-40"></div>
-                <img id="terry-train" class="w-full" src="./terry-train.png">
+                <img id="terry-train" class="w-full" src="./assets/img/terry-train.png">
             </div>
 
         </div>
 
     </div>
 
-    <script src="./main.js"></script>
+    <script src="./assets/js/main.js"></script>
 </body>
 
 </html>

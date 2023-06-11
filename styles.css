@@ -21,7 +21,7 @@
     width: 140px;
     max-width: 140px;
     max-height: 238px;
-    background: url('terry-idle.png');
+    background: url('./assets/img/terry-idle.png');
     background-repeat: no-repeat;
     animation: terry-idle 1.2s steps(8) infinite;
 }
@@ -31,7 +31,17 @@
     width: 140px;
     max-width: 140px;
     max-height: 238px;
-    background: url('terry-walk.png');
+    background: url('./assets/img/terry-walk.png');
+    background-repeat: no-repeat;
+    animation: terry-walk .7s steps(4) infinite;
+}
+
+.terry-backwards {
+    height: 238px;
+    width: 140px;
+    max-width: 140px;
+    max-height: 238px;
+    background: url('./assets/img/terry-backwards.png');
     background-repeat: no-repeat;
     animation: terry-walk .7s steps(4) infinite;
 }
