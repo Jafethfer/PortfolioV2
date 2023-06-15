@@ -10,9 +10,12 @@ var leftLimit = terryStage.getBoundingClientRect().left;
 var reachedRightLimit = false;
 var reachedLeftLimit = false;
 var accumulated = 4;
+var accumulatedY = 0;
 
 var rightKey = false;
 var leftKey = false;
+var upKey = false;
+var falling = false;
 
 setInterval(checkPosition, 30);
 setInterval(checkKeys, 30);
@@ -29,14 +32,26 @@ function playAudio() {
         if (event.key == "ArrowRight") {
             terry.classList.remove("terry-idle")
             terry.classList.add("terry-forward")
-            terry.classList.add("translate-animation")
             rightKey = true;
         }
         else if (event.key == "ArrowLeft") {
             terry.classList.remove("terry-idle")
             terry.classList.add("terry-backwards")
-            terry.classList.add("translate-animation")
             leftKey = true;
+        }
+        else if (event.key == "ArrowUp") {
+            terry.classList.remove("terry-idle")
+            terry.classList.add("terry-jump")
+            upKey = true;
+            setTimeout(() => {
+                falling = true;
+            }, 750)
+            setTimeout(() => {
+                terry.classList.remove("terry-jump")
+                terry.classList.add("terry-idle")
+                upKey = false
+                falling = false;
+            }, 1500)
         }
     })
 
@@ -44,13 +59,11 @@ function playAudio() {
         if (event.key == "ArrowRight") {
             terry.style.transform = `translateX(${terry.getBoundingClientRect().x - terry_position}px)`
             terry.classList.remove("terry-forward")
-            terry.classList.remove("translate-animation")
             terry.classList.add("terry-idle")
             rightKey = false;
         } else if (event.key == "ArrowLeft") {
             terry.style.transform = `translateX(${terry.getBoundingClientRect().x - terry_position}px)`
             terry.classList.remove("terry-backwards")
-            terry.classList.remove("translate-animation")
             terry.classList.add("terry-idle")
             leftKey = false;
         }
@@ -58,6 +71,15 @@ function playAudio() {
 }
 
 function checkKeys() {
+    if (falling) {
+        terry.style.transform = `translate(${accumulated}px,${accumulatedY}%)`
+        accumulatedY += 6
+    }
+    if (upKey) {
+        terry.style.transform = `translate(${accumulated}px,${accumulatedY}%)`
+        accumulatedY -= 3
+        return;
+    }
     if (rightKey && !reachedRightLimit) {
         terry.style.transform = `translateX(${accumulated}px)`
         accumulated += 4;

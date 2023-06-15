@@ -46,6 +46,16 @@
     animation: terry-walk .7s steps(4) infinite;
 }
 
+.terry-jump {
+    height: 290px;
+    width: 126px;
+    max-width: 140px;
+    max-height: 290px;
+    background: url('./assets/img/terry-jump.png');
+    background-repeat: no-repeat;
+    animation: terry-jump 1.5s steps(6);
+}
+
 @keyframes terry-idle {
     from {
         background-position-x: 0%;
@@ -63,6 +73,16 @@
 
     to {
         background-position: 134%;
+    }
+}
+
+@keyframes terry-jump {
+    from {
+        background-position-x: 0%;
+    }
+
+    to {
+        background-position-x: 120%;
     }
 }
 
