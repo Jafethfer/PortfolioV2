@@ -1,152 +1,311 @@
 .stage-translate {
-    animation: stage-animation 550s infinite;
+  animation: stage-animation 550s infinite;
+}
+
+img,
+video {
+  max-width: none !important;
+}
+
+#terry-stage-base-layer {
+  container-type: inline-size;
 }
 
 #terry-animation {
-    background-size: cover;
-    margin-bottom: -10%;
+  --terry-height: 25cqw;
+  background-size: cover;
+  margin-bottom: -10%;
 }
 
 .train-bump {
-    animation: train-animation 2s infinite linear;
-    animation-delay: 4.8s;
+  animation: train-animation 2s infinite linear;
+  animation-delay: 4.8s;
 }
 
 .misc-translate {
-    animation: misc-animation 20s infinite linear;
+  animation: misc-animation 20s infinite linear;
 }
 
+.terry-idle,
+.terry-forward,
+.terry-backwards {
+  height: var(--terry-height);
+}
+
+/* Width is derived from height × (source frame aspect) so cover-scaling lands
+   exactly one frame per element, regardless of viewport size. */
 .terry-idle {
-    height: 238px;
-    width: 140px;
-    max-width: 140px;
-    max-height: 238px;
-    background: url('./assets/img/terry-idle.png');
-    background-repeat: no-repeat;
-    animation: terry-idle 1.2s steps(8) infinite;
+  width: calc(var(--terry-height) * 70 / 107);
 }
 
 .terry-forward {
-    height: 238px;
-    width: 140px;
-    max-width: 140px;
-    max-height: 238px;
-    background: url('./assets/img/terry-walk.png');
-    background-repeat: no-repeat;
-    animation: terry-walk .7s steps(4) infinite;
+  width: calc(var(--terry-height) * 73 / 103);
 }
 
 .terry-backwards {
-    height: 238px;
-    width: 140px;
-    max-width: 140px;
-    max-height: 238px;
-    background: url('./assets/img/terry-backwards.png');
-    background-repeat: no-repeat;
-    animation: terry-walk .7s steps(4) infinite;
+  width: calc(var(--terry-height) * 70 / 105);
 }
 
-.terry-jump {
-    height: 290px;
-    width: 126px;
-    max-width: 140px;
-    max-height: 290px;
-    background: url('./assets/img/terry-jump.png');
-    background-repeat: no-repeat;
-    animation: terry-jump 1.5s steps(6);
+.terry-crouch,
+.terry-crouch-still {
+  /* 62×87 source, scaled vs the 107-tall idle baseline so Terry actually
+     looks shorter when crouched. */
+  height: calc(var(--terry-height) * 87 / 107);
+  width: calc(var(--terry-height) * 62 / 107);
+}
+
+.terry-crouch-forward {
+  /* 65×77 source. */
+  height: calc(var(--terry-height) * 77 / 107);
+  width: calc(var(--terry-height) * 65 / 107);
+}
+
+.terry-idle {
+  background: url("./assets/img/terry-idle.png");
+  background-repeat: no-repeat;
+  animation: terry-idle 0.7s steps(4) infinite;
+}
+
+.terry-forward {
+  background: url("./assets/img/terry-walk.png");
+  background-repeat: no-repeat;
+  animation: terry-walk 0.7s steps(4) infinite;
+}
+
+.terry-backwards {
+  background: url("./assets/img/terry-backwards.png");
+  background-repeat: no-repeat;
+  animation: terry-walk 0.7s steps(4) infinite;
+}
+
+.terry-jump-up,
+.terry-jump-fall,
+.terry-jump-ground {
+  height: 28.82cqw;
+  width: 13.09cqw;
+}
+
+.terry-jump-forward {
+  /* 84×136 source — scaled to match the walk's body size. */
+  height: 33cqw;
+  width: 20.38cqw;
+}
+
+.terry-jump-backward {
+  /* 84×105 source. */
+  height: 25.5cqw;
+  width: 20.4cqw;
+}
+
+.terry-jump-up {
+  background: url("./assets/img/terry-jump.png");
+  background-repeat: no-repeat;
+  animation: terry-jump-up 0.5s steps(3);
+}
+
+.terry-jump-fall {
+  background: url("./assets/img/terry-jump.png");
+  background-repeat: no-repeat;
+  animation: terry-jump-fall 0.5s steps(2);
+}
+
+.terry-jump-ground {
+  background: url("./assets/img/terry-jump.png");
+  background-repeat: no-repeat;
+  animation: terry-jump-ground 0.7s steps(2);
+}
+
+.terry-jump-forward {
+  background: url("./assets/img/terry-jump-forward.png");
+  background-repeat: no-repeat;
+  animation: terry-jump-forward 1s steps(8);
+}
+
+.terry-jump-backward {
+  background: url("./assets/img/terry-jump-backward.png");
+  background-repeat: no-repeat;
+  animation: terry-jump-backward 1s steps(6);
+}
+
+.terry-crouch {
+  background: url("./assets/img/terry-crouch.png");
+  background-repeat: no-repeat;
+  /* Play once and hold the final frame so Terry settles into the deep crouch. */
+  animation: terry-crouch 0.3s steps(1) forwards;
+}
+
+.terry-crouch-forward {
+  background: url("./assets/img/terry-crouch-forward.png");
+  background-repeat: no-repeat;
+  animation: terry-crouch-forward 0.7s steps(6) infinite;
+}
+
+.terry-crouch-still {
+  background: url("./assets/img/terry-crouch.png");
+  background-repeat: no-repeat;
+  background-position-x: 100%;
 }
 
 @keyframes terry-idle {
-    from {
-        background-position-x: 0%;
-    }
+  from {
+    background-position-x: 0%;
+  }
 
-    to {
-        background-position-x: 100%;
-    }
+  to {
+    background-position-x: 133.33%;
+  }
 }
 
 @keyframes terry-walk {
-    from {
-        background-position-x: 0%;
-    }
+  from {
+    background-position-x: 0%;
+  }
 
-    to {
-        background-position: 134%;
-    }
+  to {
+    background-position: 134%;
+  }
 }
 
-@keyframes terry-jump {
-    from {
-        background-position-x: 0%;
-    }
+@keyframes terry-jump-up {
+  0% {
+    background-position-x: 0%;
+  }
 
-    to {
-        background-position-x: 120%;
-    }
+  to {
+    background-position-x: 60%;
+  }
+}
+
+@keyframes terry-jump-fall {
+  0% {
+    background-position-x: 60%;
+  }
+
+  to {
+    background-position-x: 100%;
+  }
+}
+
+@keyframes terry-jump-ground {
+  0% {
+    background-position-x: 100%;
+  }
+
+  to {
+    background-position-x: 120%;
+  }
+}
+
+@keyframes terry-jump-forward {
+  from {
+    background-position-x: 0%;
+  }
+
+  to {
+    /* 8 frames → N/(N-1) × 100 = 114.29% */
+    background-position-x: 114.29%;
+  }
+}
+
+@keyframes terry-jump-backward {
+  from {
+    background-position-x: 0%;
+  }
+
+  to {
+    /* 6 frames → N/(N-1) × 100 = 120% */
+    background-position-x: 120%;
+  }
+}
+
+@keyframes terry-crouch {
+  /* Frame 0 for the first half, frame 1 for the second half; the explicit
+     100% keyframe is needed so `forwards` pins the final state at frame 1
+     instead of falling back toward the underlying 0%. */
+  0% {
+    background-position-x: 0%;
+  }
+  50% {
+    background-position-x: 100%;
+  }
+  100% {
+    background-position-x: 100%;
+  }
+}
+
+@keyframes terry-crouch-forward {
+  from {
+    background-position-x: 0%;
+  }
+
+  to {
+    /* 6 frames → 120% */
+    background-position-x: 120%;
+  }
 }
 
 @keyframes misc-animation {
-    from {
-        background-position-x: 0%;
-    }
+  from {
+    background-position-x: 0%;
+  }
 
-    to {
-        background-position-x: 1000%;
-    }
+  to {
+    background-position-x: 1000%;
+  }
 }
 
 @keyframes stage-animation {
-    from {
-        background-position-x: 0%;
-    }
+  from {
+    background-position-x: 0%;
+  }
 
-    to {
-        background-position-x: 1000%;
-    }
+  to {
+    background-position-x: 1000%;
+  }
 }
 
 @keyframes train-animation {
-    0% {}
+  0% {
+  }
 
-    5% {
-        margin-top: 10px;
-        transform: translateY(-10px);
-    }
+  5% {
+    margin-top: 10px;
+    transform: translateY(-10px);
+  }
 
-    10% {
-        margin-top: 0px;
-        transform: translateY(0px);
-    }
+  10% {
+    margin-top: 0px;
+    transform: translateY(0px);
+  }
 
-    15% {
-        margin-top: 10px;
-        transform: translateY(-10px);
-    }
+  15% {
+    margin-top: 10px;
+    transform: translateY(-10px);
+  }
 
-    25%,
-    40% {
-        margin-top: 0px;
-        transform: translateY(0px);
-    }
+  25%,
+  40% {
+    margin-top: 0px;
+    transform: translateY(0px);
+  }
 
-    45% {
-        margin-top: 10px;
-        transform: translateY(-10px);
-    }
+  45% {
+    margin-top: 10px;
+    transform: translateY(-10px);
+  }
 
-    50% {
-        margin-top: 0px;
-        transform: translateY(0px);
-    }
+  50% {
+    margin-top: 0px;
+    transform: translateY(0px);
+  }
 
-    55% {
-        margin-top: 10px;
-        transform: translateY(-10px);
-    }
+  55% {
+    margin-top: 10px;
+    transform: translateY(-10px);
+  }
 
-    60% {
-        margin-top: 0px;
-        transform: translateY(0px);
-    }
+  60% {
+    margin-top: 0px;
+    transform: translateY(0px);
+  }
 }

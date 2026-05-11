@@ -13,12 +13,15 @@
     <div style="display: flex; justify-content: center; align-items: center;width: 100vw;height: 100vh;">
         <div id="terry-stage-base-layer" class="aspect-video bg-repeat-x flex items-end"
             style="width: 75%;position: relative; background-image: url(./assets/img/terry-stage-base-layer.png); background-size: 290%;">
-            <div id="misc-layer" class="w-full absolute bottom-[20%] bg-repeat-x h-[34%]"
-                style="background-image: url(./assets/img/terry-stage-misc.png); background-size: 220%;">
+            <div id="misc-layer" class="w-full absolute bottom-[24%] bg-repeat-x h-[40%]"
+                style="background-image: url(./assets/img/terry-stage-misc.png); background-size: 270%;">
             </div>
             <div class="w-full relative">
                 <div id="terry-animation" class="terry-idle relative z-40"></div>
-                <img id="terry-train" class="w-full" src="./assets/img/terry-train.png">
+                <div id="terry-train" class="w-full overflow-hidden">
+                    <img id="terry-train-img" class="w-[140%]" src="./assets/img/terry-train.png">
+                </div>
+                
             </div>
 
         </div>
