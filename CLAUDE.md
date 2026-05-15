@@ -1,12 +1,31 @@
 # PortfolioV2
 
-Interactive portfolio site. The stage features Terry Bogard (KOF) sprite walking, jumping, crouching across a parallax background with a train and stage music.
+Interactive portfolio site. The stage features Terry Bogard (KOF) walking, jumping, crouching across a parallax background with a train and stage music. Angular 21 (standalone, signals, SCSS).
 
-- `index.html` — HTML + Tailwind CDN
-- `styles.css` — custom CSS, sprite animation rules
-- `assets/js/main.js` — keyboard input, animation state machine
-- `assets/img/` — sprite strips and stage backgrounds
-- `assets/sfx/` — audio
+## Repo layout
+
+- `src/index.html`, `src/main.ts`, `src/styles.scss` — entry + global sprite/stage CSS
+- `src/tailwind.css` — Tailwind v4 entry (plain CSS so Sass doesn't try to process it)
+- `src/app/app.{ts,html,scss}` — root component, hosts `<app-stage>` + `<app-music-control>`
+- `src/app/models/character.ts` — types: `CharacterConfig`, `AnimationName`, `Direction`, `CharacterVoices`
+- `src/app/services/`
+  - `input.service.ts` — keyboard → signals (`rightKey`, `leftKey`, `downKey`, `lastDir`, `jumpPressed`)
+  - `game-loop.service.ts` — 30 ms `tick` signal; effects depending on it re-run each frame
+  - `audio.service.ts` — voice + bg music playback
+- `src/app/characters/terry.ts` — `TERRY_CONFIG` (animation class map + voices stub)
+- `src/app/components/`
+  - `character/character.ts` — generic, config-driven character; takes `[config]`, `[worldWidth]`, `[blockedRight]`, `[blockedLeft]`; exposes `worldX()` / `width()` for the parent
+  - `stage/stage.ts` — owns parallax bg, misc layer, train; measures own width + edges; computes `blocked` flags
+  - `music-control/music-control.ts` — bg music toggle
+- `public/assets/img/` — sprite strips and stage backgrounds (served at `/assets/img/…`)
+- `public/assets/sfx/` — audio
+
+## Architectural rules
+
+- **Characters do not know about the stage.** The character receives `worldWidth`, `blockedRight`, `blockedLeft` as Angular inputs from its parent and never reaches into the DOM for stage geometry.
+- **Polymorphism by composition, not inheritance.** Add a new character by writing a new `CharacterConfig` (sprite class names + voice files + tuning) and dropping a matching `.<name>-*` CSS block into `styles.scss`. Pass it via `[characterConfig]`. For per-character behavior overrides (a unique jab combo, different physics on a stage), inject the `Character` component into a directive and adjust state — no class subclass needed.
+- **Signals over imperative state.** All character state is `signal()` (e.g. `accumulated`, `animation`, `inJump`). The template binds to `animClass()` / `transform()` computeds. Physics runs in an `effect()` that depends only on `loop.tick()`; everything else is read inside `untracked()` so we don't feedback-loop.
+- **Jump phases are tick-driven, not setTimeout-driven.** `_physicsTick` checks elapsed ticks since takeoff against `jumpApexMs` and `jumpDurationMs` to decide ascend/descend/land. Easier to reason about than scheduled callbacks.
 
 ## Terry sprite sheet
 
@@ -14,7 +33,7 @@ Source sheet (with cyan/teal backgrounds, 756×8896):
 - `C:\Users\jafet\Pictures\terry-sheet.png`
 
 Transparent version (used at runtime and for cropping):
-- `assets/img/terry-sheet.png`
+- `public/assets/img/terry-sheet.png`
 
 Keep BOTH around. The cropping tool needs the source (light-teal frame boxes mark frame boundaries) AND the transparent version (alpha mask for sprite Y-bounds, output blits).
 
@@ -42,43 +61,36 @@ node sprite-tool.mjs crop    <source> <transparent> <row> <frames> <out>
 
 ## Row → animation mapping
 
-| Row | Frames | File | CSS class |
-|-----|--------|------|-----------|
-| 0   | 4 | `terry-idle.png` | `.terry-idle` |
-| 2   | 2 | `terry-crouch.png` | `.terry-crouch` (entry transition, plays once) + `.terry-crouch-still` (static frame 1) |
-| 3   | 4 | `terry-walk.png` | `.terry-forward` |
-| 4   | 4 | `terry-backwards.png` | `.terry-backwards` |
-| 6   | 8 | `terry-jump-forward.png` | `.terry-jump-forward` |
-| 7   | 6 | `terry-jump-backward.png` | `.terry-jump-backward` |
-| 9   | 6 | `terry-crouch-forward.png` | `.terry-crouch-forward` |
+| Row | Frames | File (in `public/assets/img/`) | CSS class | `CharacterConfig.animations` key |
+|-----|--------|--------------------------------|-----------|----------------------------------|
+| 0   | 4 | `terry-idle.png` | `.terry-idle` | `idle` |
+| 2   | 2 | `terry-crouch.png` | `.terry-crouch` (entry, plays once) + `.terry-crouch-still` (static frame 1) | `crouch` / `crouchStill` |
+| 3   | 4 | `terry-walk.png` | `.terry-forward` | `forward` |
+| 4   | 4 | `terry-backwards.png` | `.terry-backwards` | `backwards` |
+| 6   | 8 | `terry-jump-forward.png` | `.terry-jump-forward` | `jumpForward` |
+| 7   | 6 | `terry-jump-backward.png` | `.terry-jump-backward` | `jumpBackward` |
+| 9   | 6 | `terry-crouch-forward.png` | `.terry-crouch-forward` | `crouchForward` |
 
 Vertical jump (`.terry-jump-up` / `.terry-jump-fall` / `.terry-jump-ground`) still uses the legacy hand-cropped `terry-jump.png` — not from the sheet pipeline.
 
 ## Sizing and keyframe math
 
-- `#terry-stage-base-layer { container-type: inline-size; }` — children resolve `cqw` against the stage (75vw).
-- `#terry-animation { --terry-height: 25cqw; }` — single source of truth for the standing-character height. All animations derive their width from this so cover-scaling maps one source frame onto the element exactly.
+- `app-stage .stage { container-type: inline-size; }` — children resolve `cqw` against the stage (75 vw).
+- `app-character > div { --terry-height: 25cqw; }` — single source of truth for the standing-character height. All animations derive their width from this so cover-scaling maps one source frame onto the element exactly.
 - For source frame `W × H` and element sized to match: `width = var(--terry-height) × W / 107` (using idle's 107 as the standing baseline). Crouch heights use `× 87/107` / `× 77/107` so Terry actually looks shorter when crouched.
 - For an N-frame strip rendered one-frame-per-element, the keyframe end value is `N/(N-1) × 100%`:
   - 2 frames → 200% — BUT for one-shot transitions with `forwards`, use an explicit `100%` keyframe to pin the final state instead, otherwise CSS extrapolates back toward the underlying property value.
   - 4 frames → 133.33%, 6 → 120%, 8 → 114.29%.
 
-## JS state model
+## Movement model
 
-Globals in `main.js`:
-- `rightKey` / `leftKey` / `upKey` / `downKey` — physical key state.
-- `lastDir` (`'right' | 'left' | null`) — most recently pressed horizontal arrow. **This drives the active direction**, not `rightKey`/`leftKey` directly. Falls back to the still-held opposite key on keyup. This is what fixed the "press opposite while held → Terry frozen" bug.
-- `jumpUp` / `falling` / `forwardJump` / `backwardJump` — jump phase flags.
-- `accumulated` (px) — X translate; `accumulatedY` — Y translate magnitude, applied as `accumulatedY × 0.3 cqw` so peak jump height is viewport-relative, not element-relative.
-- `jumpXStep` — pixels per tick during a jump. Recomputed at takeoff as `stageWidth × JUMP_DISTANCE_PCT / JUMP_TICKS` (0.30 / 33) so a leap covers ~30% of the stage regardless of viewport.
+Per-tick (30 ms) from `_physicsTick` in `character.ts`:
+- Walk: ±`walkSpeed` (default 10) px/tick
+- Crouch-forward: +`crouchSpeed` (default 5) px/tick (half walk)
+- Jump: ±`_jumpXStep` per tick, computed at takeoff as `worldWidth × jumpDistancePct / jumpTicks` (default `0.30 / 33`) so a leap covers ~30% of the stage regardless of viewport.
 
-Per-tick movement:
-- Walk: ±10 px/tick
-- Crouch-forward: +5 px/tick (half walk)
-- Jump: `±jumpXStep`
+Train scroll rate is owned by the Stage (`walkScrollRate` / `crouchScrollRate` inputs, default 20 / 10) — it scrolls when the character is `blockedRight`/`blockedLeft`. This matches the character's ground speed so the world appears to move under them.
 
-`checkPosition` scrolls the train at the stage edge using `downKey ? 10 : 20` so crouch-scroll matches Terry's half-speed.
+`lastDir` (`'right' | 'left' | null`) drives active direction, not `rightKey`/`leftKey` directly. It's the most-recently pressed horizontal arrow and falls back to the still-held opposite key on keyup — this is what fixes the "press opposite while held → character frozen" bug.
 
-Jump cleanup `setTimeout` must reset `transform` to `translateX(...)` only — otherwise leftover Y from the last tick leaves Terry hovering above the baseline.
-
-Arrow keys call `event.preventDefault()` in keydown to block the browser's default scrolling.
+`InputService` calls `event.preventDefault()` on arrow keys in keydown to block the browser's default page scrolling.
