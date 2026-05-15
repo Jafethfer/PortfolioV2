@@ -8,44 +8,53 @@ export type AnimationName =
   | 'crouchStill'
   | 'crouchForward'
   | 'jumpForward'
+  | 'jumpForwardFall'
   | 'jumpBackward'
+  | 'jumpBackwardFall'
   | 'jumpUp'
   | 'jumpFall'
-  | 'jumpGround';
+  | 'jumpGround'
+  | 'lightPunch'
+  | 'heavyPunch'
+  | 'lightKick'
+  | 'heavyKick';
 
 export type CharacterAnimations = Record<AnimationName, string>;
 
 export interface CharacterVoices {
-  jab?: string;
-  punch?: string;
-  kick?: string;
+  lightPunch?: string;
+  heavyPunch?: string;
+  lightKick?: string;
+  heavyKick?: string;
   taunt?: string;
   [name: string]: string | undefined;
 }
 
-export interface CharacterConfig {
-  readonly animations: CharacterAnimations;
-  readonly voices?: CharacterVoices;
-  readonly walkSpeed?: number;
-  readonly crouchSpeed?: number;
-  /** Fraction of the surrounding world width covered in a forward/back jump. */
-  readonly jumpDistancePct?: number;
-  readonly jumpTicks?: number;
-  readonly jumpDurationMs?: number;
-  readonly jumpApexMs?: number;
-  readonly jumpVerticalStep?: number;
-  readonly jumpYScale?: number;
-  readonly voiceVolume?: number;
+/**
+ * One sprite in a data-driven (per-frame) animation. Variable-width animation
+ * support — replaces single-strip + CSS keyframes for attacks where each
+ * frame's silhouette is a different shape.
+ *
+ * Coordinates:
+ *  - `w`, `h` are the sprite's source pixel dimensions.
+ *  - `anchorX`, `anchorY` are the body anchor (foot-centre, detected by the
+ *    sprite tool) IN sprite-pixel coords. The runtime positions the frame
+ *    so this anchor lands at the same world coordinate across frames; that's
+ *    what keeps the body stable when a limb extends.
+ *  - `durationMs` is how long this frame shows before advancing.
+ */
+export interface AnimationFrame {
+  readonly src: string;
+  readonly w: number;
+  readonly h: number;
+  readonly anchorX: number;
+  readonly anchorY: number;
+  readonly durationMs: number;
 }
 
-export const DEFAULT_CONFIG = {
-  walkSpeed: 10,
-  crouchSpeed: 5,
-  jumpDistancePct: 0.30,
-  jumpTicks: 33,
-  jumpDurationMs: 1000,
-  jumpApexMs: 500,
-  jumpVerticalStep: 5,
-  jumpYScale: 0.3,
-  voiceVolume: 0.5,
-} as const;
+export interface AnimationData {
+  readonly frames: readonly AnimationFrame[];
+  /** When true, frames loop forever; when false (default), the animation
+   * holds on the last frame until something else changes the state. */
+  readonly loop?: boolean;
+}

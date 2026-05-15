@@ -1,5 +1,18 @@
-<div
-  #el
-  [class]="[animClass(), 'relative', 'z-40']"
-  [style.transform]="transform()"
-></div>
+@let frame = currentFrame();
+@if (frame) {
+  <img
+    #el
+    [src]="frame.src"
+    [style.width]="frameWidth(frame)"
+    [style.height]="frameHeight(frame)"
+    [style.transform]="frameTransform(frame)"
+    class="relative z-40"
+    alt=""
+  />
+} @else {
+  <div
+    #el
+    [class]="[animClass(), 'relative', 'z-40']"
+    [style.transform]="transform()"
+  ></div>
+}

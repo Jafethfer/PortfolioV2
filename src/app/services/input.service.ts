@@ -14,6 +14,8 @@ export class InputService {
   readonly downKey = signal(false);
   /** Increments on each ArrowUp keydown — consumers detect change to fire one-shot. */
   readonly jumpPressed = signal(0);
+  /** Increments on each `A` keydown — one-shot for the light-punch attack. */
+  readonly lightPunchPressed = signal(0);
   /** Most-recently pressed horizontal arrow. Survives keyup of the opposite. */
   readonly lastDir = signal<Direction>(null);
 
@@ -34,6 +36,8 @@ export class InputService {
       this.downKey.set(true);
     } else if (e.key === 'ArrowUp' && !e.repeat) {
       this.jumpPressed.update(n => n + 1);
+    } else if ((e.key === 'a' || e.key === 'A') && !e.repeat) {
+      this.lightPunchPressed.update(n => n + 1);
     }
   };
 

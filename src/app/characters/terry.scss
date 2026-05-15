@@ -1,0 +1,44 @@
+/* ---------- Terry sprites ----------
+   Width is derived from height × (source frame aspect) so cover-scaling lands
+   exactly one frame per element, regardless of viewport size.
+   --terry-height is the single source of truth for standing height. */
+
+:host {
+  display: contents;
+  /* Single source of truth for standing height. Defined on :host (not on a
+     specific child element) so it cascades to both the strip-mode <div>
+     AND the per-frame <img> — those render conditionally and either may
+     be the rendered child at any given time. */
+  --terry-height: 25cqw;
+}
+
+:host > * {
+  margin-bottom: -10%;
+  /* Spawn near-center (fighting-game P1 start). With idle width ~16cqw,
+     Terry's center lands at ~48cqw — 2cqw left of dead center. */
+  margin-left: 20cqw;
+}
+
+:host > div {
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+
+
+
+/* `.terry-light-punch` rendering is data-driven (per-frame engine in
+   character.ts), so no width/height/animation rules here — the runtime
+   sizes the <img> element via cqw calc and advances frames itself. */
+
+
+
+
+/* ---------- Combat move stubs ----------
+   Sprites + keyframes TBD. Class selectors exist so `animations` can resolve
+   them today; fill in `background-image`, `width`/`height`, and the matching
+   `@keyframes` once the sprite rows are cropped. The `--stub` custom property
+   is a no-op placeholder to keep the linter happy until then. */
+.terry-heavy-punch  { --stub: 1; }
+.terry-light-kick   { --stub: 1; }
+.terry-heavy-kick   { --stub: 1; }
