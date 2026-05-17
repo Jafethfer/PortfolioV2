@@ -97,13 +97,18 @@ export class JoeStage extends Stage {
     this.groundCycle.advance(tick);
 
     // Scroll-linked motion: whenever the character is pinned at an edge
-    // and still pressing into it, slide both the ground band and the
-    // backdrop by the same per-tick delta. The bg shift is purely
-    // visual (background-position), the ground is a real scrollLeft on
-    // its overflow container.
-    const dir = this.input.lastDir();
+    // and still trying to move into it, slide both the ground band and
+    // the backdrop by the same per-tick delta. `motionIntent` covers
+    // active specials too. During a special's travel window the scroll
+    // rate matches the special's per-tick X step, so the world keeps
+    // pace with the special's actual travel speed.
+    const character = this.character();
+    const dir = character?.motionIntent ?? null;
     if (!dir) return;
-    const rate = this.input.downKey() ? this.crouchScrollRate : this.walkScrollRate;
+    const specialV = Math.abs(character?.specialXVelocity ?? 0);
+    const rate = specialV > 0
+      ? specialV
+      : (this.input.downKey() ? this.crouchScrollRate : this.walkScrollRate);
     const ground = this.groundEl().nativeElement;
     const groundImg = this.groundImgEl().nativeElement;
     const maxShift = this.maxBgShiftPx();

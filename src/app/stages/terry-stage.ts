@@ -45,13 +45,21 @@ export class TerryStage extends Stage {
 
   protected override _onTick(): void {
     // Scroll the train only while the character is pinned at an edge AND
-    // still pressing into it — releasing the key stops the scroll even
-    // though the character is still pixel-aligned with the edge.
-    const dir = this.input.lastDir();
+    // still trying to move into it. Reads `motionIntent` on the
+    // character (not `input.lastDir()`) so an active special pushing
+    // Terry into the edge also scrolls the world. During a special's
+    // travel window, the scroll rate matches the special's per-tick X
+    // step — so a fast Burning Knuckle scrolls the world at Burning
+    // Knuckle speed, not the slower default walk rate.
+    const character = this.character();
+    const dir = character?.motionIntent ?? null;
     if (!dir) return;
     const train = this.trainEl().nativeElement;
     const trainImg = this.trainImgEl().nativeElement;
-    const rate = this.input.downKey() ? this.crouchScrollRate : this.walkScrollRate;
+    const specialV = Math.abs(character?.specialXVelocity ?? 0);
+    const rate = specialV > 0
+      ? specialV
+      : (this.input.downKey() ? this.crouchScrollRate : this.walkScrollRate);
     if (dir === 'right' && this.blockedRight()
         && train.scrollLeft + train.clientWidth < trainImg.scrollWidth) {
       train.scrollLeft += rate;

@@ -16,6 +16,7 @@ import {
   AnimationName,
   AttackButton,
   CharacterVoices,
+  Direction,
   SpecialMove,
 } from '../../models/character';
 import { InputService } from '../../services/input.service';
@@ -160,6 +161,46 @@ export abstract class Character {
    * first afterNextRender fires causes `worldX` (with `_initialX === 0`)
    * to fall well below `leftLimit`, falsely tripping `blockedLeft`. */
   readonly ready = signal(false);
+
+  /** Direction the character is currently trying to move in. Used by the
+   * stage's per-tick scroll logic: if `motionIntent` is `'right'` AND
+   * `blockedRight` is true, the stage should scroll the world left.
+   *
+   * Precedence: active special's travel direction → active directional
+   * jump → user input. Specials and jumps win over input because once
+   * committed they carry forward regardless of whether the player is
+   * still holding the key. Without this, a special that drives Terry
+   * into the edge just clamps to the limit — the stage never sees
+   * "still trying to push right" and never scrolls. Returns `null` for
+   * vertical jumps with no input and stationary specials. */
+  get motionIntent(): Direction {
+    // Defer to `specialXVelocity` so we only report a special-driven
+    // intent when the special is actually inside its travel window —
+    // otherwise the stage would scroll all through a special's windup
+    // and recovery frames even though Terry isn't moving yet.
+    const sv = this.specialXVelocity;
+    if (sv > 0) return 'right';
+    if (sv < 0) return 'left';
+    if (this._forwardJump) return 'right';
+    if (this._backwardJump) return 'left';
+    return this._input.lastDir();
+  }
+
+  /** Per-tick X step the active special is applying THIS tick, in px
+   * (positive = right, negative = left). Zero outside a special's
+   * actual travel window — windup and recovery frames return 0 even
+   * though the special is still in progress, because Terry isn't
+   * actually moving during those frames. Stage reads this as the scroll
+   * rate when non-zero, so a Burning Knuckle that pushes Terry into
+   * the edge scrolls the world at the special's own travel pace instead
+   * of the much slower default `walkScrollRate`. */
+  get specialXVelocity(): number {
+    if (!this.inAttack()) return 0;
+    const tick = this._loop.tick();
+    if (tick < this._specialTravelStartTick) return 0;
+    if (tick >= this._specialTravelEndTick) return 0;
+    return this._specialXStep;
+  }
 
   // Internal physics state — not signal, no rendering depends on it.
   private _initialX = 0;
