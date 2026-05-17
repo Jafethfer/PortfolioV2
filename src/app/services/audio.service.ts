@@ -8,11 +8,16 @@ import { Injectable } from '@angular/core';
 export class AudioService {
   private _bg?: HTMLAudioElement;
 
-  playVoice(src: string | undefined, volume = 0.5): void {
-    if (!src) return;
+  /** Fire-and-forget one-shot playback. Returns the underlying Audio so
+   * callers can stop it early (e.g. cancelling a jump SFX when the player's
+   * follow-up input converts the jump into a special). Returns null when
+   * `src` is undefined so the call site is a single statement either way. */
+  playVoice(src: string | undefined, volume = 0.5): HTMLAudioElement | null {
+    if (!src) return null;
     const a = new Audio(src);
     a.volume = volume;
     a.play().catch(() => {});
+    return a;
   }
 
   playBgMusic(src: string, volume = 0.2): void {

@@ -1,8 +1,8 @@
 import {
-  ChangeDetectionStrategy,
-  Component,
   ComponentRef,
+  Directive,
   ElementRef,
+  Signal,
   Type,
   ViewContainerRef,
   afterNextRender,
@@ -18,37 +18,66 @@ import { Character } from '../character/character';
 import { InputService } from '../../services/input.service';
 import { GameLoopService } from '../../services/game-loop.service';
 
-/**
- * The world. Owns the parallax backdrop, misc layer, and train; tracks its
- * own edge limits and scrolls the train when a character bumps against them.
- * The character is rendered as a child but does not know the stage exists —
- * Stage computes `blocked` flags from the character's reported worldX/width
- * and passes them down as inputs.
- *
- * Stage is character-agnostic: it takes a `characterClass` (a concrete
- * subclass of `Character`) and *spawns* it into a host `<ng-container>` via
- * `ViewContainerRef.createComponent` — the same shape a game scene takes
- * when instantiating a player prefab.
- */
-@Component({
-  selector: 'app-stage',
-  imports: [],
-  templateUrl: './stage.html',
-  styleUrl: './stage.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class Stage {
-  readonly characterClass = input.required<Type<Character>>();
-  readonly walkScrollRate = input(20);
-  readonly crouchScrollRate = input(10);
+/** One image in a stage layer animation. Subclasses that animate a layer
+ * (Joe's water shimmer, Joe's clapping audience) declare an array of
+ * these and feed it to `makeFrameCycle` for a `currentSrc` signal +
+ * `advance(tick)` method. Single-image layers don't need this — they can
+ * just inline the URL. */
+export interface StageFrame {
+  readonly src: string;
+  readonly durationMs: number;
+}
 
-  readonly stageEl = viewChild.required<ElementRef<HTMLDivElement>>('stageEl');
-  readonly trainEl = viewChild.required<ElementRef<HTMLDivElement>>('trainEl');
-  readonly trainImgEl = viewChild.required<ElementRef<HTMLImageElement>>('trainImgEl');
+/**
+ * Abstract stage base — owns the *behavior* every stage shares, not its
+ * layout. Each concrete subclass supplies its own template + SCSS and
+ * implements its own per-tick rules (parallax pan vs. scroll-linked bg
+ * vs. anything else). This mirrors the Character abstraction: layout and
+ * visuals live in the subclass; the base handles physics-side plumbing.
+ *
+ * What the base owns:
+ *   - Character spawn into a `#characterHost` slot the subclass declares
+ *   - Edge detection (`blockedRight` / `blockedLeft`) from the
+ *     `#stageEl` element's bounding box
+ *   - Forwarding `worldWidth` + blocked flags into the character's inputs
+ *   - A single game-loop tick effect that calls `_onTick()` each frame
+ *   - Generic frame-cycling utility (`makeFrameCycle`) for any subclass
+ *     that wants animated layers
+ *   - Optional `musicSrc` for stages that wire up `<app-music-control>`
+ *
+ * What every subclass must declare in its template:
+ *   - `#stageEl` — the playable-area container (used for edge limits)
+ *   - `#characterHost` — an `<ng-container>` slot the spawn pipeline
+ *     fills in
+ *
+ * What every subclass typically implements (all optional):
+ *   - `_onAfterRender()` — one-time DOM init (centering scroll, etc.)
+ *   - `_onTick()` — per-tick logic (scroll the ground, advance frame
+ *     cycles, update parallax positions, etc.)
+ */
+@Directive()
+export abstract class Stage {
+  /** Background music for the stage. Optional — stages without an OST
+   * yet can omit the music-control button in their template. */
+  protected readonly musicSrc?: string;
+
+  /** Per-tick scroll rates for ground panning when the character is
+   * pinned at an edge. Plain protected fields (not `input()`) because
+   * `withComponentInputBinding()` wipes any input not present in the
+   * route's `data`. Subclasses override with `protected override readonly`. */
+  protected readonly walkScrollRate: number = 20;
+  protected readonly crouchScrollRate: number = 10;
+
+  readonly characterClass = input.required<Type<Character>>();
+
+  readonly stageEl = viewChild.required<ElementRef<HTMLElement>>('stageEl');
   readonly characterHost = viewChild.required('characterHost', { read: ViewContainerRef });
 
-  private readonly _input = inject(InputService);
-  private readonly _loop = inject(GameLoopService);
+  /** Shared services exposed to subclasses so they can read input state
+   * and the game-loop tick from inside `_onTick`. Kept protected (not
+   * exposed publicly) — the template never reads these directly. */
+  protected readonly input = inject(InputService);
+  protected readonly loop = inject(GameLoopService);
 
   private _rightLimit = signal(0);
   private _leftLimit = signal(0);
@@ -77,14 +106,11 @@ export class Stage {
       this._leftLimit.set(rect.left);
       this.width.set(rect.width);
 
-      // Center the train so there's equal scroll room on both sides
-      // (Terry spawns near center, world extends both directions).
-      const train = this.trainEl().nativeElement;
-      const trainImg = this.trainImgEl().nativeElement;
-      train.scrollLeft = (trainImg.scrollWidth - train.clientWidth) / 2;
+      // Subclass hook for one-time DOM setup — runs BEFORE the character
+      // spawns so things like initial scroll centering happen on the
+      // empty stage, then the character drops in on top.
+      this._onAfterRender();
 
-      // Spawn the character. The host slot lives in our template, so its
-      // viewChild is resolved by the time afterNextRender fires.
       this._characterRef = this.characterHost().createComponent(this.characterClass());
       this.character.set(this._characterRef.instance);
     });
@@ -100,30 +126,47 @@ export class Stage {
       this._characterRef.setInput('blockedLeft', this.blockedLeft());
     });
 
-    // Each tick: if the character is pinned at an edge and still pressing
-    // into it, move the world instead.
+    // Per-tick subclass hook. Gated on `character()` so subclass logic
+    // doesn't run before the character exists.
     effect(() => {
-      this._loop.tick();
-      untracked(() => this._scrollTrain());
+      this.loop.tick();
+      untracked(() => {
+        if (this.character()) this._onTick();
+      });
     });
   }
 
-  /** Scrolls the train when the character is pinned against an edge AND
-   * still holding the direction key into that edge. Releasing the key (or
-   * walking away) stops the scroll, even though the character may still be
-   * pixel-aligned with the edge limit. */
-  private _scrollTrain(): void {
-    if (!this.character()) return;
-    const dir = this._input.lastDir();
-    if (!dir) return;
-    const train = this.trainEl().nativeElement;
-    const trainImg = this.trainImgEl().nativeElement;
-    const rate = this._input.downKey() ? this.crouchScrollRate() : this.walkScrollRate();
-    if (dir === 'right' && this.blockedRight()
-        && train.scrollLeft + train.clientWidth < trainImg.scrollWidth) {
-      train.scrollLeft += rate;
-    } else if (dir === 'left' && this.blockedLeft() && train.scrollLeft > 0) {
-      train.scrollLeft -= rate;
-    }
+  /** Subclass hook — runs once after the stage view is rendered and
+   * before the character is spawned. Override to do one-time DOM init
+   * (e.g. centering a scrollable element's `scrollLeft`). */
+  protected _onAfterRender(): void {}
+
+  /** Subclass hook — called every game-loop tick after the character is
+   * spawned. Override to implement scroll/parallax/animation behavior. */
+  protected _onTick(): void {}
+
+  /** Helper for subclasses with animated layers. Returns a `currentSrc`
+   * signal (bind it to `[src]` or `[style.background-image]`) and an
+   * `advance(tick)` method to call from `_onTick`. Single-frame inputs
+   * are static — `advance` early-returns and `currentSrc` is constant. */
+  protected makeFrameCycle(frames: readonly StageFrame[]): {
+    readonly currentSrc: Signal<string>;
+    advance(tick: number): void;
+  } {
+    const idx = signal(0);
+    let startTick = 0;
+    const currentSrc = computed(() => frames[idx()]?.src ?? '');
+    return {
+      currentSrc,
+      advance: (tick: number) => {
+        if (frames.length <= 1) return;
+        const cur = frames[idx()];
+        if (!cur) return;
+        const durTicks = Math.round(cur.durationMs / GameLoopService.TICK_MS);
+        if (tick - startTick < durTicks) return;
+        idx.set((idx() + 1) % frames.length);
+        startTick = tick;
+      },
+    };
   }
 }

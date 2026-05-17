@@ -1,0 +1,18 @@
+<div
+  #stageEl
+  class="stage aspect-video bg-repeat-x flex items-end stage-translate"
+>
+  <app-music-control [src]="musicSrc!" />
+  <div class="misc-layer misc-translate w-full absolute bg-repeat-x"></div>
+  <div class="w-full relative">
+    <ng-container #characterHost></ng-container>
+    <div #trainEl class="train-bump w-full overflow-hidden">
+      <img
+        #trainImgEl
+        class="terry-ground"
+        src="/assets/img/stage/terry-stage/train.png"
+        alt=""
+      />
+    </div>
+  </div>
+</div>

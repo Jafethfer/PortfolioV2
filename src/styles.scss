@@ -10,39 +10,7 @@ video {
   max-width: none !important;
 }
 
-/* ---------- Stage / parallax / train ---------- */
-
-.stage-translate {
-  animation: stage-animation 550s infinite;
-}
-
-.misc-translate {
-  animation: misc-animation 20s infinite linear;
-}
-
-.train-bump {
-  animation: train-animation 2s infinite linear;
-  animation-delay: 4.8s;
-}
-
-@keyframes stage-animation {
-  from { background-position-x: 0%; }
-  to   { background-position-x: 1000%; }
-}
-
-@keyframes misc-animation {
-  from { background-position-x: 0%; }
-  to   { background-position-x: 1000%; }
-}
-
-@keyframes train-animation {
-  0%   {}
-  5%   { margin-top: 10px; transform: translateY(-10px); }
-  10%  { margin-top: 0px;  transform: translateY(0px); }
-  15%  { margin-top: 10px; transform: translateY(-10px); }
-  25%,40% { margin-top: 0px; transform: translateY(0px); }
-  45%  { margin-top: 10px; transform: translateY(-10px); }
-  50%  { margin-top: 0px;  transform: translateY(0px); }
-  55%  { margin-top: 10px; transform: translateY(-10px); }
-  60%  { margin-top: 0px;  transform: translateY(0px); }
-}
+/* Per-stage parallax + ground animations live in each stage subclass's
+ * own SCSS (e.g. `stages/terry-stage.scss`), scoped by Angular's view
+ * encapsulation. The shared stage component owns only the outer-container
+ * layout. */

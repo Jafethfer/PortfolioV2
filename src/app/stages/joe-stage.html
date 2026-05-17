@@ -1,0 +1,21 @@
+<div
+  #stageEl
+  class="stage aspect-video bg-no-repeat flex items-end"
+  [style.background-image]="'url(' + bgCycle.currentSrc() + ')'"
+  [style.background-position-x.px]="-bgShiftPx()"
+  [style.background-size]="bgSize()"
+>
+  <app-music-control [src]="musicSrc!" />
+  <div class="w-full relative">
+    <ng-container #characterHost></ng-container>
+    <div #groundEl class="w-full overflow-hidden">
+      <img
+        #groundImgEl
+        class="joe-ground"
+        [style.width.%]="bgWidthMultiplier * 100"
+        [src]="groundCycle.currentSrc()"
+        alt=""
+      />
+    </div>
+  </div>
+</div>
