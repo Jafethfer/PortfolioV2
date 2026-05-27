@@ -1,0 +1,78 @@
+// Terry-stage-specific styling: outer-container layout + parallax bg/misc
+// sizing + the three keyframe animations that drive the slow temple scroll,
+// the mid-layer pan, and the train's rhythmic bump. Everything here is
+// scoped to TerryStage via Angular view encapsulation.
+
+:host {
+  display: contents;
+  // Pulls the spawned character down into the train area so their feet
+  // land roughly on top of the rail. Inherited by the child character
+  // component via CSS custom-property cascade.
+  --character-foot-offset: -10%;
+}
+
+.stage {
+  container-type: inline-size;
+  width: 75%;
+  position: relative;
+  // Clips anything extending past the stage — most visibly, the
+  // character's feet dipping below the ground line at the apex of a jump.
+  overflow: hidden;
+  // The temple/water backdrop is ~3× wider than the visible stage so
+  // background-position-x can scroll a long way before wrapping.
+  background-image: url('/assets/img/stage/terry-stage/base-layer.png');
+  background-size: 290%;
+}
+
+.misc-layer {
+  bottom: 24%;
+  height: 40%;
+  background-image: url('/assets/img/stage/terry-stage/misc.png');
+  background-size: 270%;
+}
+
+.stage-translate {
+  animation: terry-stage-pan 550s infinite;
+}
+
+.misc-translate {
+  animation: terry-misc-pan 20s infinite linear;
+}
+
+.train-bump {
+  animation: terry-train-bump 2s infinite linear;
+  animation-delay: 4.8s;
+}
+
+// Terry's ground image is intentionally 2× the container width — that's
+// the scroll room `_scrollGround` pans through when the character is
+// pinned at an edge. Height is set in cqw so it scales with the stage.
+// Kept here as a plain class (not a Tailwind utility) because Tailwind v4
+// doesn't reliably scan arbitrary-value utilities like `w-[200%]` from
+// inside TS string literals — moving the sizing to SCSS sidesteps that.
+.terry-ground {
+  width: 200%;
+  height: 16.69cqw;
+}
+
+@keyframes terry-stage-pan {
+  from { background-position-x: 0%; }
+  to   { background-position-x: 1000%; }
+}
+
+@keyframes terry-misc-pan {
+  from { background-position-x: 0%; }
+  to   { background-position-x: 1000%; }
+}
+
+@keyframes terry-train-bump {
+  0%   {}
+  5%   { margin-top: 10px; transform: translateY(-10px); }
+  10%  { margin-top: 0px;  transform: translateY(0px); }
+  15%  { margin-top: 10px; transform: translateY(-10px); }
+  25%,40% { margin-top: 0px; transform: translateY(0px); }
+  45%  { margin-top: 10px; transform: translateY(-10px); }
+  50%  { margin-top: 0px;  transform: translateY(0px); }
+  55%  { margin-top: 10px; transform: translateY(-10px); }
+  60%  { margin-top: 0px;  transform: translateY(0px); }
+}

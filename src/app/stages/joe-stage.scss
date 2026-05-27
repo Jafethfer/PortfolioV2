@@ -1,0 +1,30 @@
+// Joe-stage-specific styling: outer-container layout + backdrop sizing +
+// ground-band proportions. The backdrop sizing is intentionally wider
+// than 100% so `background-position-x` (driven by `bgShiftPx` in the
+// component) has room to slide as the ground scrolls.
+
+:host {
+  display: contents;
+  // Pulls the spawned character down into Joe's audience band so they
+  // land on the grass line. The 50cqw-tall ground means a much deeper
+  // pull than Terry's stage — tune in cqw so it scales with the stage.
+  --character-foot-offset: -50cqw;
+}
+
+.stage {
+  container-type: inline-size;
+  width: 75%;
+  position: relative;
+  overflow: hidden;
+  // `background-size` is set inline from the component (driven by
+  // `bgWidthMultiplier` × `bgHeightPct`) so the same numbers also bound
+  // `bgShiftPx`'s clamp — one source of truth for "how wide is the bg".
+}
+
+.joe-ground {
+  // Width is set inline from the component (matches `bgWidthMultiplier`
+  // so ground + bg stay in sync). Height is auto so the image's native
+  // aspect drives the displayed height — author the source PNG at the
+  // proportions you want on screen and CSS won't crop or stretch it.
+  height: auto;
+}
