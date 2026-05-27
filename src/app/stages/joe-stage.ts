@@ -10,19 +10,19 @@ import { Stage, StageFrame } from '../components/stage/stage';
 import { MusicControl } from '../components/music-control/music-control';
 
 /**
- * Joe Higashi's stage — Thailand (Fatal Fury 2 / Mega Drive). Two key
+ * Joe Higashi's stage â€” Thailand (Fatal Fury 2 / Mega Drive). Two key
  * differences from Terry's stage drove the per-stage-owned-template
  * refactor:
  *
  *   1. Both the backdrop and the ground band animate as 2-frame loops
- *      (water shimmer / clapping audience) — built on the base's
+ *      (water shimmer / clapping audience) â€” built on the base's
  *      `makeFrameCycle` helper, advanced from `_onTick`.
  *   2. The backdrop scrolls *with* the ground (1:1), not as a slow
  *      independent parallax. When the character is pinned at the edge,
  *      both move together, giving a flat-camera feel instead of layered
  *      depth.
  *
- * No middle parallax layer — the misc-layer div simply isn't in this
+ * No middle parallax layer â€” the misc-layer div simply isn't in this
  * template.
  */
 @Component({
@@ -33,11 +33,11 @@ import { MusicControl } from '../components/music-control/music-control';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JoeStage extends Stage {
-  protected override readonly musicSrc = '/assets/sfx/stage/joe-higashi-stage-ost.mp3';
+  protected override readonly musicSrc = 'assets/sfx/stage/joe-higashi-stage-ost.mp3';
 
   // Scrollable ground container + its `<img>`. The img is sized via
   // `.joe-ground` (50cqw tall, `w-full`); no horizontal overflow today
-  // since the image isn't authored at 2× width. Even so, `_onTick` runs
+  // since the image isn't authored at 2Ã— width. Even so, `_onTick` runs
   // the same pinned-at-edge check Terry uses, so as soon as Joe's
   // ground is widened the scroll just starts working.
   readonly groundEl = viewChild.required<ElementRef<HTMLDivElement>>('groundEl');
@@ -47,16 +47,16 @@ export class JoeStage extends Stage {
    * `background-size` and the cap on `bgShiftPx` so the bg can't slide
    * past its right edge. `3` means the temple image renders at 300% of
    * the stage width and has 200% of stage width worth of slide room.
-   * The bg image is NOT tiled — `bg-no-repeat` in the template — so
+   * The bg image is NOT tiled â€” `bg-no-repeat` in the template â€” so
    * overshooting would reveal empty stage. */
   protected readonly bgWidthMultiplier: number = 2;
   /** Vertical proportion of the stage the backdrop fills (the ground
-   * band takes the rest). Joe's backdrop is sky/water/mountains — no
-   * ground in the image itself — so it stops above the audience band. */
+   * band takes the rest). Joe's backdrop is sky/water/mountains â€” no
+   * ground in the image itself â€” so it stops above the audience band. */
   protected readonly bgHeightPct: number = 68;
 
   /** Inline `background-size` value for stageEl. Single source of truth
-   * via `bgWidthMultiplier` × 100% width + `bgHeightPct` % height. */
+   * via `bgWidthMultiplier` Ã— 100% width + `bgHeightPct` % height. */
   readonly bgSize = computed(
     () => `${this.bgWidthMultiplier * 100}% ${this.bgHeightPct}%`,
   );
@@ -69,13 +69,13 @@ export class JoeStage extends Stage {
   readonly bgShiftPx = signal(0);
 
   /** Max px the bg can slide before its right edge meets the right edge
-   * of the stage. `(multiplier - 1) × stageWidth`. `_onTick` clamps
+   * of the stage. `(multiplier - 1) Ã— stageWidth`. `_onTick` clamps
    * `bgShiftPx` against this so the user can't push past the image. */
   readonly maxBgShiftPx = computed(
     () => (this.bgWidthMultiplier - 1) * this.width(),
   );
 
-  // Frame cycles — see `Stage.makeFrameCycle`. Each cycle exposes its
+  // Frame cycles â€” see `Stage.makeFrameCycle`. Each cycle exposes its
   // own `currentSrc` signal (bound in the template) and an `advance`
   // method called every tick.
   protected readonly bgCycle = this.makeFrameCycle(JOE_BG_FRAMES);
@@ -125,11 +125,11 @@ export class JoeStage extends Stage {
 }
 
 const JOE_BG_FRAMES: readonly StageFrame[] = [
-  { src: '/assets/img/stage/joe-stage/background-0.png', durationMs: 400 },
-  { src: '/assets/img/stage/joe-stage/background-1.png', durationMs: 400 },
+  { src: 'assets/img/stage/joe-stage/background-0.png', durationMs: 400 },
+  { src: 'assets/img/stage/joe-stage/background-1.png', durationMs: 400 },
 ];
 
 const JOE_GROUND_FRAMES: readonly StageFrame[] = [
-  { src: '/assets/img/stage/joe-stage/ground-0.png', durationMs: 350 },
-  { src: '/assets/img/stage/joe-stage/ground-1.png', durationMs: 350 },
+  { src: 'assets/img/stage/joe-stage/ground-0.png', durationMs: 350 },
+  { src: 'assets/img/stage/joe-stage/ground-1.png', durationMs: 350 },
 ];

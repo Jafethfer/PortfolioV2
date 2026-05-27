@@ -8,14 +8,14 @@ import { Stage } from '../components/stage/stage';
 import { MusicControl } from '../components/music-control/music-control';
 
 /**
- * Terry's home stage — Geese Tower rooftop with a passing train as the
+ * Terry's home stage â€” Geese Tower rooftop with a passing train as the
  * ground band. Pure parallax: the temple backdrop and middle layer pan
  * continuously via CSS keyframes (`stage-translate` / `misc-translate`),
  * and the train scrolls horizontally only when the character is pinned
  * at the stage edge (handled in `_onTick`).
  *
  * The base `Stage` handles character spawn, edge detection, and tick
- * subscription — this subclass just declares the train element + scroll
+ * subscription â€” this subclass just declares the train element + scroll
  * rules. Background and misc-layer images come from SCSS (static URLs,
  * positioned via `background-image` rules).
  */
@@ -27,7 +27,7 @@ import { MusicControl } from '../components/music-control/music-control';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TerryStage extends Stage {
-  protected override readonly musicSrc = '/assets/sfx/stage/terry-stage-ost.mp3';
+  protected override readonly musicSrc = 'assets/sfx/stage/terry-stage-ost.mp3';
 
   // Scrollable train element + its `<img>` child. The img is 200% wide
   // (see `.terry-ground` in SCSS); scrolling `trainEl.scrollLeft` pans
@@ -49,7 +49,7 @@ export class TerryStage extends Stage {
     // character (not `input.lastDir()`) so an active special pushing
     // Terry into the edge also scrolls the world. During a special's
     // travel window, the scroll rate matches the special's per-tick X
-    // step — so a fast Burning Knuckle scrolls the world at Burning
+    // step â€” so a fast Burning Knuckle scrolls the world at Burning
     // Knuckle speed, not the slower default walk rate.
     const character = this.character();
     const dir = character?.motionIntent ?? null;
