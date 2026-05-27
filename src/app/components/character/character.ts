@@ -66,16 +66,22 @@ export abstract class Character {
   protected readonly walkSpeed: number = 10;
   protected readonly crouchSpeed: number = 5;
   /** Fraction of the surrounding world width covered in a forward/back jump. */
-  protected readonly jumpDistancePct: number = 0.3;
-  protected readonly jumpTicks: number = 33;
-  protected readonly jumpDurationMs: number = 1000;
+  protected readonly jumpDistancePct: number = 0.4;
+  protected readonly jumpTicks: number = 29;
+  protected readonly jumpDurationMs: number = 870;
   protected readonly jumpApexMs: number = 500;
   protected readonly jumpVerticalStep: number = 5;
+  /** Per-tick Y descent during a normal jump's fall phase. Higher than
+   * `jumpVerticalStep` so Terry rises slowly (heavy "lift" feel) but falls
+   * faster, killing the float that comes with a symmetric arc. Tuned so
+   * descentTicks × this ≈ ascentTicks × jumpVerticalStep — peak is reached
+   * via slow ascent, then gravity feels weighted on the way back down. */
+  protected readonly jumpDescentVerticalStep: number = 7;
   /** Per-tick Y descent during the post-special fall (after `fallAfterArc`).
-   * Faster than `jumpVerticalStep` so Terry doesn't loiter mid-air after a
-   * Rising Tackle — anti-air specials feel snappier landing quickly. */
-  protected readonly specialFallVerticalStep: number = 6;
-  protected readonly jumpYScale: number = 0.3;
+   * Faster than `jumpDescentVerticalStep` so Terry doesn't loiter mid-air
+   * after a Rising Tackle — anti-air specials feel snappier landing quickly. */
+  protected readonly specialFallVerticalStep: number = 9;
+  protected readonly jumpYScale: number = 0.4;
   /** Fraction of the surrounding world width covered by a single backstep
    * (left→left double-tap). Sign is implicit — backstep is always
    * backwards-relative-to-facing; for now that's left. Tune per character
@@ -234,11 +240,27 @@ export abstract class Character {
    * state (`_specialFallingDescent`) so he physically falls back down. */
   private _specialFallAfterArc = false;
   /** Active after a `fallAfterArc` special's attack lock-in ends with Y
-   * still above ground. Each physics tick descends Y by `jumpVerticalStep`
+   * still above ground. Each physics tick descends Y by `specialFallVerticalStep`
    * until ground contact, at which point the state-machine handover
    * snaps in. The state-machine effect and `_startAttack` / `_startJump`
    * all gate on this so the character can't be re-triggered mid-descent. */
   private _specialFallingDescent = false;
+  /** Absolute loop tick at which the active heavy aerial's animation
+   * finishes (sum of frame durations). The past-apex branch in
+   * `_physicsTick` fires the swap to `airHeavyRecover` once BOTH
+   * conditions are met: tick ≥ this AND elapsed ≥ apexTicks. That's the
+   * "recover at MAX(animation end, descent start)" rule — kicks pressed
+   * early hold their last frame until apex, kicks pressed close to apex
+   * play through past apex before recovering, kicks pressed during
+   * descent play through and recover on their own end tick. 0 = no
+   * recovery scheduled (light aerials, or recover already fired). */
+  private _airHeavyAttackEndTick = 0;
+  /** True between the first air-attack trigger of a jump and landing. One air
+   * normal per jump — the gate has to outlive the active animation because the
+   * heavy variant transitions through `airHeavyPunch` → `airHeavyPunchRecover`
+   * mid-air, so an animation-name check would let a second press slip through
+   * during the recovery window. Cleared on land. */
+  private _airAttackUsed = false;
   /** Voice + whiff SFX queued to play when the special's travel window
    * starts — so the fighter's shout and the travel whoosh both sync with
    * Terry's actual forward motion instead of firing at the very start of
@@ -356,7 +378,20 @@ export abstract class Character {
 
       if (down) {
         const a = untracked(() => this.animation());
-        const alreadyCrouched = a === 'crouch' || a === 'crouchStill' || a === 'crouchForward';
+        // Anything that already had Terry in a deep crouch — including
+        // the crouching attack animations — means "skip the crouch entry,
+        // hold the deep-crouch still pose". Without `crouchLightPunch`
+        // here, a punch ending while Down is still held would replay the
+        // crouch entry animation, which reads as Terry standing up briefly
+        // before crouching again.
+        const alreadyCrouched =
+          a === 'crouch' ||
+          a === 'crouchStill' ||
+          a === 'crouchForward' ||
+          a === 'crouchLightPunch' ||
+          a === 'crouchHeavyPunch' ||
+          a === 'crouchLightKick' ||
+          a === 'crouchHeavyKick';
         if (lastDir === 'right') this.animation.set('crouchForward');
         else if (alreadyCrouched) this.animation.set('crouchStill');
         else this.animation.set('crouch');
@@ -474,6 +509,107 @@ export abstract class Character {
       fallbackDurationMs: this.heavyKickDurationMs,
     });
   }
+  /** Crouching light punch — triggered when lightPunch is pressed while
+   * Down is held. Reuses the standing light punch's voice + whiff (same
+   * grunt, same whoosh); only the animation differs. The state machine
+   * picks `crouchStill` (not `crouch` entry) when the attack lock-in
+   * ends, so Terry stays in the deep crouch pose instead of replaying
+   * the crouch entry every time he punches. */
+  crouchLightPunch(): void {
+    this._startAttack({
+      animation: 'crouchLightPunch',
+      voiceSrc: this.voices.lightPunch,
+      whiffSrc: this.voices['lightPunchWhiff'],
+      frames: this.animationFrames['crouchLightPunch'],
+      fallbackDurationMs: this.lightPunchDurationMs,
+    });
+  }
+  /** Crouching heavy punch — triggered when heavyPunch is pressed while
+   * Down is held. Mirrors `crouchLightPunch` (shared voice + whiff with
+   * its standing counterpart, state machine returns to `crouchStill`
+   * when the lock-in ends). */
+  crouchHeavyPunch(): void {
+    this._startAttack({
+      animation: 'crouchHeavyPunch',
+      voiceSrc: this.voices.heavyPunch,
+      whiffSrc: this.voices['heavyPunchWhiff'],
+      frames: this.animationFrames['crouchHeavyPunch'],
+      fallbackDurationMs: this.heavyPunchDurationMs,
+    });
+  }
+  /** Crouching light kick — triggered when lightKick is pressed while
+   * Down is held. Same shape as the other crouching attacks (shared
+   * voice + whiff, state machine returns to `crouchStill`). */
+  crouchLightKick(): void {
+    this._startAttack({
+      animation: 'crouchLightKick',
+      voiceSrc: this.voices.lightKick,
+      whiffSrc: this.voices['lightKickWhiff'],
+      frames: this.animationFrames['crouchLightKick'],
+      fallbackDurationMs: this.lightKickDurationMs,
+    });
+  }
+  /** Crouching heavy kick — triggered when heavyKick is pressed while
+   * Down is held. Same shape as the other crouching attacks. */
+  crouchHeavyKick(): void {
+    this._startAttack({
+      animation: 'crouchHeavyKick',
+      voiceSrc: this.voices.heavyKick,
+      whiffSrc: this.voices['heavyKickWhiff'],
+      frames: this.animationFrames['crouchHeavyKick'],
+      fallbackDurationMs: this.heavyKickDurationMs,
+    });
+  }
+  /** Air light punch — fires only mid-jump. See `_startAirAttack`. Last
+   * frame holds until landing. */
+  airLightPunch(): void {
+    this._startAirAttack({
+      animation: 'airLightPunch',
+      voiceSrc: this.voices.lightPunch,
+      whiffSrc: this.voices['lightPunchWhiff'],
+    });
+  }
+  /** Air heavy punch — fires only mid-jump. See `_startAirAttack`. Unlike
+   * the light variant, heavy schedules a recovery: after the punch frames
+   * finish, the sprite snaps back to a jump-fall pose so Terry visibly
+   * recovers in the air before landing (and is "punishable" — can't act
+   * again until landing). */
+  airHeavyPunch(): void {
+    this._startAirAttack({
+      animation: 'airHeavyPunch',
+      voiceSrc: this.voices.heavyPunch,
+      whiffSrc: this.voices['heavyPunchWhiff'],
+      recover: true,
+    });
+  }
+  /** Air light kick — direction-aware sprite. Forward/backward jumps use
+   * `airLightKick` (forward-pointing knee/leg); vertical (in-place) jumps
+   * use `airLightKickUp` from a different sheet row (legs tucked under,
+   * kicking down). Both variants hold the extended pose until landing,
+   * same as `airLightPunch`. */
+  airLightKick(): void {
+    const animation = this._forwardJump || this._backwardJump ? 'airLightKick' : 'airLightKickUp';
+    this._startAirAttack({
+      animation,
+      voiceSrc: this.voices.lightKick,
+      whiffSrc: this.voices['lightKickWhiff'],
+    });
+  }
+  /** Air heavy kick — direction-aware sprite. Forward/backward jumps use
+   * `airHeavyKick` (forward kick extension); vertical (in-place) jumps
+   * use `airHeavyKickUp` from a different sheet row (full leap-and-kick
+   * sequence with windup, cock-back, and follow-through). Both variants
+   * schedule `airHeavyRecover` after the kick frames finish so Terry
+   * visibly resets his stance mid-air. */
+  airHeavyKick(): void {
+    const animation = this._forwardJump || this._backwardJump ? 'airHeavyKick' : 'airHeavyKickUp';
+    this._startAirAttack({
+      animation,
+      voiceSrc: this.voices.heavyKick,
+      whiffSrc: this.voices['heavyKickWhiff'],
+      recover: true,
+    });
+  }
   taunt(): void {
     this._audio.playVoice(this.voices.taunt, this.voiceVolume);
   }
@@ -483,6 +619,11 @@ export abstract class Character {
    * special isn't short-circuited by a 2-input subset. Fires the first
    * matching special; falls through to the normal attack if none match. */
   private _tryAttack(button: AttackButton): void {
+    // Specials first — motions like Rising Tackle's `down→up` arrive
+    // mid-jump (Up triggers the jump a few ticks before the punch lands),
+    // and `_runSpecial` is the one that knows how to cancel a just-started
+    // jump. Gating specials behind `!inJump()` here would short-circuit
+    // that and route Rising Tackle into the air heavy punch instead.
     const candidates = this.specials
       .filter((s) => s.button === button)
       .slice()
@@ -490,6 +631,42 @@ export abstract class Character {
     for (const s of candidates) {
       if (this._input.matchMotion(s.motion)) {
         this._runSpecial(s);
+        // `_runSpecial` no-ops when the jump is too far committed; in that
+        // case fall through to the normal attack instead of swallowing the
+        // press. Once one special's motion has matched, the consumed events
+        // are gone, so no other special would match — break either way.
+        if (this.inAttack()) return;
+        break;
+      }
+    }
+    // No special fired: route mid-jump presses to the air normal, ground
+    // presses to the ground normal. Buttons without an air normal yet are
+    // no-ops in the air.
+    if (this.inJump()) {
+      if (button === 'lightPunch') this.airLightPunch();
+      else if (button === 'heavyPunch') this.airHeavyPunch();
+      else if (button === 'lightKick') this.airLightKick();
+      else if (button === 'heavyKick') this.airHeavyKick();
+      return;
+    }
+    // Crouching branch — Down held while pressing an attack swaps to the
+    // crouching variant of that button. Falls through to standing if the
+    // character doesn't have a crouching variant defined for the button.
+    if (this._input.downKey()) {
+      if (button === 'lightPunch' && this.animationFrames['crouchLightPunch']) {
+        this.crouchLightPunch();
+        return;
+      }
+      if (button === 'heavyPunch' && this.animationFrames['crouchHeavyPunch']) {
+        this.crouchHeavyPunch();
+        return;
+      }
+      if (button === 'lightKick' && this.animationFrames['crouchLightKick']) {
+        this.crouchLightKick();
+        return;
+      }
+      if (button === 'heavyKick' && this.animationFrames['crouchHeavyKick']) {
+        this.crouchHeavyKick();
         return;
       }
     }
@@ -591,6 +768,49 @@ export abstract class Character {
       this._specialFallAfterArc = !!s.fallAfterArc;
       this._specialTravelStartTick = this._attackStartTick + windupTicks;
       this._specialTravelEndTick = this._specialTravelStartTick + travelTicks;
+    }
+  }
+
+  /** Shared kickoff for air normals (light / heavy). Distinct from
+   * `_startAttack` because air attacks DO NOT enter the `inAttack` lock-in
+   * — that would freeze jump physics. The sprite is swapped to the air
+   * animation; jump physics keep advancing underneath; the animation's
+   * `loop: false` holds the last frame.
+   *
+   * `recover: true` schedules an auto-transition back to a jump-fall sprite
+   * after the animation's total frame duration elapses (used by heavy
+   * variants so Terry visibly recovers his stance mid-air). Without
+   * `recover`, the last frame holds until the jump's land tick.
+   *
+   * One air normal per jump — re-presses while either air punch is up are
+   * ignored. */
+  private _startAirAttack(opts: {
+    readonly animation: AnimationName;
+    readonly voiceSrc?: string;
+    readonly whiffSrc?: string;
+    readonly recover?: boolean;
+  }): void {
+    if (!this.inJump()) return;
+    if (this._airAttackUsed) return;
+    const frames = this.animationFrames[opts.animation];
+    if (!frames) return;
+    this._audio.playVoice(opts.voiceSrc, this.voiceVolume);
+    this._audio.playVoice(opts.whiffSrc, this.sfxVolume);
+    this.animation.set(opts.animation);
+    this._airAttackUsed = true;
+    // Heavy aerials schedule a recovery transition. The past-apex branch
+    // in `_physicsTick` consumes the milestone once BOTH gates are true:
+    // animation frames have all played AND Terry has crossed apex. This
+    // is the "MAX(animation end, descent start)" rule — kicks pressed
+    // early hold their last frame until apex, kicks pressed close to
+    // apex play through past apex, kicks pressed during descent play
+    // through then recover on their own end tick.
+    if (opts.recover) {
+      const totalMs = frames.frames.reduce((sum, f) => sum + f.durationMs, 0);
+      this._airHeavyAttackEndTick =
+        this._loop.tick() + Math.round(totalMs / GameLoopService.TICK_MS);
+    } else {
+      this._airHeavyAttackEndTick = 0;
     }
   }
 
@@ -844,6 +1064,8 @@ export abstract class Character {
         this._backwardJump = false;
         this.accumulatedY.set(0);
         this.inJump.set(false);
+        this._airHeavyAttackEndTick = 0;
+        this._airAttackUsed = false;
         // Force the ground animation immediately (no input change to react to).
         const dir = this._input.lastDir();
         const down = this._input.downKey();
@@ -861,11 +1083,24 @@ export abstract class Character {
         // exactly once. The fall variants are `loop: false` so the engine
         // holds on the last (hat-down) frame until the physics tick lands
         // and the state-machine effect transitions to a ground animation.
+        // Heavy aerial recovery also fires here, but only once the kick
+        // animation has finished — that way a kick pressed close to apex
+        // plays through past apex instead of being cut off mid-swing.
+        // The end-tick test naturally also handles descent-pressed kicks:
+        // they're already past apex, but the test holds until their frames
+        // finish before the recovery transition.
         const anim = this.animation();
         if (anim === 'jumpUp') this.animation.set('jumpFall');
         else if (anim === 'jumpForward') this.animation.set('jumpForwardFall');
         else if (anim === 'jumpBackward') this.animation.set('jumpBackwardFall');
-        this.accumulatedY.update((y) => y + this.jumpVerticalStep);
+        if (
+          this._airHeavyAttackEndTick > 0 &&
+          this._loop.tick() >= this._airHeavyAttackEndTick
+        ) {
+          this.animation.set('airHeavyRecover');
+          this._airHeavyAttackEndTick = 0;
+        }
+        this.accumulatedY.update((y) => y + this.jumpDescentVerticalStep);
       }
 
       if (this._forwardJump && !this.blockedRight())

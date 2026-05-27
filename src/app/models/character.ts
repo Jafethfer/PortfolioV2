@@ -27,7 +27,18 @@ export type AnimationName =
   | 'lightPunch'
   | 'heavyPunch'
   | 'lightKick'
-  | 'heavyKick';
+  | 'heavyKick'
+  | 'crouchLightPunch'
+  | 'crouchHeavyPunch'
+  | 'crouchLightKick'
+  | 'crouchHeavyKick'
+  | 'airLightPunch'
+  | 'airHeavyPunch'
+  | 'airLightKick'
+  | 'airLightKickUp'
+  | 'airHeavyKick'
+  | 'airHeavyKickUp'
+  | 'airHeavyRecover';
 
 export interface CharacterVoices {
   lightPunch?: string;

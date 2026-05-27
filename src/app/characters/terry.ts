@@ -286,6 +286,199 @@ export class Terry extends Character {
         },
       ],
     },
+    /** Crouching light punch — Terry stays in deep crouch and jabs forward
+     * (row 34 of the sheet). Fires when A is pressed while Down is held.
+     * All three frames' anchorX is pinned to body-x (~28) so the extending
+     * arm doesn't shove the torso across frame 0 → 1; matches `crouchStill`
+     * (anchorX=29) so the transition in/out of the punch stays stable.
+     * anchorY = h - 1 - 6 ≈ 63 places the body baseline matching the
+     * deep-crouch entry's anchorY=80 / h=87 (both ≈ 6 px above bbox bottom). */
+    crouchLightPunch: {
+      frames: [
+        {
+          src: '/assets/img/characters/terry/crouch-light-punch/0.png',
+          w: 61,
+          h: 70,
+          anchorX: 28,
+          anchorY: 63,
+          durationMs: 50,
+        },
+        {
+          src: '/assets/img/characters/terry/crouch-light-punch/1.png',
+          w: 88,
+          h: 70,
+          anchorX: 28,
+          anchorY: 63,
+          durationMs: 50,
+        },
+        {
+          src: '/assets/img/characters/terry/crouch-light-punch/2.png',
+          w: 62,
+          h: 70,
+          anchorX: 28,
+          anchorY: 64,
+          durationMs: 50,
+        },
+      ],
+    },
+    /** Crouching heavy punch — Terry stays in deep crouch and delivers a
+     * committed straight (row 35 of the sheet). Fires when S is pressed
+     * while Down is held. Five frames at 60/100/180/40/60 = 440ms total —
+     * matching the standing heavy's 440ms and emphasising the extended-
+     * arm beat (frame 2 at 180ms, ~40% of total). The two standing
+     * anticipation frames (60+40) collapse into the single crouch windup
+     * pose (frame 1 at 100ms). anchorX pinned near body-x (28-29) so the
+     * extending arm doesn't shove the torso. */
+    crouchHeavyPunch: {
+      frames: [
+        {
+          src: '/assets/img/characters/terry/crouch-heavy-punch/0.png',
+          w: 61,
+          h: 72,
+          anchorX: 28,
+          anchorY: 65,
+          durationMs: 60,
+        },
+        {
+          src: '/assets/img/characters/terry/crouch-heavy-punch/1.png',
+          w: 61,
+          h: 72,
+          anchorX: 29,
+          anchorY: 65,
+          durationMs: 100,
+        },
+        {
+          src: '/assets/img/characters/terry/crouch-heavy-punch/2.png',
+          w: 97,
+          h: 72,
+          anchorX: 29,
+          anchorY: 65,
+          durationMs: 180,
+        },
+        {
+          src: '/assets/img/characters/terry/crouch-heavy-punch/3.png',
+          w: 61,
+          h: 72,
+          anchorX: 29,
+          anchorY: 65,
+          durationMs: 40,
+        },
+        {
+          src: '/assets/img/characters/terry/crouch-heavy-punch/4.png',
+          w: 62,
+          h: 72,
+          anchorX: 29,
+          anchorY: 65,
+          durationMs: 60,
+        },
+      ],
+    },
+    /** Crouching light kick — Terry sweeps low (row 36 of the sheet).
+     * Fires when Z is pressed while Down is held. Five frames at
+     * 40/40/140/40/40 = 300ms total — matches the standing light kick's
+     * 300ms and weights the extended-sweep pose (frame 2 at 140ms,
+     * ~47% of total), same pattern as the heavy punches. anchorX is
+     * body-mode (torso centroid) so Terry's body stays at world-X while
+     * the leg sweeps right — without that, foot-mode anchors would yank
+     * the body left as the kicking leg's foot pulls the anchor right. */
+    crouchLightKick: {
+      frames: [
+        {
+          src: '/assets/img/characters/terry/crouch-light-kick/0.png',
+          w: 56,
+          h: 68,
+          anchorX: 27,
+          anchorY: 67,
+          durationMs: 40,
+        },
+        {
+          src: '/assets/img/characters/terry/crouch-light-kick/1.png',
+          w: 71,
+          h: 68,
+          anchorX: 25,
+          anchorY: 67,
+          durationMs: 40,
+        },
+        {
+          src: '/assets/img/characters/terry/crouch-light-kick/2.png',
+          w: 102,
+          h: 68,
+          anchorX: 24,
+          anchorY: 67,
+          durationMs: 140,
+        },
+        {
+          src: '/assets/img/characters/terry/crouch-light-kick/3.png',
+          w: 71,
+          h: 68,
+          anchorX: 25,
+          anchorY: 67,
+          durationMs: 40,
+        },
+        {
+          src: '/assets/img/characters/terry/crouch-light-kick/4.png',
+          w: 57,
+          h: 68,
+          anchorX: 28,
+          anchorY: 67,
+          durationMs: 40,
+        },
+      ],
+    },
+    /** Crouching heavy kick — Terry sticks his leg high and forward (row 37
+     * of the sheet). Fires when X is pressed while Down is held. Five
+     * frames at 80/130/280/120/160 = 770ms total — extension still
+     * dominates (frame 2 at 280ms, ~36%), but retract (frame 3) and
+     * recover (frame 4) are roughly doubled vs. the snappier punch
+     * pattern so Terry eases out of the kick instead of snapping back.
+     * Frame 2's anchorX is overridden from the auto-detected 57 to 25:
+     * the kicking leg cuts through the torso band and pulls the body-mode
+     * centroid right, even though Terry's actual torso is on the left of
+     * the bbox. */
+    crouchHeavyKick: {
+      frames: [
+        {
+          src: '/assets/img/characters/terry/crouch-heavy-kick/0.png',
+          w: 55,
+          h: 72,
+          anchorX: 27,
+          anchorY: 71,
+          durationMs: 80,
+        },
+        {
+          src: '/assets/img/characters/terry/crouch-heavy-kick/1.png',
+          w: 69,
+          h: 72,
+          anchorX: 34,
+          anchorY: 71,
+          durationMs: 130,
+        },
+        {
+          src: '/assets/img/characters/terry/crouch-heavy-kick/2.png',
+          w: 116,
+          h: 72,
+          anchorX: 25,
+          anchorY: 71,
+          durationMs: 280,
+        },
+        {
+          src: '/assets/img/characters/terry/crouch-heavy-kick/3.png',
+          w: 67,
+          h: 72,
+          anchorX: 32,
+          anchorY: 71,
+          durationMs: 120,
+        },
+        {
+          src: '/assets/img/characters/terry/crouch-heavy-kick/4.png',
+          w: 52,
+          h: 72,
+          anchorX: 25,
+          anchorY: 71,
+          durationMs: 160,
+        },
+      ],
+    },
     /** Vertical jump — ascent. Cropped from the legacy `terry-jump.png` strip
      * (6 frames at 68×136 each); preparation through launch. */
     jumpUp: {
@@ -326,7 +519,7 @@ export class Terry extends Character {
           h: 136,
           anchorX: 34,
           anchorY: 135,
-          durationMs: 250,
+          durationMs: 167,
         },
         {
           src: '/assets/img/characters/terry/jump/4.png',
@@ -334,7 +527,7 @@ export class Terry extends Character {
           h: 136,
           anchorX: 37,
           anchorY: 135,
-          durationMs: 250,
+          durationMs: 167,
         },
       ],
     },
@@ -482,6 +675,274 @@ export class Terry extends Character {
         },
       ],
     },
+    /** Recovery played after any heavy aerial attack (punch or kick)
+     * finishes. Reuses jump-forward frames 5 / 6 / 7 (hat-down brace →
+     * hat-down hold → landing stand) so the pose reads as "post-attack
+     * settle". Direction-agnostic — same animation regardless of whether
+     * Terry's mid-forward, mid-backward, or mid-vertical jump — because
+     * the alternative (direction-dispatched jump-fall variants) restarts
+     * at frame 0 and looks jarring when the attack ends late in the jump.
+     * `loop: false` makes the last frame hold until the jump physics
+     * lands. */
+    airHeavyRecover: {
+      frames: [
+        {
+          src: '/assets/img/characters/terry/jump-forward/5.png',
+          w: 60,
+          h: 136,
+          anchorX: 30,
+          anchorY: 135,
+          durationMs: 100,
+        },
+        {
+          src: '/assets/img/characters/terry/jump-forward/6.png',
+          w: 57,
+          h: 136,
+          anchorX: 28,
+          anchorY: 135,
+          durationMs: 150,
+        },
+        {
+          src: '/assets/img/characters/terry/jump-forward/7.png',
+          w: 57,
+          h: 136,
+          anchorX: 31,
+          anchorY: 135,
+          durationMs: 1500,
+        },
+      ],
+    },
+    /** Air heavy punch — Terry's committed mid-air punch (row 39 of the
+     * sheet). Played only mid-jump. Unlike the light variant which holds
+     * the extended pose until landing, the heavy variant schedules a
+     * recovery: after the 3 frames finish the engine swaps to
+     * `airHeavyRecover` (jump-forward frames 5-7) so Terry visibly resets
+     * his stance mid-air. Frame 2 has anchorX overridden to body-x (~28)
+     * so the long forward arm extension doesn't shove the torso sideways
+     * when frame 1 → 2 plays. */
+    airHeavyPunch: {
+      frames: [
+        {
+          src: '/assets/img/characters/terry/air-heavy-punch/0.png',
+          w: 55,
+          h: 85,
+          anchorX: 26,
+          anchorY: 84,
+          durationMs: 70,
+        },
+        {
+          src: '/assets/img/characters/terry/air-heavy-punch/1.png',
+          w: 54,
+          h: 85,
+          anchorX: 31,
+          anchorY: 84,
+          durationMs: 100,
+        },
+        {
+          src: '/assets/img/characters/terry/air-heavy-punch/2.png',
+          w: 85,
+          h: 85,
+          anchorX: 28,
+          anchorY: 84,
+          durationMs: 150,
+        },
+      ],
+    },
+    /** Air light punch — Terry jabs while airborne (row 38 of the sheet).
+     * Played only mid-jump; jump physics keep running underneath so the
+     * sprite tracks the leap arc. `loop: false` plus a long frame-2 duration
+     * pins the extended-punch pose until the jump's land tick overrides the
+     * animation. anchorX is held near `bodyAnchorX` so Terry's body stays at
+     * a stable world-X while the punching arm extends across frames 1-2. */
+    airLightPunch: {
+      frames: [
+        {
+          src: '/assets/img/characters/terry/air-light-punch/0.png',
+          w: 53,
+          h: 104,
+          anchorX: 26,
+          anchorY: 103,
+          durationMs: 60,
+        },
+        {
+          src: '/assets/img/characters/terry/air-light-punch/1.png',
+          w: 64,
+          h: 104,
+          anchorX: 30,
+          anchorY: 103,
+          durationMs: 80,
+        },
+        {
+          src: '/assets/img/characters/terry/air-light-punch/2.png',
+          w: 88,
+          h: 104,
+          anchorX: 28,
+          anchorY: 103,
+          durationMs: 2000,
+        },
+      ],
+    },
+    /** Air light kick — same row-42 sprites as the heavy variant (windup
+     * curl → cocked → extended kick), but with snappier frame timing and
+     * no recovery hand-off; the extended pose holds until landing the
+     * same way `airLightPunch` does. Frame 2 anchorX is overridden to
+     * body-x (~28) so the long forward leg/arm extension doesn't shove
+     * Terry's torso right when frame 1 → 2 plays. */
+    airLightKick: {
+      frames: [
+        {
+          src: '/assets/img/characters/terry/air-kick/0.png',
+          w: 53,
+          h: 84,
+          anchorX: 26,
+          anchorY: 83,
+          durationMs: 50,
+        },
+        {
+          src: '/assets/img/characters/terry/air-kick/1.png',
+          w: 64,
+          h: 84,
+          anchorX: 32,
+          anchorY: 83,
+          durationMs: 70,
+        },
+        {
+          src: '/assets/img/characters/terry/air-kick/2.png',
+          w: 102,
+          h: 84,
+          anchorX: 28,
+          anchorY: 83,
+          durationMs: 2000,
+        },
+      ],
+    },
+    /** Air light kick — vertical-jump (in-place) variant from row 40 of
+     * the sheet. Different silhouette from the forward/backward variant:
+     * Terry's legs tuck under, kicking down rather than forward. Same
+     * "hold last frame until landing" behavior as `airLightKick`. Frame 2
+     * anchorX is overridden to body-x (~28) so the extending leg doesn't
+     * shove Terry's torso right when frame 1 → 2 plays. */
+    airLightKickUp: {
+      frames: [
+        {
+          src: '/assets/img/characters/terry/air-kick-up-light/0.png',
+          w: 53,
+          h: 98,
+          anchorX: 26,
+          anchorY: 97,
+          durationMs: 50,
+        },
+        {
+          src: '/assets/img/characters/terry/air-kick-up-light/1.png',
+          w: 60,
+          h: 98,
+          anchorX: 30,
+          anchorY: 97,
+          durationMs: 70,
+        },
+        {
+          src: '/assets/img/characters/terry/air-kick-up-light/2.png',
+          w: 84,
+          h: 98,
+          anchorX: 28,
+          anchorY: 97,
+          durationMs: 2000,
+        },
+      ],
+    },
+    /** Air heavy kick — vertical-jump (in-place) variant from row 41 of
+     * the sheet. Six frames cover the full leap-and-kick cycle: launch
+     * V-pose → curl → tucked rise → cock-back → leg-extended kick →
+     * follow-through. Like the directional heavy variant, schedules
+     * `airHeavyRecover` (set by `airHeavyKick()` via `recover: true`)
+     * after the kick frames finish so Terry resets his stance mid-air
+     * before landing. Frame 4 (kick extension, w=108) has its anchorX
+     * overridden to body-x (~25) so the forward-extended leg doesn't
+     * drag Terry's torso right when frame 3 → 4 plays. */
+    airHeavyKickUp: {
+      frames: [
+        {
+          src: '/assets/img/characters/terry/air-kick-up-heavy/0.png',
+          w: 63,
+          h: 107,
+          anchorX: 32,
+          anchorY: 106,
+          durationMs: 60,
+        },
+        {
+          src: '/assets/img/characters/terry/air-kick-up-heavy/1.png',
+          w: 53,
+          h: 107,
+          anchorX: 28,
+          anchorY: 106,
+          durationMs: 70,
+        },
+        {
+          src: '/assets/img/characters/terry/air-kick-up-heavy/2.png',
+          w: 46,
+          h: 107,
+          anchorX: 23,
+          anchorY: 106,
+          durationMs: 80,
+        },
+        {
+          src: '/assets/img/characters/terry/air-kick-up-heavy/3.png',
+          w: 66,
+          h: 107,
+          anchorX: 24,
+          anchorY: 106,
+          durationMs: 80,
+        },
+        {
+          src: '/assets/img/characters/terry/air-kick-up-heavy/4.png',
+          w: 108,
+          h: 107,
+          anchorX: 25,
+          anchorY: 106,
+          durationMs: 130,
+        },
+        {
+          src: '/assets/img/characters/terry/air-kick-up-heavy/5.png',
+          w: 50,
+          h: 107,
+          anchorX: 25,
+          anchorY: 106,
+          durationMs: 90,
+        },
+      ],
+    },
+    /** Air heavy kick — same row-42 sprites as the light variant. Slower
+     * per-frame timing for the heavier feel, and `airHeavyKick()` passes
+     * `recover: true` so the engine swaps to `airHeavyRecover` after the
+     * kick frames finish (matching how heavy punch recovers mid-air). */
+    airHeavyKick: {
+      frames: [
+        {
+          src: '/assets/img/characters/terry/air-kick/0.png',
+          w: 53,
+          h: 84,
+          anchorX: 26,
+          anchorY: 83,
+          durationMs: 70,
+        },
+        {
+          src: '/assets/img/characters/terry/air-kick/1.png',
+          w: 64,
+          h: 84,
+          anchorX: 32,
+          anchorY: 83,
+          durationMs: 100,
+        },
+        {
+          src: '/assets/img/characters/terry/air-kick/2.png',
+          w: 102,
+          h: 84,
+          anchorX: 28,
+          anchorY: 83,
+          durationMs: 150,
+        },
+      ],
+    },
     lightPunch: {
       frames: [
         {
@@ -512,8 +973,9 @@ export class Terry extends Character {
     },
     /** Heavy punch — 6-frame windup → big extension → recovery (row 27 of
      * the sheet). Frame 3 is the full-extension swing (100px wide vs ~66 for
-     * the others); foot-detected anchors stay stable around (32-33, 97). The
-     * windup and recovery linger longer than the extension to sell the weight. */
+     * the others); foot-detected anchors stay stable around (32-33, 97).
+     * Frame 3 lingers ~3× the windup frames so the extended-arm pose is
+     * the dominant visible beat — total 440ms (60/60/40/180/40/60). */
     heavyPunch: {
       frames: [
         {
@@ -522,7 +984,7 @@ export class Terry extends Character {
           h: 105,
           anchorX: 32,
           anchorY: 97,
-          durationMs: 100,
+          durationMs: 60,
         },
         {
           src: '/assets/img/characters/terry/heavy-punch/1.png',
@@ -530,7 +992,7 @@ export class Terry extends Character {
           h: 105,
           anchorX: 32,
           anchorY: 97,
-          durationMs: 100,
+          durationMs: 60,
         },
         {
           src: '/assets/img/characters/terry/heavy-punch/2.png',
@@ -538,7 +1000,7 @@ export class Terry extends Character {
           h: 105,
           anchorX: 33,
           anchorY: 97,
-          durationMs: 67,
+          durationMs: 40,
         },
         {
           src: '/assets/img/characters/terry/heavy-punch/3.png',
@@ -546,7 +1008,7 @@ export class Terry extends Character {
           h: 105,
           anchorX: 33,
           anchorY: 97,
-          durationMs: 133,
+          durationMs: 180,
         },
         {
           src: '/assets/img/characters/terry/heavy-punch/4.png',
@@ -554,7 +1016,7 @@ export class Terry extends Character {
           h: 105,
           anchorX: 33,
           anchorY: 97,
-          durationMs: 67,
+          durationMs: 40,
         },
         {
           src: '/assets/img/characters/terry/heavy-punch/5.png',
@@ -562,7 +1024,7 @@ export class Terry extends Character {
           h: 105,
           anchorX: 33,
           anchorY: 97,
-          durationMs: 100,
+          durationMs: 60,
         },
       ],
     },
@@ -707,8 +1169,8 @@ export class Terry extends Character {
       // not during the windup.
       voices: [{ src: '/assets/sfx/terry/terry-crackshoot.mp3', frame: 4 }],
       whiffSrc: '/assets/sfx/misc/special-travel.mp3',
-      // 25% of stage width — comparable to a forward jump (30%), tuned
-      // shorter since the active hit window is mid-flip not the apex.
+      // 25% of stage width — a touch shorter than a forward jump (40%),
+      // tuned shorter since the active hit window is mid-flip not the apex.
       travelDistancePct: 0.25,
       // X+Y travel runs through frame 6; frame 7 pins to ground for the
       // landing pose (see `_physicsTick` past-travel-end branch).
