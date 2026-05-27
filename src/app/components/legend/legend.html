@@ -1,0 +1,48 @@
+@if (!open()) {
+  <button
+    class="fixed top-2 right-2 z-50 px-3 py-1 bg-white/80 text-black text-sm rounded hover:bg-white"
+    (click)="toggle()"
+    aria-label="Show controls"
+  >
+    Controls
+  </button>
+} @else {
+  <div
+    class="fixed top-2 right-2 z-50 w-72 max-w-[80vw] p-4 rounded bg-black/80 text-white text-sm shadow-lg"
+    role="dialog"
+    aria-label="Controls"
+  >
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-bold tracking-wide">Controls</h3>
+      <button
+        class="px-2 leading-none text-lg hover:bg-white/20 rounded"
+        (click)="toggle()"
+        aria-label="Hide controls"
+      >&times;</button>
+    </div>
+
+    <h4 class="font-semibold opacity-70 mb-1">Movement</h4>
+    <ul class="space-y-1 mb-3">
+      <li><kbd>&larr;</kbd> <kbd>&rarr;</kbd> Walk</li>
+      <li><kbd>&darr;</kbd> Crouch</li>
+      <li><kbd>&uarr;</kbd> Jump</li>
+      <li><kbd>&larr;</kbd><kbd>&larr;</kbd> Backstep</li>
+    </ul>
+
+    <h4 class="font-semibold opacity-70 mb-1">Attacks</h4>
+    <ul class="space-y-1 mb-3">
+      <li><kbd>A</kbd> Light punch</li>
+      <li><kbd>S</kbd> Heavy punch</li>
+      <li><kbd>Z</kbd> Light kick</li>
+      <li><kbd>X</kbd> Heavy kick</li>
+    </ul>
+
+    <h4 class="font-semibold opacity-70 mb-1">Specials</h4>
+    <ul class="space-y-1">
+      <li><kbd>&darr;</kbd><kbd>&larr;</kbd> + <kbd>A</kbd>/<kbd>S</kbd> Burning Knuckle</li>
+      <li><kbd>&darr;</kbd><kbd>&larr;</kbd> + <kbd>Z</kbd>/<kbd>X</kbd> Crack Shoot</li>
+      <li><kbd>&darr;</kbd><kbd>&rarr;</kbd> + <kbd>A</kbd>/<kbd>S</kbd> Power Wave</li>
+      <li><kbd>&darr;</kbd><kbd>&uarr;</kbd> + <kbd>A</kbd>/<kbd>S</kbd> Rising Tackle</li>
+    </ul>
+  </div>
+}
