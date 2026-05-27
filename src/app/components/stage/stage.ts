@@ -15,6 +15,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { Character } from '../character/character';
+import { Projectile } from '../projectile/projectile';
+import { ProjectileSpawnRequest } from '../../models/character';
 import { InputService } from '../../services/input.service';
 import { GameLoopService } from '../../services/game-loop.service';
 
@@ -72,6 +74,7 @@ export abstract class Stage {
 
   readonly stageEl = viewChild.required<ElementRef<HTMLElement>>('stageEl');
   readonly characterHost = viewChild.required('characterHost', { read: ViewContainerRef });
+  readonly projectileHost = viewChild.required('projectileHost', { read: ViewContainerRef });
 
   /** Shared services exposed to subclasses so they can read input state
    * and the game-loop tick from inside `_onTick`. Kept protected (not
@@ -86,6 +89,19 @@ export abstract class Stage {
   /** The spawned character instance. `null` until afterNextRender creates it. */
   readonly character = signal<Character | null>(null);
   private _characterRef?: ComponentRef<Character>;
+
+  /** Live projectile component refs. Concurrency v1 is capped at 1 in
+   * `_spawnProjectile` — additional spawn requests while a projectile
+   * is on screen are dropped on the floor. Per-tick drain in the loop
+   * effect destroys instances whose `expired()` signal is true. */
+  private _projectileRefs = signal<ComponentRef<Projectile>[]>([]);
+
+  /** True when any projectile is on screen. Forwarded into the
+   * character as an input so its `_tryAttack` can suppress the entire
+   * cast (animation + voice cues) when the concurrency cap is hit — not
+   * just the projectile spawn. Without this, the cast animation plays
+   * pointlessly while the spawn is silently dropped. */
+  readonly hasActiveProjectile = computed(() => this._projectileRefs().length > 0);
 
   readonly blockedRight = computed(() => {
     const c = this.character();
@@ -124,16 +140,59 @@ export abstract class Stage {
       this._characterRef.setInput('worldWidth', this.width());
       this._characterRef.setInput('blockedRight', this.blockedRight());
       this._characterRef.setInput('blockedLeft', this.blockedLeft());
+      this._characterRef.setInput('projectileActive', this.hasActiveProjectile());
     });
 
-    // Per-tick subclass hook. Gated on `character()` so subclass logic
-    // doesn't run before the character exists.
+    // Subscribe to the character's projectile-spawn output once it's
+    // spawned. Each emit triggers `_spawnProjectile` which creates the
+    // configured component into `#projectileHost`. `onCleanup` unhooks
+    // when the character changes or this directive tears down.
+    effect((onCleanup) => {
+      const inst = this.character();
+      if (!inst) return;
+      const sub = inst.projectileSpawnRequested.subscribe((req) => {
+        untracked(() => this._spawnProjectile(req));
+      });
+      onCleanup(() => sub.unsubscribe());
+    });
+
+    // Per-tick subclass hook + projectile cleanup. Gated on `character()`
+    // so subclass logic doesn't run before the character exists.
     effect(() => {
       this.loop.tick();
       untracked(() => {
         if (this.character()) this._onTick();
+        // Sweep expired projectiles. O(n) over live count — fine at the
+        // concurrency cap of 1.
+        const refs = this._projectileRefs();
+        const live = refs.filter((r) => {
+          if (r.instance.expired()) {
+            r.destroy();
+            return false;
+          }
+          return true;
+        });
+        if (live.length !== refs.length) this._projectileRefs.set(live);
       });
     });
+  }
+
+  /** Instantiate a projectile into `#projectileHost`. Concurrency v1
+   * caps the on-screen count at 1 — additional requests are dropped
+   * so a button-mash doesn't queue waves indefinitely. */
+  private _spawnProjectile(req: ProjectileSpawnRequest): void {
+    if (this._projectileRefs().length > 0) return;
+    const cls = req.config.componentClass as Type<Projectile>;
+    const ref = this.projectileHost().createComponent(cls);
+    ref.setInput('worldWidth', this.width());
+    ref.setInput('spawnX', req.worldX);
+    ref.setInput('spawnY', req.worldY);
+    ref.setInput('direction', req.direction);
+    ref.setInput('leftLimit', this._leftLimit());
+    ref.setInput('rightLimit', this._rightLimit());
+    ref.setInput('speedOverride', req.config.speed);
+    ref.setInput('travelDistancePctOverride', req.config.travelDistancePct);
+    this._projectileRefs.update((list) => [...list, ref]);
   }
 
   /** Subclass hook — runs once after the stage view is rendered and

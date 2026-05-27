@@ -9,6 +9,11 @@
   // land roughly on top of the rail. Inherited by the child character
   // component via CSS custom-property cascade.
   --character-foot-offset: -10%;
+  // Y of the ground line measured from the bottom of `.w-full.relative`.
+  // Train height (16.69cqw) minus Terry's foot-overlap (2.5cqw = 10% of
+  // 25cqw idle) = where Terry's feet actually plant. Used by projectile
+  // components to render at ground level via `bottom: var(--ground-y)`.
+  --ground-y: 6cqw;
 }
 
 .stage {
@@ -56,23 +61,57 @@
 }
 
 @keyframes terry-stage-pan {
-  from { background-position-x: 0%; }
-  to   { background-position-x: 1000%; }
+  from {
+    background-position-x: 0%;
+  }
+  to {
+    background-position-x: 1000%;
+  }
 }
 
 @keyframes terry-misc-pan {
-  from { background-position-x: 0%; }
-  to   { background-position-x: 1000%; }
+  from {
+    background-position-x: 0%;
+  }
+  to {
+    background-position-x: 1000%;
+  }
 }
 
 @keyframes terry-train-bump {
-  0%   {}
-  5%   { margin-top: 10px; transform: translateY(-10px); }
-  10%  { margin-top: 0px;  transform: translateY(0px); }
-  15%  { margin-top: 10px; transform: translateY(-10px); }
-  25%,40% { margin-top: 0px; transform: translateY(0px); }
-  45%  { margin-top: 10px; transform: translateY(-10px); }
-  50%  { margin-top: 0px;  transform: translateY(0px); }
-  55%  { margin-top: 10px; transform: translateY(-10px); }
-  60%  { margin-top: 0px;  transform: translateY(0px); }
+  0% {
+  }
+  5% {
+    margin-top: 10px;
+    transform: translateY(-10px);
+  }
+  10% {
+    margin-top: 0px;
+    transform: translateY(0px);
+  }
+  15% {
+    margin-top: 10px;
+    transform: translateY(-10px);
+  }
+  25%,
+  40% {
+    margin-top: 0px;
+    transform: translateY(0px);
+  }
+  45% {
+    margin-top: 10px;
+    transform: translateY(-10px);
+  }
+  50% {
+    margin-top: 0px;
+    transform: translateY(0px);
+  }
+  55% {
+    margin-top: 10px;
+    transform: translateY(-10px);
+  }
+  60% {
+    margin-top: 0px;
+    transform: translateY(0px);
+  }
 }

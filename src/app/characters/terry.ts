@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Character } from '../components/character/character';
 import { AnimationData, AnimationName, CharacterVoices, SpecialMove } from '../models/character';
+import { PowerWave } from '../projectiles/power-wave';
 import {
   BURNING_KNUCKLE_FRAMES,
   CRACK_SHOOT_FRAMES,
@@ -1320,11 +1321,11 @@ export class Terry extends Character {
       },
     },
     /** Power Wave (light) â€” QCF projectile cast. Terry stays planted (no
-     * X or Y travel â€” the wave projectile, added later, is what flies
-     * forward). Frames 0-3 are the windup (settle â†’ gather â†’ charge ball
-     * overhead â†’ cock back). Frame 4 is the lunge / release pose. Frame 5
-     * is the arm-extended pose where the wave would spawn. Frame 6 is
-     * recovery. */
+     * X or Y travel â€” the wave projectile is what flies forward).
+     * Frames 0-3 are the windup (settle â†’ gather â†’ charge ball
+     * overhead â†’ cock back). Frame 4 is the lunge / release pose.
+     * Frame 5 is the arm-extended pose where the wave SPAWNS, same beat
+     * as the "Wave!" voice cue. Frame 6 is recovery. */
     {
       name: 'powerWave',
       motion: ['down', 'right'],
@@ -1335,14 +1336,22 @@ export class Terry extends Character {
         { src: 'assets/sfx/terry/terry-power-wave-1.mp3', frame: 0 },
         { src: 'assets/sfx/terry/terry-power-wave-2.mp3', frame: 5 },
       ],
-      // No whiff â€” Power Wave is a stationary cast; the projectile (added
-      // later) will own its own travel/impact SFX.
+      // No whiff â€” Power Wave is a stationary cast; the projectile owns
+      // its own travel/impact SFX (added separately when those clips ship).
       frames: {
         frames: withDurations(POWER_WAVE_FRAMES, [40, 70, 90, 80, 80, 100, 150]),
       },
+      projectile: {
+        componentClass: PowerWave,
+        spawnFrame: 5,
+        spawnOffsetX: 40,
+        spawnOffsetY: 0,
+      },
     },
-    /** Power Wave (heavy) â€” same sprites and motion as the light variant;
-     * the windup frames (1-3) hold longer to sell the bigger charge. */
+    /** Power Wave (heavy) â€” same sprites, motion, and projectile class
+     * as the light variant; windup frames (1-3) hold longer to sell
+     * the bigger charge, and the projectile travels noticeably faster
+     * via the per-spawn `speed` override on `ProjectileSpawn`. */
     {
       name: 'powerWaveHeavy',
       motion: ['down', 'right'],
@@ -1353,6 +1362,15 @@ export class Terry extends Character {
       ],
       frames: {
         frames: withDurations(POWER_WAVE_FRAMES, [50, 130, 160, 130, 80, 110, 170]),
+      },
+      projectile: {
+        componentClass: PowerWave,
+        spawnFrame: 5,
+        spawnOffsetX: 40,
+        spawnOffsetY: 0,
+        // Heavy wave is ~1.5x the light variant's speed â€” reads as a
+        // more committed cast with a faster, harder-to-react-to wave.
+        speed: 22,
       },
     },
   ];

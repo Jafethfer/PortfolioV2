@@ -42,7 +42,7 @@ Keep BOTH around. The cropping tool needs the source (light-teal frame boxes mar
 
 ## Tooling
 
-Lives in a Jimp install at `C:\Users\jafet\AppData\Local\Temp\bg-removal\` (Node v25). Set up once via `npm init -y && npm install jimp` in that folder.
+Lives in a Jimp install at `C:\Users\jafet\Documents\PortfolioV2Assets\` (Node v25). Set up once via `npm install` in that folder (the `package.json` already declares the Jimp dep). Kept OUTSIDE the repo (deps are heavyweight, workflow is one-off) but inside `Documents\` so Windows doesn't clear it on reboot like it did the previous `\Temp\bg-removal\` location.
 
 ### `remove-bg.mjs` — background removal
 ```
@@ -67,16 +67,21 @@ node sprite-tool.mjs crop    <source> <transparent> <row> <frames> <out> [align=
 
 ## Row → animation mapping
 
-| Row | Frames | File (in `public/assets/img/`) | CSS class | `CharacterConfig.animations` key |
-|-----|--------|--------------------------------|-----------|----------------------------------|
-| 0   | 4 | `terry-idle.png` | `.terry-idle` | `idle` |
-| 2   | 2 | `terry-crouch.png` | `.terry-crouch` (entry, plays once) + `.terry-crouch-still` (static frame 1) | `crouch` / `crouchStill` |
-| 3   | 4 | `terry-walk.png` | `.terry-forward` | `forward` |
-| 4   | 4 | `terry-backwards.png` | `.terry-backwards` | `backwards` |
-| 6   | 8 | `terry-jump-forward.png` | `.terry-jump-forward` | `jumpForward` |
-| 7   | 6 | `terry-jump-backward.png` | `.terry-jump-backward` | `jumpBackward` |
-| 9   | 6 | `terry-crouch-forward.png` | `.terry-crouch-forward` | `crouchForward` |
-| 26  | 3 | `terry-light-punch.png` | `.terry-light-punch` (one-shot, `forwards`) | `lightPunch` |
+Row indices below match the rewritten `sprite-tool.mjs` (79 detected rows). The original tool's 67-row indexing differed for rows after #9 — re-run `node sprite-tool.mjs analyze ...` if a mapping doesn't match your sheet.
+
+| Row | Frames | Folder (in `public/assets/img/characters/terry/`) | Notes |
+|-----|--------|--------------------------------|-------|
+| 0   | 4 | `idle/` | standing baseline (107px H) |
+| 2   | 2 | `crouch/` | entry + crouchStill |
+| 3   | 4 | `walk/` | forward |
+| 4   | 4 | `backwards/` | walk-back |
+| 6   | 8 | `jump-forward/` | |
+| 7   | 6 | `jump-backward/` | |
+| 9   | 6 | `crouch-forward/` | |
+| 50  | 7 | `power-wave/` | casting (Power Wave) — Terry's body |
+| 51  | 6 | `power-wave/projectile/` | flame projectile strip, sub-row below #50 |
+
+Other rows (light/heavy normals, Crack Shoot, Burning Knuckle, Rising Tackle) live on the sheet but weren't tabulated here — read their frame-data files for source rows when needed.
 
 Vertical jump (`.terry-jump-up` / `.terry-jump-fall` / `.terry-jump-ground`) still uses the legacy hand-cropped `terry-jump.png` — not from the sheet pipeline.
 

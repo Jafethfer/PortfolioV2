@@ -6,6 +6,7 @@ import {
   effect,
   inject,
   input,
+  output,
   signal,
   untracked,
   viewChild,
@@ -17,6 +18,8 @@ import {
   AttackButton,
   CharacterVoices,
   Direction,
+  ProjectileSpawn,
+  ProjectileSpawnRequest,
   SpecialMove,
 } from '../../models/character';
 import { InputService } from '../../services/input.service';
@@ -141,6 +144,11 @@ export abstract class Character {
    * into a per-tick px step at takeoff. The character has no other way of
    * knowing â€” it doesn't reach into the DOM for stage geometry. */
   readonly worldWidth = input(0);
+  /** True when the stage has at least one projectile alive (forwarded from
+   * `Stage.hasActiveProjectile`). Specials whose `projectile` config is set
+   * are gated on this — without the gate, the cast animation plays in full
+   * but the spawn is silently dropped by the stage's concurrency cap. */
+  readonly projectileActive = input(false);
 
   readonly el = viewChild.required<ElementRef<HTMLElement>>('el');
 
@@ -167,6 +175,14 @@ export abstract class Character {
    * first afterNextRender fires causes `worldX` (with `_initialX === 0`)
    * to fall well below `leftLimit`, falsely tripping `blockedLeft`. */
   readonly ready = signal(false);
+
+  /** Fires once per projectile-spawning special when the spawn frame is
+   * reached. Stage subscribes via effect on the spawned character and
+   * instantiates the projectile in its `#projectileHost` slot. Keeps
+   * the "character knows nothing about the stage" rule intact — the
+   * character just declares it needs a thing spawned at a coordinate;
+   * the stage handles instantiation and cleanup. */
+  readonly projectileSpawnRequested = output<ProjectileSpawnRequest>();
 
   /** Direction the character is currently trying to move in. Used by the
    * stage's per-tick scroll logic: if `motionIntent` is `'right'` AND
@@ -271,6 +287,11 @@ export abstract class Character {
    * tick is reached; the queue is cleared on attack end. */
   private _pendingVoiceCues: { src: string; volume: number; tick: number }[] = [];
   private _pendingWhiffSrc: string | undefined = undefined;
+  /** Queue of projectile-spawn events from the active special, each
+   * tagged with the absolute tick at which `projectileSpawnRequested`
+   * should fire. Drained per-tick in `_physicsTick`, same shape as the
+   * voice-cue queue. */
+  private _pendingProjectileSpawns: { config: ProjectileSpawn; tick: number }[] = [];
   private _pendingWhiffVolume = 0;
   /** The Audio element from the currently-playing jump SFX, so a special
    * that cancels the jump (e.g. Rising Tackle on `downâ†’up+P`, where the
@@ -626,6 +647,14 @@ export abstract class Character {
     // that and route Rising Tackle into the air heavy punch instead.
     const candidates = this.specials
       .filter((s) => s.button === button)
+      // Suppress projectile-spawning specials when one is already on
+      // screen — otherwise the cast plays in full and the Stage's
+      // concurrency cap silently drops the spawn. matchMotion() consumes
+      // events, so filtering BEFORE the loop also preserves the QCF
+      // motion for any non-projectile fallback (currently none, but
+      // future-proofs against a heavy variant gaining a different
+      // motion).
+      .filter((s) => !(s.projectile && this.projectileActive()))
       .slice()
       .sort((a, b) => b.motion.length - a.motion.length);
     for (const s of candidates) {
@@ -741,6 +770,23 @@ export abstract class Character {
           tick: this._attackStartTick + windupTicks,
         });
       }
+    }
+    // Queue the projectile spawn (if any) on its target tick. Same
+    // windup math as voice cues — sum of frame durations up to
+    // `spawnFrame`, converted to ticks. The spawn world-X is computed
+    // at emit time (in `_physicsTick`), not now, so the projectile
+    // appears at Terry's CURRENT position even if he was scrolled
+    // during the windup.
+    if (s.projectile && this.inAttack() && this.animation() === s.name) {
+      const spawnFrame = s.projectile.spawnFrame ?? 0;
+      const windupMs = s.frames.frames
+        .slice(0, spawnFrame)
+        .reduce((sum, f) => sum + f.durationMs, 0);
+      const windupTicks = Math.round(windupMs / GameLoopService.TICK_MS);
+      this._pendingProjectileSpawns.push({
+        config: s.projectile,
+        tick: this._attackStartTick + windupTicks,
+      });
     }
     // `_startAttack` no-ops when blocked by jump/attack lock â€” only commit
     // travel state when the special actually launched. The animation-name
@@ -984,6 +1030,26 @@ export abstract class Character {
           return true;
         });
       }
+      // Drain projectile spawns whose target tick has been reached.
+      // Compute world-X at emit time (not queue time) so the projectile
+      // anchors to Terry's CURRENT position. Sprite-pixel offsets are
+      // scaled by the rendered character height vs the 107 baseline,
+      // same conversion the per-frame anchor math uses.
+      if (this._pendingProjectileSpawns.length > 0) {
+        this._pendingProjectileSpawns = this._pendingProjectileSpawns.filter((evt) => {
+          if (tick < evt.tick) return true;
+          const scale = this.el().nativeElement.clientHeight / 107;
+          const offX = (evt.config.spawnOffsetX ?? 0) * scale;
+          const offY = (evt.config.spawnOffsetY ?? 0) * scale;
+          this.projectileSpawnRequested.emit({
+            config: evt.config,
+            worldX: this.worldX() + offX,
+            worldY: offY,
+            direction: 'right',
+          });
+          return false;
+        });
+      }
       if (travelElapsed >= 0 && tick < this._specialTravelEndTick) {
         if (this._specialXStep > 0 && !this.blockedRight()) {
           this.accumulated.update((x) => x + this._specialXStep);
@@ -1033,6 +1099,7 @@ export abstract class Character {
           this._specialFallAfterArc = false;
           this._pendingWhiffSrc = undefined;
           this._pendingVoiceCues = [];
+          this._pendingProjectileSpawns = [];
           // Custom descent (not the jump physics) â€” jump's ascending
           // phase would otherwise push Y further up for the first
           // `apexTicks` ticks before the descent kicks in. Handled at
@@ -1047,6 +1114,7 @@ export abstract class Character {
         this._specialFallAfterArc = false;
         this._pendingWhiffSrc = undefined;
         this._pendingVoiceCues = [];
+        this._pendingProjectileSpawns = [];
         this.accumulatedY.set(0);
       }
       return;
