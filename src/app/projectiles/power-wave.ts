@@ -15,6 +15,11 @@ import { POWER_WAVE_PROJECTILE_FRAMES } from './power-wave-frames';
 })
 export class PowerWave extends Projectile {
   protected override readonly frames = { frames: POWER_WAVE_PROJECTILE_FRAMES, loop: true };
-  protected override readonly speed = 14;
+  // Light variant baseline. Must outpace `Stage.walkScrollRate` (20)
+  // so the wave moves forward in screen-space even when Terry walks
+  // into the edge — otherwise the world-scroll shift drags it
+  // backward, and the wave reads as a static fireball drifting back
+  // toward Terry. Heavy variant overrides this via SpecialMove.speed.
+  protected override readonly speed = 24;
   protected override readonly travelDistancePct = 1.1;
 }

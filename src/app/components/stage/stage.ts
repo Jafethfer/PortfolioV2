@@ -204,6 +204,21 @@ export abstract class Stage {
    * spawned. Override to implement scroll/parallax/animation behavior. */
   protected _onTick(): void {}
 
+  /** Apply a world-scroll shift to every live projectile so they stay
+   * anchored to the world (not the screen) as the camera moves.
+   * Subclasses call this from `_onTick` after scrolling, with `deltaX`
+   * = the per-tick screen offset every world-fixed point should
+   * receive. For a Terry-style train scroll: when `train.scrollLeft`
+   * increases by N (camera moves right), pass `-N` so projectiles
+   * shift left to match. Without this, projectiles drift in screen
+   * relative to the world as Terry walks at the stage edge. */
+  protected shiftProjectiles(deltaX: number): void {
+    if (deltaX === 0) return;
+    for (const ref of this._projectileRefs()) {
+      ref.instance.accumulated.update((x) => x + deltaX);
+    }
+  }
+
   /** Helper for subclasses with animated layers. Returns a `currentSrc`
    * signal (bind it to `[src]` or `[style.background-image]`) and an
    * `advance(tick)` method to call from `_onTick`. Single-frame inputs

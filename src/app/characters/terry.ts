@@ -1368,9 +1368,11 @@ export class Terry extends Character {
         spawnFrame: 5,
         spawnOffsetX: 40,
         spawnOffsetY: 0,
-        // Heavy wave is ~1.5x the light variant's speed â€” reads as a
-        // more committed cast with a faster, harder-to-react-to wave.
-        speed: 22,
+        // Heavy wave is 1.5x the light variant's 24 px/tick â€” reads as
+        // a more committed cast with a faster, harder-to-react-to wave.
+        // Always well above `walkScrollRate` (20) so it never gets
+        // dragged backward by world-scroll compensation.
+        speed: 36,
       },
     },
   ];

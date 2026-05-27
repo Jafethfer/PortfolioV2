@@ -60,11 +60,21 @@ export class TerryStage extends Stage {
     const rate = specialV > 0
       ? specialV
       : (this.input.downKey() ? this.crouchScrollRate : this.walkScrollRate);
+    // Capture the scroll position BEFORE applying the delta so we can
+    // compute the actual change (clamped by the train's scroll bounds)
+    // and forward it to projectiles as a world-shift. This keeps a wave
+    // anchored to the world point where it was fired instead of
+    // drifting in screen as the train rushes past underneath.
+    const before = train.scrollLeft;
     if (dir === 'right' && this.blockedRight()
         && train.scrollLeft + train.clientWidth < trainImg.scrollWidth) {
       train.scrollLeft += rate;
     } else if (dir === 'left' && this.blockedLeft() && train.scrollLeft > 0) {
       train.scrollLeft -= rate;
     }
+    // train.scrollLeft increase = camera moves right = world-fixed
+    // points shift LEFT in screen by the same amount. Pass the negated
+    // delta so live projectiles compensate.
+    this.shiftProjectiles(-(train.scrollLeft - before));
   }
 }
