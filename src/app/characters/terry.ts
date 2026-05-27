@@ -26,26 +26,26 @@ import {
 })
 export class Terry extends Character {
   protected override readonly voices: CharacterVoices = {
-    lightPunch: '/assets/sfx/terry/terry-light-punch.mp3',
-    heavyPunch: '/assets/sfx/terry/terry-heavy-punch.mp3',
-    // Reuse the punch shout for kicks — same exertion grunt works for both.
-    lightKick: '/assets/sfx/terry/terry-light-punch.mp3',
-    heavyKick: '/assets/sfx/terry/terry-heavy-punch.mp3',
-    taunt: '/assets/sfx/terry/terry-taunt.mp3',
+    lightPunch: 'assets/sfx/terry/terry-light-punch.mp3',
+    heavyPunch: 'assets/sfx/terry/terry-heavy-punch.mp3',
+    // Reuse the punch shout for kicks â€” same exertion grunt works for both.
+    lightKick: 'assets/sfx/terry/terry-light-punch.mp3',
+    heavyKick: 'assets/sfx/terry/terry-heavy-punch.mp3',
+    taunt: 'assets/sfx/terry/terry-taunt.mp3',
     // Non-voice combat SFX live in `misc/` because they're character-agnostic
     // (every fighter's jab makes the same whoosh). Played at `sfxVolume`
     // alongside the character-specific voice clip.
-    lightPunchWhiff: '/assets/sfx/misc/light-punch-whiff.mp3',
-    heavyPunchWhiff: '/assets/sfx/misc/heavy-punch-whiff.mp3',
-    // Reuse the punch whiff for kicks — same generic whoosh works for both.
-    lightKickWhiff: '/assets/sfx/misc/light-punch-whiff.mp3',
-    heavyKickWhiff: '/assets/sfx/misc/heavy-punch-whiff.mp3',
-    jump: '/assets/sfx/misc/jump.mp3',
-    // lightKick / heavyKick still TBD — no SFX file yet.
+    lightPunchWhiff: 'assets/sfx/misc/light-punch-whiff.mp3',
+    heavyPunchWhiff: 'assets/sfx/misc/heavy-punch-whiff.mp3',
+    // Reuse the punch whiff for kicks â€” same generic whoosh works for both.
+    lightKickWhiff: 'assets/sfx/misc/light-punch-whiff.mp3',
+    heavyKickWhiff: 'assets/sfx/misc/heavy-punch-whiff.mp3',
+    jump: 'assets/sfx/misc/jump.mp3',
+    // lightKick / heavyKick still TBD â€” no SFX file yet.
   };
 
   /** Per-frame (data-driven) animations. Each frame has its own image and an
-   * anchor (foot-centre) — the runtime positions every frame so its anchor
+   * anchor (foot-centre) â€” the runtime positions every frame so its anchor
    * lands at the same world X, which keeps Terry's body stable even when a
    * limb extends. Cropped via `sprite-tool.mjs crop-frames`. */
   protected override readonly animationFrames: Partial<Record<AnimationName, AnimationData>> = {
@@ -53,7 +53,7 @@ export class Terry extends Character {
       loop: true,
       frames: [
         {
-          src: '/assets/img/characters/terry/idle/0.png',
+          src: 'assets/img/characters/terry/idle/0.png',
           w: 64,
           h: 107,
           anchorX: 31,
@@ -61,7 +61,7 @@ export class Terry extends Character {
           durationMs: 150,
         },
         {
-          src: '/assets/img/characters/terry/idle/1.png',
+          src: 'assets/img/characters/terry/idle/1.png',
           w: 64,
           h: 107,
           anchorX: 31,
@@ -69,7 +69,7 @@ export class Terry extends Character {
           durationMs: 150,
         },
         {
-          src: '/assets/img/characters/terry/idle/2.png',
+          src: 'assets/img/characters/terry/idle/2.png',
           w: 65,
           h: 107,
           anchorX: 31,
@@ -77,7 +77,7 @@ export class Terry extends Character {
           durationMs: 150,
         },
         {
-          src: '/assets/img/characters/terry/idle/3.png',
+          src: 'assets/img/characters/terry/idle/3.png',
           w: 64,
           h: 107,
           anchorX: 31,
@@ -90,7 +90,7 @@ export class Terry extends Character {
      * Walk-forward step cycle. The auto-detected foot/body anchors drift
      * by 10+ sprite-px between frames because Terry's stepping legs (and
      * to a lesser extent, his swinging arm) shift the centroid. Hand-set
-     * `anchorX` to `floor(w/2)` instead — each frame's bounding box is
+     * `anchorX` to `floor(w/2)` instead â€” each frame's bounding box is
      * roughly centred on the body in the source sheet, so frame-centre is
      * a more stable anchor than detected feet for step cycles.
      */
@@ -98,7 +98,7 @@ export class Terry extends Character {
       loop: true,
       frames: [
         {
-          src: '/assets/img/characters/terry/walk/0.png',
+          src: 'assets/img/characters/terry/walk/0.png',
           w: 69,
           h: 103,
           anchorX: 34,
@@ -106,7 +106,7 @@ export class Terry extends Character {
           durationMs: 175,
         },
         {
-          src: '/assets/img/characters/terry/walk/1.png',
+          src: 'assets/img/characters/terry/walk/1.png',
           w: 63,
           h: 103,
           anchorX: 31,
@@ -114,7 +114,7 @@ export class Terry extends Character {
           durationMs: 175,
         },
         {
-          src: '/assets/img/characters/terry/walk/2.png',
+          src: 'assets/img/characters/terry/walk/2.png',
           w: 61,
           h: 103,
           anchorX: 30,
@@ -122,7 +122,7 @@ export class Terry extends Character {
           durationMs: 175,
         },
         {
-          src: '/assets/img/characters/terry/walk/3.png',
+          src: 'assets/img/characters/terry/walk/3.png',
           w: 58,
           h: 103,
           anchorX: 29,
@@ -131,12 +131,12 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Same step-cycle treatment as `forward` — frame-centre anchors. */
+    /** Same step-cycle treatment as `forward` â€” frame-centre anchors. */
     backwards: {
       loop: true,
       frames: [
         {
-          src: '/assets/img/characters/terry/backwards/0.png',
+          src: 'assets/img/characters/terry/backwards/0.png',
           w: 62,
           h: 105,
           anchorX: 31,
@@ -144,7 +144,7 @@ export class Terry extends Character {
           durationMs: 175,
         },
         {
-          src: '/assets/img/characters/terry/backwards/1.png',
+          src: 'assets/img/characters/terry/backwards/1.png',
           w: 65,
           h: 105,
           anchorX: 32,
@@ -152,7 +152,7 @@ export class Terry extends Character {
           durationMs: 175,
         },
         {
-          src: '/assets/img/characters/terry/backwards/2.png',
+          src: 'assets/img/characters/terry/backwards/2.png',
           w: 59,
           h: 105,
           anchorX: 29,
@@ -160,7 +160,7 @@ export class Terry extends Character {
           durationMs: 175,
         },
         {
-          src: '/assets/img/characters/terry/backwards/3.png',
+          src: 'assets/img/characters/terry/backwards/3.png',
           w: 62,
           h: 105,
           anchorX: 31,
@@ -169,15 +169,15 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Backstep — quick backwards hop, 2 frames from row 8. Frame 0 is the
+    /** Backstep â€” quick backwards hop, 2 frames from row 8. Frame 0 is the
      * launch pose (Terry leaning back, planting his front foot), frame 1
-     * the recovery (arms pulled into guard). Body-anchored — both frames'
+     * the recovery (arms pulled into guard). Body-anchored â€” both frames'
      * `anchorX` is close to idle's 31 so the body stays centered as Terry
      * slides backwards. */
     backstep: {
       frames: [
         {
-          src: '/assets/img/characters/terry/backstep/0.png',
+          src: 'assets/img/characters/terry/backstep/0.png',
           w: 73,
           h: 92,
           anchorX: 29,
@@ -185,7 +185,7 @@ export class Terry extends Character {
           durationMs: 380,
         },
         {
-          src: '/assets/img/characters/terry/backstep/1.png',
+          src: 'assets/img/characters/terry/backstep/1.png',
           w: 57,
           h: 92,
           anchorX: 31,
@@ -194,13 +194,13 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Crouch entry: standing → deep crouch. Plays once, holds on the deep
+    /** Crouch entry: standing â†’ deep crouch. Plays once, holds on the deep
      * crouch frame until input releases. Foot-anchored since both poses have
      * feet on the ground. */
     crouch: {
       frames: [
         {
-          src: '/assets/img/characters/terry/crouch/0.png',
+          src: 'assets/img/characters/terry/crouch/0.png',
           w: 56,
           h: 87,
           anchorX: 27,
@@ -208,7 +208,7 @@ export class Terry extends Character {
           durationMs: 45,
         },
         {
-          src: '/assets/img/characters/terry/crouch/1.png',
+          src: 'assets/img/characters/terry/crouch/1.png',
           w: 58,
           h: 87,
           anchorX: 29,
@@ -217,12 +217,12 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Held deep-crouch pose — reached via crouchForward → release direction.
+    /** Held deep-crouch pose â€” reached via crouchForward â†’ release direction.
      * Reuses crouch's frame 1 as a single static frame. */
     crouchStill: {
       frames: [
         {
-          src: '/assets/img/characters/terry/crouch/1.png',
+          src: 'assets/img/characters/terry/crouch/1.png',
           w: 58,
           h: 87,
           anchorX: 29,
@@ -231,13 +231,13 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Crouch-walk step cycle. Body-anchored (feet swing) — `anchorY = h-1`
+    /** Crouch-walk step cycle. Body-anchored (feet swing) â€” `anchorY = h-1`
      * means the image bottom aligns to the ground. */
     crouchForward: {
       loop: true,
       frames: [
         {
-          src: '/assets/img/characters/terry/crouch-forward/0.png',
+          src: 'assets/img/characters/terry/crouch-forward/0.png',
           w: 53,
           h: 77,
           anchorX: 30,
@@ -245,7 +245,7 @@ export class Terry extends Character {
           durationMs: 117,
         },
         {
-          src: '/assets/img/characters/terry/crouch-forward/1.png',
+          src: 'assets/img/characters/terry/crouch-forward/1.png',
           w: 52,
           h: 77,
           anchorX: 26,
@@ -253,7 +253,7 @@ export class Terry extends Character {
           durationMs: 117,
         },
         {
-          src: '/assets/img/characters/terry/crouch-forward/2.png',
+          src: 'assets/img/characters/terry/crouch-forward/2.png',
           w: 55,
           h: 77,
           anchorX: 27,
@@ -261,7 +261,7 @@ export class Terry extends Character {
           durationMs: 117,
         },
         {
-          src: '/assets/img/characters/terry/crouch-forward/3.png',
+          src: 'assets/img/characters/terry/crouch-forward/3.png',
           w: 61,
           h: 77,
           anchorX: 30,
@@ -269,7 +269,7 @@ export class Terry extends Character {
           durationMs: 117,
         },
         {
-          src: '/assets/img/characters/terry/crouch-forward/4.png',
+          src: 'assets/img/characters/terry/crouch-forward/4.png',
           w: 55,
           h: 77,
           anchorX: 27,
@@ -277,7 +277,7 @@ export class Terry extends Character {
           durationMs: 117,
         },
         {
-          src: '/assets/img/characters/terry/crouch-forward/5.png',
+          src: 'assets/img/characters/terry/crouch-forward/5.png',
           w: 52,
           h: 77,
           anchorX: 26,
@@ -286,17 +286,17 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Crouching light punch — Terry stays in deep crouch and jabs forward
+    /** Crouching light punch â€” Terry stays in deep crouch and jabs forward
      * (row 34 of the sheet). Fires when A is pressed while Down is held.
      * All three frames' anchorX is pinned to body-x (~28) so the extending
-     * arm doesn't shove the torso across frame 0 → 1; matches `crouchStill`
+     * arm doesn't shove the torso across frame 0 â†’ 1; matches `crouchStill`
      * (anchorX=29) so the transition in/out of the punch stays stable.
-     * anchorY = h - 1 - 6 ≈ 63 places the body baseline matching the
-     * deep-crouch entry's anchorY=80 / h=87 (both ≈ 6 px above bbox bottom). */
+     * anchorY = h - 1 - 6 â‰ˆ 63 places the body baseline matching the
+     * deep-crouch entry's anchorY=80 / h=87 (both â‰ˆ 6 px above bbox bottom). */
     crouchLightPunch: {
       frames: [
         {
-          src: '/assets/img/characters/terry/crouch-light-punch/0.png',
+          src: 'assets/img/characters/terry/crouch-light-punch/0.png',
           w: 61,
           h: 70,
           anchorX: 28,
@@ -304,7 +304,7 @@ export class Terry extends Character {
           durationMs: 50,
         },
         {
-          src: '/assets/img/characters/terry/crouch-light-punch/1.png',
+          src: 'assets/img/characters/terry/crouch-light-punch/1.png',
           w: 88,
           h: 70,
           anchorX: 28,
@@ -312,7 +312,7 @@ export class Terry extends Character {
           durationMs: 50,
         },
         {
-          src: '/assets/img/characters/terry/crouch-light-punch/2.png',
+          src: 'assets/img/characters/terry/crouch-light-punch/2.png',
           w: 62,
           h: 70,
           anchorX: 28,
@@ -321,9 +321,9 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Crouching heavy punch — Terry stays in deep crouch and delivers a
+    /** Crouching heavy punch â€” Terry stays in deep crouch and delivers a
      * committed straight (row 35 of the sheet). Fires when S is pressed
-     * while Down is held. Five frames at 60/100/180/40/60 = 440ms total —
+     * while Down is held. Five frames at 60/100/180/40/60 = 440ms total â€”
      * matching the standing heavy's 440ms and emphasising the extended-
      * arm beat (frame 2 at 180ms, ~40% of total). The two standing
      * anticipation frames (60+40) collapse into the single crouch windup
@@ -332,7 +332,7 @@ export class Terry extends Character {
     crouchHeavyPunch: {
       frames: [
         {
-          src: '/assets/img/characters/terry/crouch-heavy-punch/0.png',
+          src: 'assets/img/characters/terry/crouch-heavy-punch/0.png',
           w: 61,
           h: 72,
           anchorX: 28,
@@ -340,7 +340,7 @@ export class Terry extends Character {
           durationMs: 60,
         },
         {
-          src: '/assets/img/characters/terry/crouch-heavy-punch/1.png',
+          src: 'assets/img/characters/terry/crouch-heavy-punch/1.png',
           w: 61,
           h: 72,
           anchorX: 29,
@@ -348,7 +348,7 @@ export class Terry extends Character {
           durationMs: 100,
         },
         {
-          src: '/assets/img/characters/terry/crouch-heavy-punch/2.png',
+          src: 'assets/img/characters/terry/crouch-heavy-punch/2.png',
           w: 97,
           h: 72,
           anchorX: 29,
@@ -356,7 +356,7 @@ export class Terry extends Character {
           durationMs: 180,
         },
         {
-          src: '/assets/img/characters/terry/crouch-heavy-punch/3.png',
+          src: 'assets/img/characters/terry/crouch-heavy-punch/3.png',
           w: 61,
           h: 72,
           anchorX: 29,
@@ -364,7 +364,7 @@ export class Terry extends Character {
           durationMs: 40,
         },
         {
-          src: '/assets/img/characters/terry/crouch-heavy-punch/4.png',
+          src: 'assets/img/characters/terry/crouch-heavy-punch/4.png',
           w: 62,
           h: 72,
           anchorX: 29,
@@ -373,18 +373,18 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Crouching light kick — Terry sweeps low (row 36 of the sheet).
+    /** Crouching light kick â€” Terry sweeps low (row 36 of the sheet).
      * Fires when Z is pressed while Down is held. Five frames at
-     * 40/40/140/40/40 = 300ms total — matches the standing light kick's
+     * 40/40/140/40/40 = 300ms total â€” matches the standing light kick's
      * 300ms and weights the extended-sweep pose (frame 2 at 140ms,
      * ~47% of total), same pattern as the heavy punches. anchorX is
      * body-mode (torso centroid) so Terry's body stays at world-X while
-     * the leg sweeps right — without that, foot-mode anchors would yank
+     * the leg sweeps right â€” without that, foot-mode anchors would yank
      * the body left as the kicking leg's foot pulls the anchor right. */
     crouchLightKick: {
       frames: [
         {
-          src: '/assets/img/characters/terry/crouch-light-kick/0.png',
+          src: 'assets/img/characters/terry/crouch-light-kick/0.png',
           w: 56,
           h: 68,
           anchorX: 27,
@@ -392,7 +392,7 @@ export class Terry extends Character {
           durationMs: 40,
         },
         {
-          src: '/assets/img/characters/terry/crouch-light-kick/1.png',
+          src: 'assets/img/characters/terry/crouch-light-kick/1.png',
           w: 71,
           h: 68,
           anchorX: 25,
@@ -400,7 +400,7 @@ export class Terry extends Character {
           durationMs: 40,
         },
         {
-          src: '/assets/img/characters/terry/crouch-light-kick/2.png',
+          src: 'assets/img/characters/terry/crouch-light-kick/2.png',
           w: 102,
           h: 68,
           anchorX: 24,
@@ -408,7 +408,7 @@ export class Terry extends Character {
           durationMs: 140,
         },
         {
-          src: '/assets/img/characters/terry/crouch-light-kick/3.png',
+          src: 'assets/img/characters/terry/crouch-light-kick/3.png',
           w: 71,
           h: 68,
           anchorX: 25,
@@ -416,7 +416,7 @@ export class Terry extends Character {
           durationMs: 40,
         },
         {
-          src: '/assets/img/characters/terry/crouch-light-kick/4.png',
+          src: 'assets/img/characters/terry/crouch-light-kick/4.png',
           w: 57,
           h: 68,
           anchorX: 28,
@@ -425,9 +425,9 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Crouching heavy kick — Terry sticks his leg high and forward (row 37
+    /** Crouching heavy kick â€” Terry sticks his leg high and forward (row 37
      * of the sheet). Fires when X is pressed while Down is held. Five
-     * frames at 80/130/280/120/160 = 770ms total — extension still
+     * frames at 80/130/280/120/160 = 770ms total â€” extension still
      * dominates (frame 2 at 280ms, ~36%), but retract (frame 3) and
      * recover (frame 4) are roughly doubled vs. the snappier punch
      * pattern so Terry eases out of the kick instead of snapping back.
@@ -438,7 +438,7 @@ export class Terry extends Character {
     crouchHeavyKick: {
       frames: [
         {
-          src: '/assets/img/characters/terry/crouch-heavy-kick/0.png',
+          src: 'assets/img/characters/terry/crouch-heavy-kick/0.png',
           w: 55,
           h: 72,
           anchorX: 27,
@@ -446,7 +446,7 @@ export class Terry extends Character {
           durationMs: 80,
         },
         {
-          src: '/assets/img/characters/terry/crouch-heavy-kick/1.png',
+          src: 'assets/img/characters/terry/crouch-heavy-kick/1.png',
           w: 69,
           h: 72,
           anchorX: 34,
@@ -454,7 +454,7 @@ export class Terry extends Character {
           durationMs: 130,
         },
         {
-          src: '/assets/img/characters/terry/crouch-heavy-kick/2.png',
+          src: 'assets/img/characters/terry/crouch-heavy-kick/2.png',
           w: 116,
           h: 72,
           anchorX: 25,
@@ -462,7 +462,7 @@ export class Terry extends Character {
           durationMs: 280,
         },
         {
-          src: '/assets/img/characters/terry/crouch-heavy-kick/3.png',
+          src: 'assets/img/characters/terry/crouch-heavy-kick/3.png',
           w: 67,
           h: 72,
           anchorX: 32,
@@ -470,7 +470,7 @@ export class Terry extends Character {
           durationMs: 120,
         },
         {
-          src: '/assets/img/characters/terry/crouch-heavy-kick/4.png',
+          src: 'assets/img/characters/terry/crouch-heavy-kick/4.png',
           w: 52,
           h: 72,
           anchorX: 25,
@@ -479,12 +479,12 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Vertical jump — ascent. Cropped from the legacy `terry-jump.png` strip
-     * (6 frames at 68×136 each); preparation through launch. */
+    /** Vertical jump â€” ascent. Cropped from the legacy `terry-jump.png` strip
+     * (6 frames at 68Ã—136 each); preparation through launch. */
     jumpUp: {
       frames: [
         {
-          src: '/assets/img/characters/terry/jump/0.png',
+          src: 'assets/img/characters/terry/jump/0.png',
           w: 68,
           h: 136,
           anchorX: 31,
@@ -492,7 +492,7 @@ export class Terry extends Character {
           durationMs: 167,
         },
         {
-          src: '/assets/img/characters/terry/jump/1.png',
+          src: 'assets/img/characters/terry/jump/1.png',
           w: 68,
           h: 136,
           anchorX: 31,
@@ -500,7 +500,7 @@ export class Terry extends Character {
           durationMs: 167,
         },
         {
-          src: '/assets/img/characters/terry/jump/2.png',
+          src: 'assets/img/characters/terry/jump/2.png',
           w: 68,
           h: 136,
           anchorX: 32,
@@ -509,12 +509,12 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Vertical jump — descent. Last frame is the "hat-down" pose; `loop:
+    /** Vertical jump â€” descent. Last frame is the "hat-down" pose; `loop:
      * false` makes the engine hold on it until the physics tick lands. */
     jumpFall: {
       frames: [
         {
-          src: '/assets/img/characters/terry/jump/3.png',
+          src: 'assets/img/characters/terry/jump/3.png',
           w: 68,
           h: 136,
           anchorX: 34,
@@ -522,7 +522,7 @@ export class Terry extends Character {
           durationMs: 167,
         },
         {
-          src: '/assets/img/characters/terry/jump/4.png',
+          src: 'assets/img/characters/terry/jump/4.png',
           w: 68,
           h: 136,
           anchorX: 37,
@@ -531,13 +531,13 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Landing pose — set by the state machine on land if it ever wants to
-     * play a recover. Currently the state machine goes idle → on land, so
+    /** Landing pose â€” set by the state machine on land if it ever wants to
+     * play a recover. Currently the state machine goes idle â†’ on land, so
      * jumpGround is wired but unused. */
     jumpGround: {
       frames: [
         {
-          src: '/assets/img/characters/terry/jump/5.png',
+          src: 'assets/img/characters/terry/jump/5.png',
           w: 69,
           h: 136,
           anchorX: 42,
@@ -546,18 +546,18 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Forward jump — ascent half. Frames 0-3 of the cropped 8-frame strip.
+    /** Forward jump â€” ascent half. Frames 0-3 of the cropped 8-frame strip.
      * Physics transitions to `jumpForwardFall` at the apex.
      *
      * Brief launch crouch (frame 0), then the rotation frames (1-3) cycle
-     * fast — quick frame cadence reads as continuous spinning motion
+     * fast â€” quick frame cadence reads as continuous spinning motion
      * instead of three separately-held poses. Total (380ms) finishes well
      * before the 500ms ascent so the engine holds on the apex pose for
      * the remaining ~120ms before the physics-driven cut to the fall. */
     jumpForward: {
       frames: [
         {
-          src: '/assets/img/characters/terry/jump-forward/0.png',
+          src: 'assets/img/characters/terry/jump-forward/0.png',
           w: 56,
           h: 136,
           anchorX: 30,
@@ -565,7 +565,7 @@ export class Terry extends Character {
           durationMs: 110,
         },
         {
-          src: '/assets/img/characters/terry/jump-forward/1.png',
+          src: 'assets/img/characters/terry/jump-forward/1.png',
           w: 68,
           h: 136,
           anchorX: 45,
@@ -573,7 +573,7 @@ export class Terry extends Character {
           durationMs: 150,
         },
         {
-          src: '/assets/img/characters/terry/jump-forward/2.png',
+          src: 'assets/img/characters/terry/jump-forward/2.png',
           w: 80,
           h: 136,
           anchorX: 40,
@@ -581,7 +581,7 @@ export class Terry extends Character {
           durationMs: 60,
         },
         {
-          src: '/assets/img/characters/terry/jump-forward/3.png',
+          src: 'assets/img/characters/terry/jump-forward/3.png',
           w: 59,
           h: 136,
           anchorX: 29,
@@ -590,7 +590,7 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Forward jump — descent half. Frames 4-6 of the cropped strip. The
+    /** Forward jump â€” descent half. Frames 4-6 of the cropped strip. The
      * landing-stand frame (7) is intentionally NOT included so the engine
      * holds on the "hat-down" pose (frame 6) until ground contact, instead
      * of cutting to the standing pose mid-air. Per-frame durations slow
@@ -598,7 +598,7 @@ export class Terry extends Character {
     jumpForwardFall: {
       frames: [
         {
-          src: '/assets/img/characters/terry/jump-forward/4.png',
+          src: 'assets/img/characters/terry/jump-forward/4.png',
           w: 80,
           h: 136,
           anchorX: 40,
@@ -606,7 +606,7 @@ export class Terry extends Character {
           durationMs: 60,
         },
         {
-          src: '/assets/img/characters/terry/jump-forward/5.png',
+          src: 'assets/img/characters/terry/jump-forward/5.png',
           w: 60,
           h: 136,
           anchorX: 30,
@@ -614,7 +614,7 @@ export class Terry extends Character {
           durationMs: 220,
         },
         {
-          src: '/assets/img/characters/terry/jump-forward/6.png',
+          src: 'assets/img/characters/terry/jump-forward/6.png',
           w: 57,
           h: 136,
           anchorX: 28,
@@ -623,11 +623,11 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Backward jump — ascent half. Frames 0-2 of the cropped 6-frame strip. */
+    /** Backward jump â€” ascent half. Frames 0-2 of the cropped 6-frame strip. */
     jumpBackward: {
       frames: [
         {
-          src: '/assets/img/characters/terry/jump-backward/0.png',
+          src: 'assets/img/characters/terry/jump-backward/0.png',
           w: 56,
           h: 105,
           anchorX: 30,
@@ -635,7 +635,7 @@ export class Terry extends Character {
           durationMs: 167,
         },
         {
-          src: '/assets/img/characters/terry/jump-backward/1.png',
+          src: 'assets/img/characters/terry/jump-backward/1.png',
           w: 80,
           h: 105,
           anchorX: 40,
@@ -643,7 +643,7 @@ export class Terry extends Character {
           durationMs: 60,
         },
         {
-          src: '/assets/img/characters/terry/jump-backward/2.png',
+          src: 'assets/img/characters/terry/jump-backward/2.png',
           w: 59,
           h: 105,
           anchorX: 29,
@@ -652,13 +652,13 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Backward jump — descent half. Frames 3-4; last frame holds for the
+    /** Backward jump â€” descent half. Frames 3-4; last frame holds for the
      * remainder of the descent. Frame 5 (landing) is omitted, same as the
      * forward variant. */
     jumpBackwardFall: {
       frames: [
         {
-          src: '/assets/img/characters/terry/jump-backward/3.png',
+          src: 'assets/img/characters/terry/jump-backward/3.png',
           w: 80,
           h: 105,
           anchorX: 40,
@@ -666,7 +666,7 @@ export class Terry extends Character {
           durationMs: 60,
         },
         {
-          src: '/assets/img/characters/terry/jump-backward/4.png',
+          src: 'assets/img/characters/terry/jump-backward/4.png',
           w: 68,
           h: 105,
           anchorX: 43,
@@ -676,10 +676,10 @@ export class Terry extends Character {
       ],
     },
     /** Recovery played after any heavy aerial attack (punch or kick)
-     * finishes. Reuses jump-forward frames 5 / 6 / 7 (hat-down brace →
-     * hat-down hold → landing stand) so the pose reads as "post-attack
-     * settle". Direction-agnostic — same animation regardless of whether
-     * Terry's mid-forward, mid-backward, or mid-vertical jump — because
+     * finishes. Reuses jump-forward frames 5 / 6 / 7 (hat-down brace â†’
+     * hat-down hold â†’ landing stand) so the pose reads as "post-attack
+     * settle". Direction-agnostic â€” same animation regardless of whether
+     * Terry's mid-forward, mid-backward, or mid-vertical jump â€” because
      * the alternative (direction-dispatched jump-fall variants) restarts
      * at frame 0 and looks jarring when the attack ends late in the jump.
      * `loop: false` makes the last frame hold until the jump physics
@@ -687,7 +687,7 @@ export class Terry extends Character {
     airHeavyRecover: {
       frames: [
         {
-          src: '/assets/img/characters/terry/jump-forward/5.png',
+          src: 'assets/img/characters/terry/jump-forward/5.png',
           w: 60,
           h: 136,
           anchorX: 30,
@@ -695,7 +695,7 @@ export class Terry extends Character {
           durationMs: 100,
         },
         {
-          src: '/assets/img/characters/terry/jump-forward/6.png',
+          src: 'assets/img/characters/terry/jump-forward/6.png',
           w: 57,
           h: 136,
           anchorX: 28,
@@ -703,7 +703,7 @@ export class Terry extends Character {
           durationMs: 150,
         },
         {
-          src: '/assets/img/characters/terry/jump-forward/7.png',
+          src: 'assets/img/characters/terry/jump-forward/7.png',
           w: 57,
           h: 136,
           anchorX: 31,
@@ -712,18 +712,18 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Air heavy punch — Terry's committed mid-air punch (row 39 of the
+    /** Air heavy punch â€” Terry's committed mid-air punch (row 39 of the
      * sheet). Played only mid-jump. Unlike the light variant which holds
      * the extended pose until landing, the heavy variant schedules a
      * recovery: after the 3 frames finish the engine swaps to
      * `airHeavyRecover` (jump-forward frames 5-7) so Terry visibly resets
      * his stance mid-air. Frame 2 has anchorX overridden to body-x (~28)
      * so the long forward arm extension doesn't shove the torso sideways
-     * when frame 1 → 2 plays. */
+     * when frame 1 â†’ 2 plays. */
     airHeavyPunch: {
       frames: [
         {
-          src: '/assets/img/characters/terry/air-heavy-punch/0.png',
+          src: 'assets/img/characters/terry/air-heavy-punch/0.png',
           w: 55,
           h: 85,
           anchorX: 26,
@@ -731,7 +731,7 @@ export class Terry extends Character {
           durationMs: 70,
         },
         {
-          src: '/assets/img/characters/terry/air-heavy-punch/1.png',
+          src: 'assets/img/characters/terry/air-heavy-punch/1.png',
           w: 54,
           h: 85,
           anchorX: 31,
@@ -739,7 +739,7 @@ export class Terry extends Character {
           durationMs: 100,
         },
         {
-          src: '/assets/img/characters/terry/air-heavy-punch/2.png',
+          src: 'assets/img/characters/terry/air-heavy-punch/2.png',
           w: 85,
           h: 85,
           anchorX: 28,
@@ -748,7 +748,7 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Air light punch — Terry jabs while airborne (row 38 of the sheet).
+    /** Air light punch â€” Terry jabs while airborne (row 38 of the sheet).
      * Played only mid-jump; jump physics keep running underneath so the
      * sprite tracks the leap arc. `loop: false` plus a long frame-2 duration
      * pins the extended-punch pose until the jump's land tick overrides the
@@ -757,7 +757,7 @@ export class Terry extends Character {
     airLightPunch: {
       frames: [
         {
-          src: '/assets/img/characters/terry/air-light-punch/0.png',
+          src: 'assets/img/characters/terry/air-light-punch/0.png',
           w: 53,
           h: 104,
           anchorX: 26,
@@ -765,7 +765,7 @@ export class Terry extends Character {
           durationMs: 60,
         },
         {
-          src: '/assets/img/characters/terry/air-light-punch/1.png',
+          src: 'assets/img/characters/terry/air-light-punch/1.png',
           w: 64,
           h: 104,
           anchorX: 30,
@@ -773,7 +773,7 @@ export class Terry extends Character {
           durationMs: 80,
         },
         {
-          src: '/assets/img/characters/terry/air-light-punch/2.png',
+          src: 'assets/img/characters/terry/air-light-punch/2.png',
           w: 88,
           h: 104,
           anchorX: 28,
@@ -782,16 +782,16 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Air light kick — same row-42 sprites as the heavy variant (windup
-     * curl → cocked → extended kick), but with snappier frame timing and
+    /** Air light kick â€” same row-42 sprites as the heavy variant (windup
+     * curl â†’ cocked â†’ extended kick), but with snappier frame timing and
      * no recovery hand-off; the extended pose holds until landing the
      * same way `airLightPunch` does. Frame 2 anchorX is overridden to
      * body-x (~28) so the long forward leg/arm extension doesn't shove
-     * Terry's torso right when frame 1 → 2 plays. */
+     * Terry's torso right when frame 1 â†’ 2 plays. */
     airLightKick: {
       frames: [
         {
-          src: '/assets/img/characters/terry/air-kick/0.png',
+          src: 'assets/img/characters/terry/air-kick/0.png',
           w: 53,
           h: 84,
           anchorX: 26,
@@ -799,7 +799,7 @@ export class Terry extends Character {
           durationMs: 50,
         },
         {
-          src: '/assets/img/characters/terry/air-kick/1.png',
+          src: 'assets/img/characters/terry/air-kick/1.png',
           w: 64,
           h: 84,
           anchorX: 32,
@@ -807,7 +807,7 @@ export class Terry extends Character {
           durationMs: 70,
         },
         {
-          src: '/assets/img/characters/terry/air-kick/2.png',
+          src: 'assets/img/characters/terry/air-kick/2.png',
           w: 102,
           h: 84,
           anchorX: 28,
@@ -816,16 +816,16 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Air light kick — vertical-jump (in-place) variant from row 40 of
+    /** Air light kick â€” vertical-jump (in-place) variant from row 40 of
      * the sheet. Different silhouette from the forward/backward variant:
      * Terry's legs tuck under, kicking down rather than forward. Same
      * "hold last frame until landing" behavior as `airLightKick`. Frame 2
      * anchorX is overridden to body-x (~28) so the extending leg doesn't
-     * shove Terry's torso right when frame 1 → 2 plays. */
+     * shove Terry's torso right when frame 1 â†’ 2 plays. */
     airLightKickUp: {
       frames: [
         {
-          src: '/assets/img/characters/terry/air-kick-up-light/0.png',
+          src: 'assets/img/characters/terry/air-kick-up-light/0.png',
           w: 53,
           h: 98,
           anchorX: 26,
@@ -833,7 +833,7 @@ export class Terry extends Character {
           durationMs: 50,
         },
         {
-          src: '/assets/img/characters/terry/air-kick-up-light/1.png',
+          src: 'assets/img/characters/terry/air-kick-up-light/1.png',
           w: 60,
           h: 98,
           anchorX: 30,
@@ -841,7 +841,7 @@ export class Terry extends Character {
           durationMs: 70,
         },
         {
-          src: '/assets/img/characters/terry/air-kick-up-light/2.png',
+          src: 'assets/img/characters/terry/air-kick-up-light/2.png',
           w: 84,
           h: 98,
           anchorX: 28,
@@ -850,19 +850,19 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Air heavy kick — vertical-jump (in-place) variant from row 41 of
+    /** Air heavy kick â€” vertical-jump (in-place) variant from row 41 of
      * the sheet. Six frames cover the full leap-and-kick cycle: launch
-     * V-pose → curl → tucked rise → cock-back → leg-extended kick →
+     * V-pose â†’ curl â†’ tucked rise â†’ cock-back â†’ leg-extended kick â†’
      * follow-through. Like the directional heavy variant, schedules
      * `airHeavyRecover` (set by `airHeavyKick()` via `recover: true`)
      * after the kick frames finish so Terry resets his stance mid-air
      * before landing. Frame 4 (kick extension, w=108) has its anchorX
      * overridden to body-x (~25) so the forward-extended leg doesn't
-     * drag Terry's torso right when frame 3 → 4 plays. */
+     * drag Terry's torso right when frame 3 â†’ 4 plays. */
     airHeavyKickUp: {
       frames: [
         {
-          src: '/assets/img/characters/terry/air-kick-up-heavy/0.png',
+          src: 'assets/img/characters/terry/air-kick-up-heavy/0.png',
           w: 63,
           h: 107,
           anchorX: 32,
@@ -870,7 +870,7 @@ export class Terry extends Character {
           durationMs: 60,
         },
         {
-          src: '/assets/img/characters/terry/air-kick-up-heavy/1.png',
+          src: 'assets/img/characters/terry/air-kick-up-heavy/1.png',
           w: 53,
           h: 107,
           anchorX: 28,
@@ -878,7 +878,7 @@ export class Terry extends Character {
           durationMs: 70,
         },
         {
-          src: '/assets/img/characters/terry/air-kick-up-heavy/2.png',
+          src: 'assets/img/characters/terry/air-kick-up-heavy/2.png',
           w: 46,
           h: 107,
           anchorX: 23,
@@ -886,7 +886,7 @@ export class Terry extends Character {
           durationMs: 80,
         },
         {
-          src: '/assets/img/characters/terry/air-kick-up-heavy/3.png',
+          src: 'assets/img/characters/terry/air-kick-up-heavy/3.png',
           w: 66,
           h: 107,
           anchorX: 24,
@@ -894,7 +894,7 @@ export class Terry extends Character {
           durationMs: 80,
         },
         {
-          src: '/assets/img/characters/terry/air-kick-up-heavy/4.png',
+          src: 'assets/img/characters/terry/air-kick-up-heavy/4.png',
           w: 108,
           h: 107,
           anchorX: 25,
@@ -902,7 +902,7 @@ export class Terry extends Character {
           durationMs: 130,
         },
         {
-          src: '/assets/img/characters/terry/air-kick-up-heavy/5.png',
+          src: 'assets/img/characters/terry/air-kick-up-heavy/5.png',
           w: 50,
           h: 107,
           anchorX: 25,
@@ -911,14 +911,14 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Air heavy kick — same row-42 sprites as the light variant. Slower
+    /** Air heavy kick â€” same row-42 sprites as the light variant. Slower
      * per-frame timing for the heavier feel, and `airHeavyKick()` passes
      * `recover: true` so the engine swaps to `airHeavyRecover` after the
      * kick frames finish (matching how heavy punch recovers mid-air). */
     airHeavyKick: {
       frames: [
         {
-          src: '/assets/img/characters/terry/air-kick/0.png',
+          src: 'assets/img/characters/terry/air-kick/0.png',
           w: 53,
           h: 84,
           anchorX: 26,
@@ -926,7 +926,7 @@ export class Terry extends Character {
           durationMs: 70,
         },
         {
-          src: '/assets/img/characters/terry/air-kick/1.png',
+          src: 'assets/img/characters/terry/air-kick/1.png',
           w: 64,
           h: 84,
           anchorX: 32,
@@ -934,7 +934,7 @@ export class Terry extends Character {
           durationMs: 100,
         },
         {
-          src: '/assets/img/characters/terry/air-kick/2.png',
+          src: 'assets/img/characters/terry/air-kick/2.png',
           w: 102,
           h: 84,
           anchorX: 28,
@@ -946,7 +946,7 @@ export class Terry extends Character {
     lightPunch: {
       frames: [
         {
-          src: '/assets/img/characters/terry/light-punch/0.png',
+          src: 'assets/img/characters/terry/light-punch/0.png',
           w: 66,
           h: 101,
           anchorX: 32,
@@ -954,7 +954,7 @@ export class Terry extends Character {
           durationMs: 50,
         },
         {
-          src: '/assets/img/characters/terry/light-punch/1.png',
+          src: 'assets/img/characters/terry/light-punch/1.png',
           w: 89,
           h: 101,
           anchorX: 32,
@@ -962,7 +962,7 @@ export class Terry extends Character {
           durationMs: 50,
         },
         {
-          src: '/assets/img/characters/terry/light-punch/2.png',
+          src: 'assets/img/characters/terry/light-punch/2.png',
           w: 66,
           h: 101,
           anchorX: 32,
@@ -971,15 +971,15 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Heavy punch — 6-frame windup → big extension → recovery (row 27 of
+    /** Heavy punch â€” 6-frame windup â†’ big extension â†’ recovery (row 27 of
      * the sheet). Frame 3 is the full-extension swing (100px wide vs ~66 for
      * the others); foot-detected anchors stay stable around (32-33, 97).
-     * Frame 3 lingers ~3× the windup frames so the extended-arm pose is
-     * the dominant visible beat — total 440ms (60/60/40/180/40/60). */
+     * Frame 3 lingers ~3Ã— the windup frames so the extended-arm pose is
+     * the dominant visible beat â€” total 440ms (60/60/40/180/40/60). */
     heavyPunch: {
       frames: [
         {
-          src: '/assets/img/characters/terry/heavy-punch/0.png',
+          src: 'assets/img/characters/terry/heavy-punch/0.png',
           w: 66,
           h: 105,
           anchorX: 32,
@@ -987,7 +987,7 @@ export class Terry extends Character {
           durationMs: 60,
         },
         {
-          src: '/assets/img/characters/terry/heavy-punch/1.png',
+          src: 'assets/img/characters/terry/heavy-punch/1.png',
           w: 65,
           h: 105,
           anchorX: 32,
@@ -995,7 +995,7 @@ export class Terry extends Character {
           durationMs: 60,
         },
         {
-          src: '/assets/img/characters/terry/heavy-punch/2.png',
+          src: 'assets/img/characters/terry/heavy-punch/2.png',
           w: 67,
           h: 105,
           anchorX: 33,
@@ -1003,7 +1003,7 @@ export class Terry extends Character {
           durationMs: 40,
         },
         {
-          src: '/assets/img/characters/terry/heavy-punch/3.png',
+          src: 'assets/img/characters/terry/heavy-punch/3.png',
           w: 100,
           h: 105,
           anchorX: 33,
@@ -1011,7 +1011,7 @@ export class Terry extends Character {
           durationMs: 180,
         },
         {
-          src: '/assets/img/characters/terry/heavy-punch/4.png',
+          src: 'assets/img/characters/terry/heavy-punch/4.png',
           w: 67,
           h: 105,
           anchorX: 33,
@@ -1019,7 +1019,7 @@ export class Terry extends Character {
           durationMs: 40,
         },
         {
-          src: '/assets/img/characters/terry/heavy-punch/5.png',
+          src: 'assets/img/characters/terry/heavy-punch/5.png',
           w: 67,
           h: 105,
           anchorX: 33,
@@ -1028,18 +1028,18 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Light kick — 4-frame brace → extended kick → retract → recover.
+    /** Light kick â€” 4-frame brace â†’ extended kick â†’ retract â†’ recover.
      * Cropped from row 28 via the flood-fill extractor (sprite-tool's gap
      * detector misread the wide extended-kick cell as two frames because of
      * the empty cell-bg between Terry's body and his outstretched foot).
      * Per-frame `anchorX` = each frame's torso centroid + 3 (the idle
      * frames' own anchor-vs-centroid offset), so the body lands at the
-     * same world-X as idle on transition — without that 3px nudge the
+     * same world-X as idle on transition â€” without that 3px nudge the
      * sprite jumps left/right when you trigger the kick. */
     lightKick: {
       frames: [
         {
-          src: '/assets/img/characters/terry/light-kick/0.png',
+          src: 'assets/img/characters/terry/light-kick/0.png',
           w: 54,
           h: 108,
           anchorX: 29,
@@ -1047,7 +1047,7 @@ export class Terry extends Character {
           durationMs: 60,
         },
         {
-          src: '/assets/img/characters/terry/light-kick/1.png',
+          src: 'assets/img/characters/terry/light-kick/1.png',
           w: 99,
           h: 105,
           anchorX: 41,
@@ -1055,7 +1055,7 @@ export class Terry extends Character {
           durationMs: 100,
         },
         {
-          src: '/assets/img/characters/terry/light-kick/2.png',
+          src: 'assets/img/characters/terry/light-kick/2.png',
           w: 54,
           h: 108,
           anchorX: 29,
@@ -1063,7 +1063,7 @@ export class Terry extends Character {
           durationMs: 60,
         },
         {
-          src: '/assets/img/characters/terry/light-kick/3.png',
+          src: 'assets/img/characters/terry/light-kick/3.png',
           w: 66,
           h: 101,
           anchorX: 37,
@@ -1072,22 +1072,22 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Heavy kick — 8-frame windup → knee raise → full extension → retract
-     * → recover. Re-extracted from row 29 as SOURCE-CELL crops (not
-     * alpha-tight) — alpha trimming made foot detection unreliable since
+    /** Heavy kick â€” 8-frame windup â†’ knee raise â†’ full extension â†’ retract
+     * â†’ recover. Re-extracted from row 29 as SOURCE-CELL crops (not
+     * alpha-tight) â€” alpha trimming made foot detection unreliable since
      * cropped-X depended on whatever body part extended leftmost.
      *
      * Per-frame `anchorX` = PLANTED foot X (detected via rightmost
-     * bottom-pixel cluster — Terry's right foot, which stays planted
-     * during the kick) − 26. The −26 offset matches idle's relationship
-     * (idle planted foot at X=57, anchor=31, so 31 − 57 = −26), so the
+     * bottom-pixel cluster â€” Terry's right foot, which stays planted
+     * during the kick) âˆ’ 26. The âˆ’26 offset matches idle's relationship
+     * (idle planted foot at X=57, anchor=31, so 31 âˆ’ 57 = âˆ’26), so the
      * planted foot lands at the same world position across idle and every
      * kick frame. The kicking foot (Terry's LEFT in the sprite) is what
-     * swings up and forward — opposite of what I initially assumed. */
+     * swings up and forward â€” opposite of what I initially assumed. */
     heavyKick: {
       frames: [
         {
-          src: '/assets/img/characters/terry/heavy-kick/0.png',
+          src: 'assets/img/characters/terry/heavy-kick/0.png',
           w: 55,
           h: 108,
           anchorX: 22,
@@ -1095,7 +1095,7 @@ export class Terry extends Character {
           durationMs: 60,
         },
         {
-          src: '/assets/img/characters/terry/heavy-kick/1.png',
+          src: 'assets/img/characters/terry/heavy-kick/1.png',
           w: 55,
           h: 108,
           anchorX: 22,
@@ -1103,7 +1103,7 @@ export class Terry extends Character {
           durationMs: 70,
         },
         {
-          src: '/assets/img/characters/terry/heavy-kick/2.png',
+          src: 'assets/img/characters/terry/heavy-kick/2.png',
           w: 60,
           h: 108,
           anchorX: 24,
@@ -1111,7 +1111,7 @@ export class Terry extends Character {
           durationMs: 70,
         },
         {
-          src: '/assets/img/characters/terry/heavy-kick/3.png',
+          src: 'assets/img/characters/terry/heavy-kick/3.png',
           w: 64,
           h: 108,
           anchorX: 9,
@@ -1119,7 +1119,7 @@ export class Terry extends Character {
           durationMs: 70,
         },
         {
-          src: '/assets/img/characters/terry/heavy-kick/4.png',
+          src: 'assets/img/characters/terry/heavy-kick/4.png',
           w: 99,
           h: 108,
           anchorX: -6,
@@ -1127,7 +1127,7 @@ export class Terry extends Character {
           durationMs: 120,
         },
         {
-          src: '/assets/img/characters/terry/heavy-kick/5.png',
+          src: 'assets/img/characters/terry/heavy-kick/5.png',
           w: 64,
           h: 108,
           anchorX: 9,
@@ -1135,7 +1135,7 @@ export class Terry extends Character {
           durationMs: 70,
         },
         {
-          src: '/assets/img/characters/terry/heavy-kick/6.png',
+          src: 'assets/img/characters/terry/heavy-kick/6.png',
           w: 60,
           h: 108,
           anchorX: 24,
@@ -1143,7 +1143,7 @@ export class Terry extends Character {
           durationMs: 70,
         },
         {
-          src: '/assets/img/characters/terry/heavy-kick/7.png',
+          src: 'assets/img/characters/terry/heavy-kick/7.png',
           w: 55,
           h: 108,
           anchorX: 22,
@@ -1154,11 +1154,11 @@ export class Terry extends Character {
     },
   };
 
-  /** Special moves — each is a directional motion + an attack button. The
+  /** Special moves â€” each is a directional motion + an attack button. The
    * base `Character` class scans this on every attack-button press and, on
    * match, plays the special's frames + audio in place of the normal attack. */
   protected override readonly specials: readonly SpecialMove[] = [
-    /** Crack Shoot — Terry's QCB-style forward flip kick. Frames 4-6 are
+    /** Crack Shoot â€” Terry's QCB-style forward flip kick. Frames 4-6 are
      * the airborne flip, frame 7 the grounded landing pose. Whiff reuses
      * the generic heavy whoosh until a Crack-Shoot-specific clip exists. */
     {
@@ -1167,67 +1167,67 @@ export class Terry extends Character {
       button: 'lightKick',
       // Shout fires on the launch frame (4) so it lands with the flip,
       // not during the windup.
-      voices: [{ src: '/assets/sfx/terry/terry-crackshoot.mp3', frame: 4 }],
-      whiffSrc: '/assets/sfx/misc/special-travel.mp3',
-      // 25% of stage width — a touch shorter than a forward jump (40%),
+      voices: [{ src: 'assets/sfx/terry/terry-crackshoot.mp3', frame: 4 }],
+      whiffSrc: 'assets/sfx/misc/special-travel.mp3',
+      // 25% of stage width â€” a touch shorter than a forward jump (40%),
       // tuned shorter since the active hit window is mid-flip not the apex.
       travelDistancePct: 0.25,
       // X+Y travel runs through frame 6; frame 7 pins to ground for the
       // landing pose (see `_physicsTick` past-travel-end branch).
       travelStartFrame: 4,
       travelEndFrame: 7,
-      // Low forward leap — half-ish of a default jump's peak — to sell
+      // Low forward leap â€” half-ish of a default jump's peak â€” to sell
       // the mid-air flip without competing with the jump's verticality.
       arcHeight: 20,
       // Frame timing: snappy windup (0-3 at 40-60ms), quick flip (4-6 at
       // 80-100ms), longer landing recovery (7 at 180ms). The voice cue +
       // travel both anchor to frame 4, so shortening the windup shifts
-      // them earlier proportionally — exactly the snappier feel we want.
+      // them earlier proportionally â€” exactly the snappier feel we want.
       frames: { frames: withDurations(CRACK_SHOOT_FRAMES, [40, 40, 50, 60, 100, 100, 80, 180]) },
     },
-    /** Heavy Crack Shoot — same flip, more committed. Same sprites and
+    /** Heavy Crack Shoot â€” same flip, more committed. Same sprites and
      * motion as the light variant; tuning differs: longer windup, bigger
      * arc, more travel, slower airborne frames so the bigger leap reads. */
     {
       name: 'crackShootHeavy',
       motion: ['down', 'left'],
       button: 'heavyKick',
-      voices: [{ src: '/assets/sfx/terry/terry-crackshoot.mp3', frame: 4 }],
-      whiffSrc: '/assets/sfx/misc/special-travel.mp3',
-      // 50% of the stage (vs 25% light) — Terry leaps roughly twice as far.
+      voices: [{ src: 'assets/sfx/terry/terry-crackshoot.mp3', frame: 4 }],
+      whiffSrc: 'assets/sfx/misc/special-travel.mp3',
+      // 50% of the stage (vs 25% light) â€” Terry leaps roughly twice as far.
       travelDistancePct: 0.5,
       travelStartFrame: 4,
       travelEndFrame: 7,
-      // Double the light arc — reads as a higher leap matching the travel.
+      // Double the light arc â€” reads as a higher leap matching the travel.
       arcHeight: 40,
       // Frames 1-3 are heavier windup (sells the bigger commitment); 4-6
       // hold longer so the wider leap doesn't blur past in a few ticks.
-      // Travel distance is unaffected by frame timing — `_specialXStep`
+      // Travel distance is unaffected by frame timing â€” `_specialXStep`
       // scales by travelTicks.
       frames: {
         frames: withDurations(CRACK_SHOOT_FRAMES, [80, 120, 120, 140, 170, 170, 140, 180]),
       },
     },
-    /** Burning Knuckle — Terry's QCF charging-fist punch. Frames 0-5 are
-     * the windup (stance → V-pose flash → lean back → brace → charge),
-     * frames 6-8 are the airborne charge forward (punch released → big
-     * punch with trailing flame → recovery with fading flame), frames 9-10
-     * are grounded recovery. No Y arc — Terry stays at ground level the
+    /** Burning Knuckle â€” Terry's QCF charging-fist punch. Frames 0-5 are
+     * the windup (stance â†’ V-pose flash â†’ lean back â†’ brace â†’ charge),
+     * frames 6-8 are the airborne charge forward (punch released â†’ big
+     * punch with trailing flame â†’ recovery with fading flame), frames 9-10
+     * are grounded recovery. No Y arc â€” Terry stays at ground level the
      * whole move, just translates forward fast during the charge window. */
     {
       name: 'burningKnuckle',
       motion: ['down', 'left'],
       button: 'lightPunch',
       // Shout fires on the charge frame (6) so it lands with the punch.
-      voices: [{ src: '/assets/sfx/terry/terry-burning-knuckle.mp3', frame: 6 }],
-      whiffSrc: '/assets/sfx/misc/special-travel.mp3',
-      // 25% of stage width during the charge window — light commitment.
+      voices: [{ src: 'assets/sfx/terry/terry-burning-knuckle.mp3', frame: 6 }],
+      whiffSrc: 'assets/sfx/misc/special-travel.mp3',
+      // 25% of stage width during the charge window â€” light commitment.
       travelDistancePct: 0.3,
       // Travel only during the punch-with-flame frames (6, 7, 8); frames
       // 9-10 are stationary recovery.
       travelStartFrame: 6,
       travelEndFrame: 10,
-      // No `arcHeight` — Burning Knuckle is a horizontal charge, not a leap.
+      // No `arcHeight` â€” Burning Knuckle is a horizontal charge, not a leap.
       // Quick windup, single-frame V-pose flash, short charge, punctuated
       // by the punch frame (7) lingering slightly to register the impact.
       frames: {
@@ -1237,21 +1237,21 @@ export class Terry extends Character {
         ),
       },
     },
-    /** Heavy Burning Knuckle — bigger commitment. Same sprites and motion
+    /** Heavy Burning Knuckle â€” bigger commitment. Same sprites and motion
      * as the light variant; tuning differs: longer windup frames so the
      * charge reads as more dangerous, more travel distance. No arc still. */
     {
       name: 'burningKnuckleHeavy',
       motion: ['down', 'left'],
       button: 'heavyPunch',
-      voices: [{ src: '/assets/sfx/terry/terry-burning-knuckle.mp3', frame: 6 }],
-      whiffSrc: '/assets/sfx/misc/special-travel.mp3',
-      // 40% of the stage (vs 25% light) — Terry charges further.
+      voices: [{ src: 'assets/sfx/terry/terry-burning-knuckle.mp3', frame: 6 }],
+      whiffSrc: 'assets/sfx/misc/special-travel.mp3',
+      // 40% of the stage (vs 25% light) â€” Terry charges further.
       travelDistancePct: 0.6,
       travelStartFrame: 6,
       travelEndFrame: 10,
       // Windup frames 1-5 hold ~50% longer than light to sell the bigger
-      // commitment, but the travel frames (6-8) are SHORTER than light —
+      // commitment, but the travel frames (6-8) are SHORTER than light â€”
       // heavier variants linger on the buildup and then snap through the
       // forward charge fast. Per-tick X step scales as 1 / travelTicks, so
       // shorter durations here = visibly faster traversal across the same
@@ -1263,18 +1263,18 @@ export class Terry extends Character {
         ),
       },
     },
-    /** Rising Tackle (light) — anti-air spinning uppercut, leaps straight
+    /** Rising Tackle (light) â€” anti-air spinning uppercut, leaps straight
      * up. Frames 0-2 are the windup crouch, frames 3-8 are the airborne
      * spin (this is the arc window), frames 9-10 are landing recovery.
-     * No X travel — pure Y arc, peaking at ~half a jump's apex height. */
+     * No X travel â€” pure Y arc, peaking at ~half a jump's apex height. */
     {
       name: 'risingTackle',
       motion: ['down', 'up'],
       button: 'lightPunch',
       // Shout fires on the launch frame (3) so it lands with the leap.
-      voices: [{ src: '/assets/sfx/terry/terry-rising-tackle.mp3', frame: 3 }],
-      whiffSrc: '/assets/sfx/misc/special-travel.mp3',
-      // Y arc only — Terry leaps straight up, no horizontal travel.
+      voices: [{ src: 'assets/sfx/terry/terry-rising-tackle.mp3', frame: 3 }],
+      whiffSrc: 'assets/sfx/misc/special-travel.mp3',
+      // Y arc only â€” Terry leaps straight up, no horizontal travel.
       // `fallAfterArc` makes the arc rise-only (peaks at end of travel
       // window) and hands off to the jump's descent physics after the
       // animation ends, so Terry physically falls back to ground using
@@ -1283,7 +1283,7 @@ export class Terry extends Character {
       travelDistancePct: 0.05,
       fallAfterArc: true,
       travelStartFrame: 3,
-      // 8 frames here — the source's grounded recovery frames are dropped
+      // 8 frames here â€” the source's grounded recovery frames are dropped
       // because the fall phase (jumpFall sprite descending) replaces them.
       // Airborne window is frames 3-7.
       travelEndFrame: 8,
@@ -1291,7 +1291,7 @@ export class Terry extends Character {
         frames: withDurations(RISING_TACKLE_FRAMES.slice(0, 8), [50, 50, 50, 60, 80, 80, 80, 110]),
       },
     },
-    /** Rising Tackle (heavy) — bigger commitment, peaks at a full jump's
+    /** Rising Tackle (heavy) â€” bigger commitment, peaks at a full jump's
      * apex height. Same frames, motion, and button family as light;
      * windup frames hold longer to sell the deeper crouch and the
      * airborne spin reads slower since the arc is taller. */
@@ -1299,12 +1299,12 @@ export class Terry extends Character {
       name: 'risingTackleHeavy',
       motion: ['down', 'up'],
       button: 'heavyPunch',
-      voices: [{ src: '/assets/sfx/terry/terry-rising-tackle.mp3', frame: 3 }],
-      whiffSrc: '/assets/sfx/misc/special-travel.mp3',
-      // Matches the default jump's peak (jumpVerticalStep × apexTicks
-      // = 5 × 17 = 85) — Terry rises as high as he would in a jump.
+      voices: [{ src: 'assets/sfx/terry/terry-rising-tackle.mp3', frame: 3 }],
+      whiffSrc: 'assets/sfx/misc/special-travel.mp3',
+      // Matches the default jump's peak (jumpVerticalStep Ã— apexTicks
+      // = 5 Ã— 17 = 85) â€” Terry rises as high as he would in a jump.
       arcHeight: 120,
-      // Small forward leap on the heavy variant — Terry takes a step
+      // Small forward leap on the heavy variant â€” Terry takes a step
       // into the rising tackle instead of going straight up. X applies
       // only during the rising phase (frames 3-7); the jump-fall descent
       // afterward has no X motion.
@@ -1319,37 +1319,37 @@ export class Terry extends Character {
         ),
       },
     },
-    /** Power Wave (light) — QCF projectile cast. Terry stays planted (no
-     * X or Y travel — the wave projectile, added later, is what flies
-     * forward). Frames 0-3 are the windup (settle → gather → charge ball
-     * overhead → cock back). Frame 4 is the lunge / release pose. Frame 5
+    /** Power Wave (light) â€” QCF projectile cast. Terry stays planted (no
+     * X or Y travel â€” the wave projectile, added later, is what flies
+     * forward). Frames 0-3 are the windup (settle â†’ gather â†’ charge ball
+     * overhead â†’ cock back). Frame 4 is the lunge / release pose. Frame 5
      * is the arm-extended pose where the wave would spawn. Frame 6 is
      * recovery. */
     {
       name: 'powerWave',
       motion: ['down', 'right'],
       button: 'lightPunch',
-      // Shout splits across two clips — "Power!" at launch, "Wave!" on
+      // Shout splits across two clips â€” "Power!" at launch, "Wave!" on
       // the release frame (5, arm extended).
       voices: [
-        { src: '/assets/sfx/terry/terry-power-wave-1.mp3', frame: 0 },
-        { src: '/assets/sfx/terry/terry-power-wave-2.mp3', frame: 5 },
+        { src: 'assets/sfx/terry/terry-power-wave-1.mp3', frame: 0 },
+        { src: 'assets/sfx/terry/terry-power-wave-2.mp3', frame: 5 },
       ],
-      // No whiff — Power Wave is a stationary cast; the projectile (added
+      // No whiff â€” Power Wave is a stationary cast; the projectile (added
       // later) will own its own travel/impact SFX.
       frames: {
         frames: withDurations(POWER_WAVE_FRAMES, [40, 70, 90, 80, 80, 100, 150]),
       },
     },
-    /** Power Wave (heavy) — same sprites and motion as the light variant;
+    /** Power Wave (heavy) â€” same sprites and motion as the light variant;
      * the windup frames (1-3) hold longer to sell the bigger charge. */
     {
       name: 'powerWaveHeavy',
       motion: ['down', 'right'],
       button: 'heavyPunch',
       voices: [
-        { src: '/assets/sfx/terry/terry-power-wave-1.mp3', frame: 0 },
-        { src: '/assets/sfx/terry/terry-power-wave-2.mp3', frame: 5 },
+        { src: 'assets/sfx/terry/terry-power-wave-1.mp3', frame: 0 },
+        { src: 'assets/sfx/terry/terry-power-wave-2.mp3', frame: 5 },
       ],
       frames: {
         frames: withDurations(POWER_WAVE_FRAMES, [50, 130, 160, 130, 80, 110, 170]),
