@@ -1048,7 +1048,11 @@ export abstract class Character {
    * spans the full animation. */
   private _startBackstep(): void {
     if (this.inJump() || this.inAttack() || this._specialFallingDescent) return;
-    if (this.blockedLeft()) return;
+    // No `blockedLeft` bail: the dash should still PLAY near/at the edge — the
+    // physics tick clamps the leftward travel itself (it only moves while
+    // `!blockedLeft()`), so Terry hops back as far as there's room and simply
+    // stays put when flush against the wall, instead of the move being
+    // swallowed entirely (which it was the moment he reached the left edge).
     const frames = this.animationFrames['backstep'];
     if (!frames) return;
     this._startAttack({
