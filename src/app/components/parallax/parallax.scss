@@ -1,0 +1,120 @@
+// Scroll-driven parallax overlay. The host is a fixed window over the
+// stage; the inner `.parallax-track` is a wider horizontal row of info
+// cards that pans rightward as the user scrolls down (offset driven from
+// the wheel listener in the component).
+:host {
+  position: absolute;
+  inset: 0;
+  // Above the background + misc layers and the character/train band so the
+  // info reads as a foreground HUD. Cards are translucent so the scene
+  // still shows through behind them.
+  z-index: 10;
+  overflow: hidden;
+  // The overlay must not eat pointer interaction with the scene; the wheel
+  // listener lives on `window`, so it still fires regardless.
+  pointer-events: none;
+}
+
+// Vertical placement of the card band. `top` is set per-stage via the
+// `cardsY` input; `translateY(-50%)` makes that value land on the band's
+// center rather than its top edge.
+.parallax-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+}
+
+.parallax-track {
+  display: flex;
+  align-items: center;
+  gap: 5cqw;
+  // Leading/trailing breathing room so the first/last card aren't flush
+  // against the stage edges.
+  padding: 0 8cqw;
+  // Smoothly chase the offset set on each wheel tick instead of jumping.
+  transition: transform 0.18s ease-out;
+  will-change: transform;
+}
+
+// Scroll hint (animated webp + label). Anchored top-right of the stage,
+// floating above the cards as an invitation to scroll.
+.scroll-hint {
+  position: absolute;
+  top: 2.5cqw;
+  right: 2.5cqw;
+  display: flex;
+  align-items: center;
+  gap: 1cqw;
+  opacity: 1;
+  // Fade out (and back in if the user returns to the start) over half a
+  // second when `scrolled()` toggles the modifier class.
+  transition: opacity 0.5s ease;
+
+  &__icon {
+    width: 4cqw;
+    height: auto;
+  }
+
+  &__label {
+    color: #fff;
+    font-size: 1.6cqw;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-shadow: 0 0.25cqw 0.5cqw rgba(0, 0, 0, 0.85);
+  }
+}
+
+.scroll-hint--hidden {
+  opacity: 0;
+}
+
+// Stage navigation. Anchored bottom-center, fades in when the user reaches
+// the last card. Hidden state is non-interactive (`pointer-events: none`)
+// so it can't catch clicks while invisible.
+.stage-nav {
+  position: absolute;
+  bottom: 4cqw;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2cqw;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+
+  &--visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6cqw;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1.8cqw;
+    font-weight: 700;
+    color: #fff;
+    padding: 1.2cqw 2.4cqw;
+    background: rgba(8, 12, 24, 0.72);
+    border: 0.3cqw solid rgba(255, 96, 16, 0.9);
+    border-radius: 1cqw;
+    box-shadow: 0 0 2cqw rgba(255, 96, 16, 0.3);
+    transition: background 0.2s ease, transform 0.1s ease;
+
+    &:hover {
+      background: rgba(255, 96, 16, 0.85);
+    }
+
+    &:active {
+      transform: translateY(0.3cqw);
+    }
+  }
+
+  &__arrow {
+    font-size: 2.4cqw;
+    line-height: 1;
+  }
+}

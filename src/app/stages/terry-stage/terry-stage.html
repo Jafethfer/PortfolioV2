@@ -8,8 +8,22 @@
     class="misc-layer misc-translate w-full absolute bg-repeat-x"
     style="background-image: url('assets/img/stage/terry-stage/misc.png')"
   ></div>
+
+  <!-- Scroll-driven parallax overlay (self-contained: owns its own wheel
+       handling + info-card content). Stage nav buttons surface at the end
+       of the cards; routing is handled by the Stage base. -->
+  <app-parallax
+    [cards]="infoCards"
+    [cardsY]="infoCardsY"
+    [progress]="parallaxProgress()"
+    [hasNext]="hasNextStage"
+    [hasPrevious]="hasPreviousStage"
+    (next)="goToNextStage()"
+    (previous)="goToPreviousStage()"
+  />
   <div class="w-full relative">
     <ng-container #characterHost></ng-container>
+    <ng-container #projectileHost></ng-container>
     <div #trainEl class="train-bump w-full overflow-hidden">
       <img
         #trainImgEl

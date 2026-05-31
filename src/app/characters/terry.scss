@@ -1,13 +1,15 @@
 /* ---------- Terry sprites ----------
    All animations are data-driven (per-frame `<img>` engine in character.ts).
-   The runtime sizes each image via `var(--terry-height)` × source aspect,
+   The runtime sizes each image via `var(--character-height)` × source aspect,
    so this file only carries layout/positioning. */
 
 :host {
   display: contents;
-  /* Single source of truth for standing height — cascades to the per-frame
-     <img> via `width: calc(... * var(--terry-height) / 107)`. */
-  --terry-height: 25cqw;
+  /* Single source of truth for standing height — the generic
+     `--character-height` the base Character reads (paired with its
+     `spriteBaseHeight = 107`, Terry's idle source height). Cascades to the
+     per-frame <img> via `width: calc(... * var(--character-height) / 107)`. */
+  --character-height: 25cqw;
 }
 
 :host > * {
@@ -18,7 +20,9 @@
      16.69cqw train) each pick the offset that puts Terry on the right
      visual baseline. Fallback matches Terry-stage's original tuning. */
   margin-bottom: var(--character-foot-offset, -10%);
-  /* Spawn near-center (fighting-game P1 start). With idle width ~16cqw,
-     Terry's center lands at ~48cqw — 2cqw left of dead center. */
-  margin-left: 20cqw;
+  /* Horizontal spawn offset. The active stage may override
+     `--character-spawn-x` (e.g. Terry-stage spawns at the far left so the
+     parallax cards read left-to-right as he walks). Fallback is the
+     near-center fighting-game P1 start (~48cqw center with idle width). */
+  margin-left: var(--character-spawn-x, 20cqw);
 }

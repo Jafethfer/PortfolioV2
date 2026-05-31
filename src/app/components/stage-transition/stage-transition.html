@@ -1,0 +1,12 @@
+<div
+  class="wipe"
+  [class.wipe--covered]="covered()"
+  [class.wipe--active]="active()"
+>
+  <div class="wipe__grid" [style.--cols]="cols" [style.--rows]="rows">
+    @for (tile of tiles; track $index) {
+      <span class="wipe__cell" [style.transition-delay.ms]="tile.delay"></span>
+    }
+  </div>
+  <span class="wipe__label">Now Loading…</span>
+</div>

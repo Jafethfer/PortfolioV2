@@ -1,0 +1,13 @@
+@let frame = currentFrameData();
+@if (frame) {
+  <img
+    #el
+    [src]="frame.src"
+    [style.width]="frameWidth(frame)"
+    [style.height]="frameHeight(frame)"
+    [style.transform]="frameTransform(frame)"
+    style="bottom: var(--ground-y, 0);"
+    class="absolute left-0 z-30"
+    alt=""
+  />
+}

@@ -1,0 +1,32 @@
+// Single "about me" card. Sized in `cqw` so it scales with the stage
+// container (`container-type: inline-size` lives on `.stage`, an ancestor).
+// The host IS the card — `app-parallax` lays a row of these out in a flex
+// track.
+:host {
+  flex: 0 0 auto;
+  display: block;
+  width: 34cqw;
+  padding: 3cqw;
+  color: #fff;
+  background: rgba(8, 12, 24, 0.62);
+  border: 0.35cqw solid rgba(255, 96, 16, 0.85);
+  border-radius: 1.2cqw;
+  box-shadow: 0 0 3cqw rgba(255, 96, 16, 0.35);
+  backdrop-filter: blur(2px);
+}
+
+h2 {
+  margin: 0 0 1.5cqw;
+  font-size: 3cqw;
+  font-weight: 800;
+  line-height: 1.1;
+  color: rgb(255, 176, 64);
+  text-shadow: 0 0.3cqw 0.6cqw rgba(0, 0, 0, 0.8);
+}
+
+p {
+  margin: 0;
+  font-size: 1.9cqw;
+  line-height: 1.45;
+  opacity: 0.92;
+}

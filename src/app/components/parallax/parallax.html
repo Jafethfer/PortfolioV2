@@ -1,0 +1,45 @@
+<!-- The band sets the vertical position of the cards (per-stage `cardsY`);
+     `translateY(-50%)` in SCSS makes `cardsY` mean the band's center. The
+     inner track is wider than the host window — `offset` slides it left so
+     a positive scroll progress reveals later cards (= scrolling rightward
+     through the content). Vertical (band) and horizontal (track) transforms
+     are kept on separate elements so neither clobbers the other. -->
+<div class="parallax-band" [style.top]="cardsY()">
+  <div
+    #trackEl
+    class="parallax-track"
+    [style.transform]="'translateX(' + -offset() + 'px)'"
+  >
+    @for (card of cards(); track card.title) {
+      <app-info-card [title]="card.title" [body]="card.body" />
+    }
+  </div>
+</div>
+
+<!-- Scroll hint (top-right). Icon + label invite the user to scroll to
+     move through the cards. Fades out (opacity transition in SCSS) the
+     instant the user starts scrolling. -->
+<div class="scroll-hint" [class.scroll-hint--hidden]="scrolled()">
+  <img
+    class="scroll-hint__icon"
+    src="assets/img/misc/scroll-down-mouse.webp"
+    alt=""
+  />
+  <span class="scroll-hint__label">Walk to explore</span>
+</div>
+
+<!-- Stage navigation. Fades in once the user reaches the last card
+     (`atEnd`). Buttons only appear when a neighbour stage exists; clicks
+     emit outputs the stage wires to the router. -->
+<div class="stage-nav" [class.stage-nav--visible]="atEnd()">
+  @if (hasPrevious()) {
+    <button type="button" class="stage-nav__btn" (click)="previous.emit()">
+      <span class="stage-nav__arrow">‹</span> Previous Stage
+    </button>
+  }
+  @if (hasNext()) {
+    <button type="button" class="stage-nav__btn" (click)="next.emit()">
+      Next Stage <span class="stage-nav__arrow">›</span>
+    </button>
+  }
+</div>

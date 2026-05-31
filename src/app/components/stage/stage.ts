@@ -1,5 +1,6 @@
 import {
   ComponentRef,
+  DestroyRef,
   Directive,
   ElementRef,
   Signal,
@@ -14,7 +15,12 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { REFERENCE_WIDTH } from '../../constants/viewport';
+import { StageTransitionService } from '../../services/stage-transition.service';
 import { Character } from '../character/character';
+import { Projectile } from '../projectile/projectile';
+import { ProjectileSpawnRequest } from '../../models/character';
 import { InputService } from '../../services/input.service';
 import { GameLoopService } from '../../services/game-loop.service';
 
@@ -67,25 +73,70 @@ export abstract class Stage {
    * route's `data`. Subclasses override with `protected override readonly`. */
   protected readonly walkScrollRate: number = 20;
   protected readonly crouchScrollRate: number = 10;
+  /** Reference stage width the scroll rates above are calibrated against; the
+   * effective rate scales by `width / referenceWidth` so the world scrolls the
+   * same FRACTION of the stage per tick on any viewport. Defaults to the shared
+   * `REFERENCE_WIDTH` (same default the character uses); override per stage if
+   * needed. */
+  protected readonly referenceWidth: number = REFERENCE_WIDTH;
 
   readonly characterClass = input.required<Type<Character>>();
 
   readonly stageEl = viewChild.required<ElementRef<HTMLElement>>('stageEl');
   readonly characterHost = viewChild.required('characterHost', { read: ViewContainerRef });
+  readonly projectileHost = viewChild.required('projectileHost', { read: ViewContainerRef });
 
   /** Shared services exposed to subclasses so they can read input state
    * and the game-loop tick from inside `_onTick`. Kept protected (not
    * exposed publicly) — the template never reads these directly. */
   protected readonly input = inject(InputService);
   protected readonly loop = inject(GameLoopService);
+  private readonly _router = inject(Router);
+  private readonly _route = inject(ActivatedRoute);
+  private readonly _transition = inject(StageTransitionService);
+
+  /** Resolved neighbour stage paths for Next/Previous navigation, derived
+   * from the router config order (single source of truth — no separate
+   * stage list to keep in sync). `null` at the first/last stage. */
+  private readonly _previousPath: string | null;
+  private readonly _nextPath: string | null;
+
+  /** Whether a neighbour stage exists in each direction. Forwarded into
+   * `<app-parallax [hasNext] [hasPrevious]>` so it can hide the dead-end
+   * nav button. */
+  readonly hasPreviousStage: boolean;
+  readonly hasNextStage: boolean;
 
   private _rightLimit = signal(0);
   private _leftLimit = signal(0);
   readonly width = signal(0);
 
+  /** Screen-x limits of the playable area (px). Exposed read-only so
+   * subclasses can compute world-progress metrics (e.g. how far Terry has
+   * walked across the stage) for movement-driven effects. */
+  get rightLimit(): number {
+    return this._rightLimit();
+  }
+  get leftLimit(): number {
+    return this._leftLimit();
+  }
+
   /** The spawned character instance. `null` until afterNextRender creates it. */
   readonly character = signal<Character | null>(null);
   private _characterRef?: ComponentRef<Character>;
+
+  /** Live projectile component refs. Concurrency v1 is capped at 1 in
+   * `_spawnProjectile` — additional spawn requests while a projectile
+   * is on screen are dropped on the floor. Per-tick drain in the loop
+   * effect destroys instances whose `expired()` signal is true. */
+  private _projectileRefs = signal<ComponentRef<Projectile>[]>([]);
+
+  /** True when any projectile is on screen. Forwarded into the
+   * character as an input so its `_tryAttack` can suppress the entire
+   * cast (animation + voice cues) when the concurrency cap is hit — not
+   * just the projectile spawn. Without this, the cast animation plays
+   * pointlessly while the spawn is silently dropped. */
+  readonly hasActiveProjectile = computed(() => this._projectileRefs().length > 0);
 
   readonly blockedRight = computed(() => {
     const c = this.character();
@@ -100,40 +151,168 @@ export abstract class Stage {
   });
 
   constructor() {
+    const { previous, next } = this._resolveStageNeighbors();
+    this._previousPath = previous;
+    this._nextPath = next;
+    this.hasPreviousStage = previous !== null;
+    this.hasNextStage = next !== null;
+
+    this._spawnCharacterOnRender();
+    this._forwardInputsToCharacter();
+    this._wireProjectileSpawns();
+    this._runGameLoop();
+    this._wireResize();
+  }
+
+  /** Resolve this stage's neighbour paths from the ordered router config. Only
+   * entries with a `component` are real stages (the `''` redirect is skipped).
+   * Read once — the component is freshly created on each navigation. */
+  private _resolveStageNeighbors(): { previous: string | null; next: string | null } {
+    const stagePaths = this._router.config
+      .filter((r) => !!r.component)
+      .map((r) => r.path ?? '');
+    const idx = stagePaths.indexOf(this._route.snapshot.routeConfig?.path ?? '');
+    return {
+      previous: idx > 0 ? stagePaths[idx - 1] : null,
+      next: idx >= 0 && idx < stagePaths.length - 1 ? stagePaths[idx + 1] : null,
+    };
+  }
+
+  /** Measure stage geometry, run the subclass's one-time DOM hook, then spawn
+   * the character — in that order so setup happens on the empty stage before
+   * the character drops in on top. */
+  private _spawnCharacterOnRender(): void {
     afterNextRender(() => {
-      const rect = this.stageEl().nativeElement.getBoundingClientRect();
-      this._rightLimit.set(rect.right);
-      this._leftLimit.set(rect.left);
-      this.width.set(rect.width);
-
-      // Subclass hook for one-time DOM setup — runs BEFORE the character
-      // spawns so things like initial scroll centering happen on the
-      // empty stage, then the character drops in on top.
+      this._measureStage();
       this._onAfterRender();
-
       this._characterRef = this.characterHost().createComponent(this.characterClass());
       this.character.set(this._characterRef.instance);
     });
+  }
 
-    // Forward Stage-computed signals into the character's inputs. Reading
-    // `character()` here means this effect activates once the character is
-    // spawned, then re-runs whenever any forwarded signal changes.
+  /** Measure the playable area's screen geometry into the limit + width
+   * signals. Driven both on first render and on viewport resize, so
+   * `worldWidth` (which sizes jump/special travel and is forwarded to the
+   * character) and the edge limits always reflect the CURRENT viewport. */
+  private _measureStage(): void {
+    const rect = this.stageEl().nativeElement.getBoundingClientRect();
+    this._rightLimit.set(rect.right);
+    this._leftLimit.set(rect.left);
+    this.width.set(rect.width);
+  }
+
+  /** Re-measure stage geometry + the character's layout on window resize. The
+   * stage is sized in `vw`, so its width (and thus every viewport-relative
+   * distance derived from `worldWidth`) changes when the window does. Without
+   * this, travel/scroll distances stay frozen at the spawn-time viewport. */
+  private _wireResize(): void {
+    const onResize = (): void => {
+      // Capture the OLD width before re-measuring so we can hand the character
+      // the exact scale factor — `width` is the stage's own signal, updated
+      // synchronously here, so there's no async-input lag to trip over.
+      const prevWidth = this.width();
+      this._measureStage();
+      const ratio = prevWidth > 0 ? this.width() / prevWidth : 1;
+      this.character()?.remeasure(ratio);
+      this._onResize();
+    };
+    window.addEventListener('resize', onResize);
+    inject(DestroyRef).onDestroy(() => window.removeEventListener('resize', onResize));
+  }
+
+  /** Forward Stage-computed signals into the spawned character's inputs. The
+   * effect activates once the character exists, then re-runs on any change. */
+  private _forwardInputsToCharacter(): void {
     effect(() => {
       const inst = this.character();
       if (!inst || !this._characterRef) return;
       this._characterRef.setInput('worldWidth', this.width());
       this._characterRef.setInput('blockedRight', this.blockedRight());
       this._characterRef.setInput('blockedLeft', this.blockedLeft());
+      this._characterRef.setInput('projectileActive', this.hasActiveProjectile());
     });
+  }
 
-    // Per-tick subclass hook. Gated on `character()` so subclass logic
-    // doesn't run before the character exists.
+  /** Subscribe to the character's projectile-spawn output; each emit spawns
+   * the configured component into `#projectileHost`. Unhooks when the
+   * character changes or the directive tears down. */
+  private _wireProjectileSpawns(): void {
+    effect((onCleanup) => {
+      const inst = this.character();
+      if (!inst) return;
+      const sub = inst.projectileSpawnRequested.subscribe((req) => {
+        untracked(() => this._spawnProjectile(req));
+      });
+      onCleanup(() => sub.unsubscribe());
+    });
+  }
+
+  /** Per-tick loop: run the subclass hook (once the character exists) and
+   * sweep expired projectiles. */
+  private _runGameLoop(): void {
     effect(() => {
       this.loop.tick();
       untracked(() => {
         if (this.character()) this._onTick();
+        this._sweepExpiredProjectiles();
       });
     });
+  }
+
+  /** Destroy projectiles whose `expired()` signal is true. O(n) over the live
+   * count — fine at the concurrency cap of 1. */
+  private _sweepExpiredProjectiles(): void {
+    const refs = this._projectileRefs();
+    const live = refs.filter((r) => {
+      if (r.instance.expired()) {
+        r.destroy();
+        return false;
+      }
+      return true;
+    });
+    if (live.length !== refs.length) this._projectileRefs.set(live);
+  }
+
+  /** Instantiate a projectile into `#projectileHost`. Concurrency v1
+   * caps the on-screen count at 1 — additional requests are dropped
+   * so a button-mash doesn't queue waves indefinitely. */
+  private _spawnProjectile(req: ProjectileSpawnRequest): void {
+    if (this._projectileRefs().length > 0) return;
+    const cls = req.config.componentClass as Type<Projectile>;
+    const ref = this.projectileHost().createComponent(cls);
+    ref.setInput('worldWidth', this.width());
+    ref.setInput('spawnX', req.worldX);
+    ref.setInput('spawnY', req.worldY);
+    ref.setInput('direction', req.direction);
+    ref.setInput('leftLimit', this._leftLimit());
+    ref.setInput('rightLimit', this._rightLimit());
+    ref.setInput('speedOverride', req.config.speed);
+    ref.setInput('travelDistancePctOverride', req.config.travelDistancePct);
+    this._projectileRefs.update((list) => [...list, ref]);
+  }
+
+  /** Navigate to the next/previous stage. No-ops at the ends (the nav
+   * buttons are hidden there anyway). Bound from the parallax's
+   * `(next)` / `(previous)` outputs in each stage's template. */
+  /** Guards against a second nav trigger while the exit outro is already
+   * playing (the nav buttons stay live until the loading cover starts). */
+  private _leaving = false;
+
+  goToNextStage(): void {
+    if (this._nextPath) this._leaveTo(this._nextPath);
+  }
+
+  goToPreviousStage(): void {
+    if (this._previousPath) this._leaveTo(this._previousPath);
+  }
+
+  /** Play the character's stage-exit outro (back-dash → hat-throw), then run
+   * the loading transition into `path`. */
+  private async _leaveTo(path: string): Promise<void> {
+    if (this._leaving) return;
+    this._leaving = true;
+    await this.character()?.playOutro();
+    this._transition.navigateTo('/' + path);
   }
 
   /** Subclass hook — runs once after the stage view is rendered and
@@ -144,6 +323,38 @@ export abstract class Stage {
   /** Subclass hook — called every game-loop tick after the character is
    * spawned. Override to implement scroll/parallax/animation behavior. */
   protected _onTick(): void {}
+
+  /** Subclass hook — runs on viewport resize, after the stage geometry and
+   * the character have re-measured. Override to re-derive any cached
+   * viewport-dependent state (e.g. a scroll-progress baseline). */
+  protected _onResize(): void {}
+
+  /** Apply a world-scroll shift to every live projectile so they stay
+   * anchored to the world (not the screen) as the camera moves.
+   * Subclasses call this from `_onTick` after scrolling, with `deltaX`
+   * = the per-tick screen offset every world-fixed point should
+   * receive. For a Terry-style train scroll: when `train.scrollLeft`
+   * increases by N (camera moves right), pass `-N` so projectiles
+   * shift left to match. Without this, projectiles drift in screen
+   * relative to the world as Terry walks at the stage edge. */
+  protected shiftProjectiles(deltaX: number): void {
+    if (deltaX === 0) return;
+    for (const ref of this._projectileRefs()) {
+      ref.instance.accumulated.update((x) => x + deltaX);
+    }
+  }
+
+  /** Per-tick world-scroll distance (px) for the current frame, used by every
+   * stage's pinned-at-edge scroll. A special's own X velocity (already
+   * viewport-relative) takes precedence when active; otherwise the walk/crouch
+   * scroll rate, scaled by `width / referenceWidth` so the world scrolls the
+   * same fraction of the stage per tick on any viewport. */
+  protected worldScrollRate(specialXVelocity: number): number {
+    const specialV = Math.abs(specialXVelocity);
+    if (specialV > 0) return specialV;
+    const base = this.input.downKey() ? this.crouchScrollRate : this.walkScrollRate;
+    return (base * this.width()) / this.referenceWidth;
+  }
 
   /** Helper for subclasses with animated layers. Returns a `currentSrc`
    * signal (bind it to `[src]` or `[style.background-image]`) and an

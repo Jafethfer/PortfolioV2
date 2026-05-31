@@ -1,3 +1,5 @@
+import { Type } from '@angular/core';
+
 export type Direction = 'right' | 'left' | null;
 
 /** Tokens for the directional motion buffer. Consumed by `SpecialMove.motion`
@@ -38,7 +40,10 @@ export type AnimationName =
   | 'airLightKickUp'
   | 'airHeavyKick'
   | 'airHeavyKickUp'
-  | 'airHeavyRecover';
+  | 'airHeavyRecover'
+  /** Hat-throw / victory pose. Played (after a back-dash) as the stage-exit
+   * outro before the loading transition — see `Character.playOutro`. */
+  | 'victory';
 
 export interface CharacterVoices {
   lightPunch?: string;
@@ -151,4 +156,51 @@ export interface SpecialMove {
    * Rising Tackle use this: Terry leaps up, performs the move at peak,
    * then physically falls back down. */
   readonly fallAfterArc?: boolean;
+  /** Optional projectile spawn. When set, the character emits a spawn
+   * request on the configured frame of the special's animation; the
+   * Stage subscribes and instantiates the projectile into its
+   * `#projectileHost` slot. The character has no reference to the
+   * projectile after spawn — travel, despawn, and audio are owned by
+   * the projectile component. */
+  readonly projectile?: ProjectileSpawn;
+}
+
+/** Per-special projectile spawn config. The Stage uses this to
+ * instantiate the projectile component and pass it the spawn world-X,
+ * direction, world width, and stage edge bounds. `componentClass` is
+ * typed as `Type<unknown>` here to avoid a circular import between
+ * `models/` and `components/projectile/`; the Stage casts to the
+ * concrete `Type<Projectile>` at the use site. */
+export interface ProjectileSpawn {
+  readonly componentClass: Type<unknown>;
+  /** Animation frame index at which the projectile spawns. Defaults
+   * to 0 (spawn on launch). Resolved to an absolute tick by the
+   * character's `_runSpecial` from the sum of preceding frame
+   * durations — same pattern voice cues use. */
+  readonly spawnFrame?: number;
+  /** Horizontal offset (sprite-pixels) from the character's body
+   * anchor to the projectile's anchor at spawn. Positive = forward. */
+  readonly spawnOffsetX?: number;
+  /** Vertical offset (sprite-pixels) from the character's foot
+   * baseline. Negative = above ground. */
+  readonly spawnOffsetY?: number;
+  /** Optional speed override (px/tick). When set, replaces the
+   * projectile class's default `speed`. Lets light/heavy variants of
+   * the same special share a projectile class but cast at different
+   * speeds — heavy Power Wave is faster than light, etc. */
+  readonly speed?: number;
+  /** Optional travel-distance override (fraction of stage width).
+   * Defensive cap before the off-screen detector catches up. */
+  readonly travelDistancePct?: number;
+}
+
+/** Payload emitted on `Character.projectileSpawnRequested`. The Stage
+ * receives this, creates the projectile component, and forwards the
+ * spawn coordinates so the projectile doesn't have to reach back
+ * into the character. */
+export interface ProjectileSpawnRequest {
+  readonly config: ProjectileSpawn;
+  readonly worldX: number;
+  readonly worldY: number;
+  readonly direction: Direction;
 }
