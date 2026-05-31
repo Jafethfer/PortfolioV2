@@ -1,0 +1,11 @@
+:host {
+  display: contents;
+  // Small — a cap is a fraction of Terry's height. Tune to taste.
+  --projectile-height: 3.2cqw;
+}
+
+// Render the hat in front of Terry (his body img is z-40) so it reads as
+// tossed out toward the viewer as it arcs and falls back.
+img {
+  z-index: 45;
+}

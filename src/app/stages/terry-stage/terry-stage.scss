@@ -9,6 +9,9 @@
   // land roughly on top of the rail. Inherited by the child character
   // component via CSS custom-property cascade.
   --character-foot-offset: -10%;
+  // Spawn Terry at the far left so he starts at the beginning of the stage
+  // and walks rightward through the parallax cards (read left-to-right).
+  --character-spawn-x: 4cqw;
   // Y of the ground line measured from the bottom of `.w-full.relative`.
   // Train height (16.69cqw) minus Terry's foot-overlap (2.5cqw = 10% of
   // 25cqw idle) = where Terry's feet actually plant. Used by projectile

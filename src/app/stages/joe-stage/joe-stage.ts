@@ -6,8 +6,8 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { Stage, StageFrame } from '../components/stage/stage';
-import { MusicControl } from '../components/music-control/music-control';
+import { Stage, StageFrame } from '../../components/stage/stage';
+import { MusicControl } from '../../components/music-control/music-control';
 
 /**
  * Joe Higashi's stage â€” Thailand (Fatal Fury 2 / Mega Drive). Two key
@@ -95,20 +95,21 @@ export class JoeStage extends Stage {
     const tick = this.loop.tick();
     this.bgCycle.advance(tick);
     this.groundCycle.advance(tick);
+    this._scrollWorld();
+  }
 
-    // Scroll-linked motion: whenever the character is pinned at an edge
-    // and still trying to move into it, slide both the ground band and
-    // the backdrop by the same per-tick delta. `motionIntent` covers
-    // active specials too. During a special's travel window the scroll
-    // rate matches the special's per-tick X step, so the world keeps
-    // pace with the special's actual travel speed.
+  /**
+   * Scroll-linked motion: whenever the character is pinned at an edge and
+   * still trying to move into it, slide both the ground band and the backdrop
+   * by the same per-tick delta. `motionIntent` covers active specials too —
+   * during a special's travel window the scroll rate matches its per-tick X
+   * step, so the world keeps pace with the special's actual travel speed.
+   */
+  private _scrollWorld(): void {
     const character = this.character();
     const dir = character?.motionIntent ?? null;
     if (!dir) return;
-    const specialV = Math.abs(character?.specialXVelocity ?? 0);
-    const rate = specialV > 0
-      ? specialV
-      : (this.input.downKey() ? this.crouchScrollRate : this.walkScrollRate);
+    const rate = this.worldScrollRate(character?.specialXVelocity ?? 0);
     const ground = this.groundEl().nativeElement;
     const groundImg = this.groundImgEl().nativeElement;
     const maxShift = this.maxBgShiftPx();

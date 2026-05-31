@@ -101,6 +101,21 @@ export class InputService {
     }
   }
 
+  /** Backstep is a left→left double-tap. Called right after a 'left' press is
+   * pushed: if the previous motion was also 'left' within the double-tap
+   * window, fire the signal and drop the pair so a third tap doesn't
+   * re-trigger. */
+  private _detectBackstep(): void {
+    const buf = this._motionBuffer;
+    if (buf.length < 2) return;
+    const last = buf[buf.length - 1];
+    const prev = buf[buf.length - 2];
+    if (prev.input === 'left' && last.t - prev.t <= DOUBLE_TAP_WINDOW_MS) {
+      this.backstepPressed.update((n) => n + 1);
+      buf.length = buf.length - 2;
+    }
+  }
+
   private _onKeyDown = (e: KeyboardEvent): void => {
     if (ARROW_KEYS.has(e.key)) e.preventDefault();
     if (e.key === 'ArrowRight') {
@@ -114,19 +129,7 @@ export class InputService {
       if (!e.repeat) {
         this.lastDir.set('left');
         this._pushMotion('left');
-        // Backstep is a left→left double-tap. Inspect the motion buffer's
-        // last two entries (the one we just pushed + the previous direction
-        // press). If both are 'left' within the double-tap window, fire the
-        // signal and drop the pair so a third tap doesn't re-trigger.
-        const buf = this._motionBuffer;
-        if (buf.length >= 2) {
-          const last = buf[buf.length - 1];
-          const prev = buf[buf.length - 2];
-          if (prev.input === 'left' && last.t - prev.t <= DOUBLE_TAP_WINDOW_MS) {
-            this.backstepPressed.update((n) => n + 1);
-            buf.length = buf.length - 2;
-          }
-        }
+        this._detectBackstep();
       }
     } else if (e.key === 'ArrowDown') {
       if (!e.repeat) this._pushMotion('down');

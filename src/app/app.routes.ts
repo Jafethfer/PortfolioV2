@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { Terry } from './characters/terry';
-import { TerryStage } from './stages/terry-stage';
-import { JoeStage } from './stages/joe-stage';
+import { TerryStage } from './stages/terry-stage/terry-stage';
+import { JoeStage } from './stages/joe-stage/joe-stage';
 
 /**
  * Stage routing. Each entry mounts a concrete `Stage` subclass and feeds

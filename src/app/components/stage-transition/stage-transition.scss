@@ -1,0 +1,66 @@
+// Fatal-Fury-Special grid-wipe. A full-viewport grid of black tiles that
+// scatter-fill (cover) and scatter-clear (reveal), plus a "Now Loading"
+// label that surfaces once the screen is fully black.
+:host {
+  display: contents;
+}
+
+.wipe {
+  position: fixed;
+  inset: 0;
+  // Above everything — stage, parallax overlay, and the controls legend.
+  z-index: 9999;
+  // Invisible/non-blocking when idle (tiles are at opacity 0); only catch
+  // input while a transition is actually running.
+  pointer-events: none;
+
+  &--active {
+    pointer-events: auto;
+  }
+}
+
+.wipe__grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  // `--cols` / `--rows` are set from the component so the cell count and the
+  // grid track count can't drift apart. No gap — when every tile is opaque
+  // the screen is solid black (no seams of the scene showing through).
+  grid-template-columns: repeat(var(--cols), 1fr);
+  grid-template-rows: repeat(var(--rows), 1fr);
+}
+
+.wipe__cell {
+  background: #000;
+  opacity: 0;
+  // Each tile carries its own `transition-delay` (inline, from the component)
+  // so toggling `--covered` produces the staggered dissolve in both
+  // directions.
+  transition: opacity 140ms linear;
+}
+
+.wipe--covered .wipe__cell {
+  opacity: 1;
+}
+
+.wipe__label {
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 2.2vw;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow: 0 0 1vw rgba(255, 96, 16, 0.6);
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.wipe--covered .wipe__label {
+  opacity: 1;
+  // Hold off until the tiles have finished filling so the label appears on
+  // the fully-black screen, not mid-dissolve.
+  transition-delay: 540ms;
+}

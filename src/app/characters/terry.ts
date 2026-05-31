@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Character } from '../components/character/character';
 import { AnimationData, AnimationName, CharacterVoices, SpecialMove } from '../models/character';
 import { PowerWave } from '../projectiles/power-wave';
+import { Hat, HAT_FLIGHT_MS } from '../projectiles/hat';
 import {
   BURNING_KNUCKLE_FRAMES,
   CRACK_SHOOT_FRAMES,
@@ -1153,6 +1154,89 @@ export class Terry extends Character {
         },
       ],
     },
+    /** Victory / hat-throw outro (row 74). Terry celebrates then raises his
+     * arm to toss his cap. Played by `Character.playOutro` after the
+     * back-dash, before the stage-load transition. `loop: false` holds the
+     * final raised-arm pose. Box-mode crops â€” uniform 75Ã—144 cells with the
+     * body centered, so every frame shares the same anchor (bodyâ€‘x 37, foot
+     * line 138). Anchors/durations are first-pass estimates â€” tune from
+     * motion. (Tool detected 10 boxes; trim a frame here if it's really 9.) */
+    victory: {
+      frames: [
+        {
+          src: 'assets/img/characters/terry/victory/0.png',
+          w: 75,
+          h: 144,
+          anchorX: 37,
+          anchorY: 138,
+          durationMs: 130,
+        },
+        {
+          src: 'assets/img/characters/terry/victory/1.png',
+          w: 75,
+          h: 144,
+          anchorX: 37,
+          anchorY: 138,
+          durationMs: 120,
+        },
+        {
+          src: 'assets/img/characters/terry/victory/2.png',
+          w: 75,
+          h: 144,
+          anchorX: 37,
+          anchorY: 138,
+          durationMs: 110,
+        },
+        {
+          src: 'assets/img/characters/terry/victory/3.png',
+          w: 75,
+          h: 144,
+          anchorX: 37,
+          anchorY: 138,
+          durationMs: 110,
+        },
+        {
+          src: 'assets/img/characters/terry/victory/4.png',
+          w: 75,
+          h: 144,
+          anchorX: 37,
+          anchorY: 138,
+          durationMs: 100,
+        },
+        {
+          src: 'assets/img/characters/terry/victory/5.png',
+          w: 75,
+          h: 144,
+          anchorX: 37,
+          anchorY: 138,
+          durationMs: 100,
+        },
+        {
+          src: 'assets/img/characters/terry/victory/6.png',
+          w: 75,
+          h: 144,
+          anchorX: 37,
+          anchorY: 138,
+          durationMs: 90,
+        },
+        {
+          src: 'assets/img/characters/terry/victory/7.png',
+          w: 75,
+          h: 144,
+          anchorX: 37,
+          anchorY: 138,
+          durationMs: 100,
+        },
+        {
+          src: 'assets/img/characters/terry/victory/8.png',
+          w: 75,
+          h: 144,
+          anchorX: 37,
+          anchorY: 138,
+          durationMs: 400,
+        },
+      ],
+    },
   };
 
   /** Special moves â€” each is a directional motion + an attack button. The
@@ -1382,4 +1466,29 @@ export class Terry extends Character {
    * walk/backwards/crouch animations don't visually jump too far when
    * transitioning to/from idle. */
   protected override readonly bodyAnchorX = 31;
+
+  /**
+   * Terry's send-off: two back-dashes, then his "OK!" victory pose tossing his
+   * cap. The cap (the `Hat` projectile) arcs off Terry's raised fist, lands,
+   * and rests on the ground for a beat before the loading transition starts.
+   *
+   * Cap spawn placement: the fist sits at ~(62, 10) in the 75×144 victory cell.
+   * `worldX` references the sprite's left region and `frameTransform` pins each
+   * frame's anchor to a "body line" `bodyAnchorX` (31) source-px from it — so
+   * the fist is 31 + (62 − 37) = 56 source-px right of `worldX` and 138 − 10 =
+   * 128 up. Offsets are scaled by the spawn frame's rendered height over the
+   * 107 baseline, so the 144-tall frame needs the raw deltas × 107/144 (~0.74):
+   * X ≈ 56 × 0.74 ≈ 41, Y ≈ −128 × 0.74 ≈ −95 (tuned to 38 / −95 from motion).
+   */
+  override async playOutro(): Promise<void> {
+    this.scripted.set(true);
+    await this.backDash();
+    await this.backDash();
+    await this.playScriptedClip('victory', {
+      voice: { src: 'assets/sfx/terry/terry-ok.mp3', frame: 6 },
+      projectile: { componentClass: Hat, spawnFrame: 6, spawnOffsetX: 38, spawnOffsetY: -95 },
+      projectileFlightMs: HAT_FLIGHT_MS,
+      holdAfterLandMs: 1000,
+    });
+  }
 }

@@ -40,7 +40,10 @@ export type AnimationName =
   | 'airLightKickUp'
   | 'airHeavyKick'
   | 'airHeavyKickUp'
-  | 'airHeavyRecover';
+  | 'airHeavyRecover'
+  /** Hat-throw / victory pose. Played (after a back-dash) as the stage-exit
+   * outro before the loading transition — see `Character.playOutro`. */
+  | 'victory';
 
 export interface CharacterVoices {
   lightPunch?: string;
