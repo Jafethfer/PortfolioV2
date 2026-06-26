@@ -1,0 +1,21 @@
+/* ---------- Joe Higashi sprites ----------
+   Data-driven per-frame `<img>` engine (see character.ts) — same model as
+   Terry. This file only carries layout/positioning; the runtime sizes each
+   image via `var(--character-height)` × source aspect. */
+
+:host {
+  display: contents;
+  /* Standing height, paired with the base `spriteBaseHeight = 107` (Joe's
+     idle source height). Cascades to each per-frame <img> via
+     `width: calc(... * var(--character-height) / 107)`. */
+  --character-height: 25cqw;
+}
+
+:host > * {
+  /* Feet-on-ground offset + horizontal spawn — both inherited from the active
+     stage's `:host` custom properties (JoeStage sets a deeper
+     `--character-foot-offset` for its tall audience band). Fallbacks match the
+     Terry-stage tuning. */
+  margin-bottom: var(--character-foot-offset, -10%);
+  margin-left: var(--character-spawn-x, 20cqw);
+}

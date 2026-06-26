@@ -1,4 +1,4 @@
-import { AnimationFrame } from '../models/character';
+import { AnimationFrame } from '../../models/character';
 
 /**
  * Terry's cap sprite — the hat he tosses during his victory pose. Extracted

@@ -7,7 +7,6 @@ import {
 } from '@angular/core';
 import { Character } from '../../components/character/character';
 import { Stage } from '../../components/stage/stage';
-import { MusicControl } from '../../components/music-control/music-control';
 import { Parallax } from '../../components/parallax/parallax';
 import { infoCardsStage1 } from '../../constants/stage-info-cards';
 
@@ -27,7 +26,7 @@ import { infoCardsStage1 } from '../../constants/stage-info-cards';
   selector: 'app-terry-stage',
   templateUrl: './terry-stage.html',
   styleUrl: './terry-stage.scss',
-  imports: [MusicControl, Parallax],
+  imports: [Parallax],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TerryStage extends Stage {

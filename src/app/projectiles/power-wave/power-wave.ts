@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { Projectile } from '../components/projectile/projectile';
+import { Projectile } from '../../components/projectile/projectile';
 import { POWER_WAVE_PROJECTILE_FRAMES } from './power-wave-frames';
 
 /**
@@ -9,7 +9,7 @@ import { POWER_WAVE_PROJECTILE_FRAMES } from './power-wave-frames';
  */
 @Component({
   selector: 'app-power-wave',
-  templateUrl: '../components/projectile/projectile.html',
+  templateUrl: '../../components/projectile/projectile.html',
   styleUrl: './power-wave.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -22,4 +22,6 @@ export class PowerWave extends Projectile {
   // toward Terry. Heavy variant overrides this via SpecialMove.speed.
   protected override readonly speed = 24;
   protected override readonly travelDistancePct = 1.1;
+  // Flight whoosh as the wave launches. Played on the SFX channel.
+  protected override readonly spawnSfx = 'assets/sfx/misc/projectile-travel.mp3';
 }

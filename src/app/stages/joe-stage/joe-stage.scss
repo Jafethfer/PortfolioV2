@@ -9,6 +9,12 @@
   // land on the grass line. The 50cqw-tall ground means a much deeper
   // pull than Terry's stage — tune in cqw so it scales with the stage.
   --character-foot-offset: -50cqw;
+  // Y of the ground line measured from the bottom of `.w-full.relative`,
+  // inherited by projectile components so they render at Terry's feet via
+  // `bottom: var(--ground-y)` (without this they fall back to 0 and pin to
+  // the stage bottom). Larger than Terry's 6cqw because Joe's audience band
+  // is much taller. Trial value — tune so the Power Wave sits at his feet.
+  --ground-y: 4cqw;
 }
 
 .stage {

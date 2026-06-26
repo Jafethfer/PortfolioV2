@@ -7,7 +7,6 @@ import {
   viewChild,
 } from '@angular/core';
 import { Stage, StageFrame } from '../../components/stage/stage';
-import { MusicControl } from '../../components/music-control/music-control';
 
 /**
  * Joe Higashi's stage â€” Thailand (Fatal Fury 2 / Mega Drive). Two key
@@ -29,7 +28,6 @@ import { MusicControl } from '../../components/music-control/music-control';
   selector: 'app-joe-stage',
   templateUrl: './joe-stage.html',
   styleUrl: './joe-stage.scss',
-  imports: [MusicControl],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JoeStage extends Stage {

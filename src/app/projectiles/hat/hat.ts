@@ -5,9 +5,9 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { AnimationFrame } from '../models/character';
-import { GameLoopService } from '../services/game-loop.service';
-import { Projectile } from '../components/projectile/projectile';
+import { AnimationFrame } from '../../models/character';
+import { GameLoopService } from '../../services/game-loop.service';
+import { Projectile } from '../../components/projectile/projectile';
 import { HAT_FRAMES } from './hat-frames';
 
 /** Flight length (ticks) from the throw to touching the ground. Exported as
@@ -28,7 +28,7 @@ export const HAT_FLIGHT_MS = HAT_FLIGHT_TICKS * GameLoopService.TICK_MS;
  */
 @Component({
   selector: 'app-hat',
-  templateUrl: '../components/projectile/projectile.html',
+  templateUrl: '../../components/projectile/projectile.html',
   styleUrl: './hat.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

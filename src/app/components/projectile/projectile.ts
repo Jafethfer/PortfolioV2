@@ -12,6 +12,8 @@ import {
 } from '@angular/core';
 import { AnimationData, AnimationFrame, Direction } from '../../models/character';
 import { GameLoopService } from '../../services/game-loop.service';
+import { AudioService } from '../../services/audio.service';
+import { REFERENCE_WIDTH } from '../../constants/viewport';
 
 /**
  * Abstract projectile base. Mirrors `Character` in structure — owns
@@ -67,9 +69,18 @@ export abstract class Projectile {
 
   /** Subclasses must provide. */
   protected abstract readonly frames: AnimationData;
-  /** Px/tick advance. Default ~14 (≈ walk × 1.4 — reads as a clearly
-   * faster forward motion than the character itself). */
+  /** Px/tick advance, calibrated against `referenceWidth`. Default ~14
+   * (≈ walk × 1.4 — reads as a clearly faster forward motion than the
+   * character itself). The effective per-tick advance is scaled by
+   * `worldWidth / referenceWidth` (see `_physicsTick`) so the wave covers
+   * the same FRACTION of the stage per tick on any viewport — matching how
+   * `Character` scales its walk speed and `Stage` its scroll rate. */
   protected readonly speed: number = 14;
+  /** Reference stage width the `speed` above is calibrated against. Matches
+   * the shared `REFERENCE_WIDTH` the character/stage use, so a wave keeps the
+   * same speed RELATIONSHIP to the world-scroll rate on every viewport (it
+   * must outpace the scroll or it gets dragged backward). */
+  protected readonly referenceWidth: number = REFERENCE_WIDTH;
   /** Despawn cap, as a fraction of stage width travelled from spawn.
    * 1.2 means the projectile flies 120% of the stage width before
    * vanishing — covers the full visible area with room to spare. */
@@ -79,6 +90,13 @@ export abstract class Projectile {
    * so a frame of `h === heightBaseline` renders exactly at that height. */
   protected readonly heightBaseline: number = 76;
 
+  /** Launch/flight SFX, played once when the projectile spawns. Optional —
+   * subclasses set it (left undefined = silent). Played on the mixer's
+   * `'sfx'` channel, so the SFX slider scales it. */
+  protected readonly spawnSfx?: string;
+  /** Volume the `spawnSfx` is authored at (pre-mixer level). */
+  protected readonly spawnSfxVolume: number = 0.5;
+
   private _hostLeft = 0;
   private _startAccumulated = 0;
   private _frameStartTick = 0;
@@ -86,6 +104,7 @@ export abstract class Projectile {
 
   readonly el = viewChild<ElementRef<HTMLImageElement>>('el');
   protected readonly _loop = inject(GameLoopService);
+  protected readonly _audio = inject(AudioService);
 
   readonly currentFrameData = computed<AnimationFrame | null>(
     () => this.frames.frames[this.currentFrameIndex()] ?? null,
@@ -115,6 +134,10 @@ export abstract class Projectile {
       this._startAccumulated = this.spawnX() - this._hostLeft;
       this.accumulated.set(this._startAccumulated);
 
+      // Launch SFX — fires as the projectile appears (the stage spawns it on
+      // the special's release frame), so the whoosh syncs with the visual.
+      this._audio.playVoice(this.spawnSfx, this.spawnSfxVolume, 'sfx');
+
       // Preload all frame images so the per-tick src change doesn't
       // flash while the next frame fetches.
       for (const frame of this.frames.frames) {
@@ -137,7 +160,12 @@ export abstract class Projectile {
   private _physicsTick(): void {
     if (this.expired()) return;
     const dirSign = this.direction() === 'left' ? -1 : 1;
-    const speed = this.speedOverride() ?? this.speed;
+    const baseSpeed = this.speedOverride() ?? this.speed;
+    // Scale to the current viewport so the wave covers the same fraction of
+    // the stage per tick regardless of width — the character's walk speed and
+    // the stage's scroll rate scale the same way, keeping their relationship
+    // (the wave must outpace the scroll) constant across viewports.
+    const speed = (baseSpeed * this.worldWidth()) / this.referenceWidth;
     const travelCap = this.travelDistancePctOverride() ?? this.travelDistancePct;
     this.accumulated.update((x) => x + speed * dirSign);
     // Off-screen despawn: the <img>'s left edge in absolute screen

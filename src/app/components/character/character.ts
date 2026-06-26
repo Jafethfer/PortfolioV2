@@ -24,7 +24,7 @@ import {
 } from '../../models/character';
 import { InputService } from '../../services/input.service';
 import { GameLoopService } from '../../services/game-loop.service';
-import { AudioService } from '../../services/audio.service';
+import { AudioService, SoundCategory } from '../../services/audio.service';
 import { REFERENCE_WIDTH } from '../../constants/viewport';
 
 /**
@@ -304,7 +304,12 @@ export abstract class Character {
    * absolute tick at which it should fire (computed from `SpecialMove.voices`
    * frame indices at launch). The physics tick drains entries as their
    * tick is reached; the queue is cleared on attack end. */
-  private _pendingVoiceCues: { src: string; volume: number; tick: number }[] = [];
+  private _pendingVoiceCues: {
+    src: string;
+    volume: number;
+    tick: number;
+    category: SoundCategory;
+  }[] = [];
   private _pendingWhiffSrc: string | undefined = undefined;
   /** Queue of projectile-spawn events from the active special, each
    * tagged with the absolute tick at which `projectileSpawnRequested`
@@ -318,6 +323,9 @@ export abstract class Character {
    * the whoosh â€” otherwise the jump SFX bleeds over into the special. */
   private _activeJumpSfx: HTMLAudioElement | null = null;
   private _frameStartTick = 0;
+  /** Step direction (+1 forward / -1 reverse) for `bounce` (ping-pong)
+   * animations. Reset to +1 whenever the animation changes. */
+  private _frameDir = 1;
   /** Keeps preloaded Image objects alive for the character's lifetime so
    * the browser's memory cache doesn't evict them â€” otherwise the dev
    * server's no-store cache-control would force a fresh fetch on every
@@ -532,6 +540,7 @@ export abstract class Character {
       this.animation();
       untracked(() => {
         this.currentFrameIndex.set(0);
+        this._frameDir = 1;
         this._frameStartTick = this._loop.tick();
       });
     });
@@ -594,6 +603,7 @@ export abstract class Character {
       this._pendingVoiceCues.push({
         src: opts.voice.src,
         volume: this.voiceVolume,
+        category: 'voice',
         tick: this._attackStartTick + this._windupTicks(data.frames, opts.voice.frame ?? 0),
       });
     }
@@ -915,6 +925,7 @@ export abstract class Character {
       this._pendingVoiceCues.push({
         src: v.src,
         volume: this.voiceVolume,
+        category: 'voice',
         tick: this._attackStartTick + this._windupTicks(s.frames.frames, v.frame ?? 0),
       });
     }
@@ -979,7 +990,7 @@ export abstract class Character {
     const frames = this.animationFrames[opts.animation];
     if (!frames) return;
     this._audio.playVoice(opts.voiceSrc, this.voiceVolume);
-    this._audio.playVoice(opts.whiffSrc, this.sfxVolume);
+    this._audio.playVoice(opts.whiffSrc, this.sfxVolume, 'sfx');
     this.animation.set(opts.animation);
     this._airAttackUsed = true;
     // Heavy aerials schedule a recovery transition. The past-apex branch
@@ -1024,7 +1035,7 @@ export abstract class Character {
     // (which sync the whoosh with forward motion) defer via `deferWhiff`
     // and let the physics tick play it at travel-start.
     if (!opts.deferWhiff) {
-      this._audio.playVoice(opts.whiffSrc, opts.whiffVolume ?? this.sfxVolume);
+      this._audio.playVoice(opts.whiffSrc, opts.whiffVolume ?? this.sfxVolume, 'sfx');
     }
     this.animation.set(opts.animation);
     // Reset frame state explicitly. The animation-change effect already does
@@ -1079,6 +1090,7 @@ export abstract class Character {
         this._pendingVoiceCues.push({
           src: v.src,
           volume: this.backstepSfxVolume,
+          category: 'sfx',
           tick: this._attackStartTick + this._windupTicks(frames.frames, v.frame ?? 0),
         });
       }
@@ -1104,7 +1116,7 @@ export abstract class Character {
     // use the character-agnostic jump SFX from `voices.jump`. Stash the
     // Audio so `_runSpecial` can stop it when a follow-up motion (e.g.
     // `downâ†’up+P` for Rising Tackle) converts the jump into a special.
-    this._activeJumpSfx = this._audio.playVoice(this.voices['jump'], this.jumpSfxVolume);
+    this._activeJumpSfx = this._audio.playVoice(this.voices['jump'], this.jumpSfxVolume, 'sfx');
   }
 
   /** Advances the current per-frame animation's frame index when the current
@@ -1118,7 +1130,16 @@ export abstract class Character {
     if (!frame) return;
     const durationTicks = Math.round(frame.durationMs / GameLoopService.TICK_MS);
     if (this._loop.tick() - this._frameStartTick < durationTicks) return;
-    if (idx + 1 < data.frames.length) {
+    const n = data.frames.length;
+    if (data.bounce && n > 2) {
+      // Ping-pong: walk to the last frame, then back to the first, forever.
+      // Reflect off either end so the end frames aren't shown twice in a row.
+      let next = idx + this._frameDir;
+      if (next >= n) { next = n - 2; this._frameDir = -1; }
+      else if (next < 0) { next = 1; this._frameDir = 1; }
+      this.currentFrameIndex.set(next);
+      this._frameStartTick = this._loop.tick();
+    } else if (idx + 1 < n) {
       this.currentFrameIndex.set(idx + 1);
       this._frameStartTick = this._loop.tick();
     } else if (data.loop) {
@@ -1163,7 +1184,7 @@ export abstract class Character {
     // (when travelElapsed crosses 0) so the whoosh lands with the forward
     // motion, not during the windup.
     if (travelElapsed >= 0 && this._pendingWhiffSrc) {
-      this._audio.playVoice(this._pendingWhiffSrc, this._pendingWhiffVolume);
+      this._audio.playVoice(this._pendingWhiffSrc, this._pendingWhiffVolume, 'sfx');
       this._pendingWhiffSrc = undefined;
     }
     this._drainVoiceCues(tick);
@@ -1179,7 +1200,7 @@ export abstract class Character {
     if (this._pendingVoiceCues.length === 0) return;
     this._pendingVoiceCues = this._pendingVoiceCues.filter((cue) => {
       if (tick >= cue.tick) {
-        this._audio.playVoice(cue.src, cue.volume);
+        this._audio.playVoice(cue.src, cue.volume, cue.category);
         return false;
       }
       return true;

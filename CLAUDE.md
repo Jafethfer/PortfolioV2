@@ -6,19 +6,19 @@ Interactive portfolio site. The stage features Terry Bogard (KOF) walking, jumpi
 
 - `src/index.html`, `src/main.ts`, `src/styles.scss` — entry + stage/parallax CSS (sprite styles live with each character)
 - `src/tailwind.css` — Tailwind v4 entry (plain CSS so Sass doesn't try to process it)
-- `src/app/app.{ts,html,scss}` — root component, hosts `<app-stage>` + `<app-music-control>`; picks which `Character` subclass the stage instantiates
+- `src/app/app.{ts,html,scss}` — root component, hosts `<router-outlet>` (the active stage) + the global `<app-audio-mixer>`; picks which `Character` subclass the stage instantiates
 - `src/app/models/character.ts` — shared types: `AnimationName`, `CharacterAnimations`, `CharacterVoices`, `Direction`
 - `src/app/services/`
   - `input.service.ts` — keyboard → signals (`rightKey`, `leftKey`, `downKey`, `lastDir`, `jumpPressed`)
   - `game-loop.service.ts` — 30 ms `tick` signal; effects depending on it re-run each frame
-  - `audio.service.ts` — voice + bg music playback
+  - `audio.service.ts` — voice/SFX/bg-music playback **and** the volume mixer. Owns three master-volume signals (`musicVolume` 0.2, `sfxVolume` 0.7, `voiceVolume` 0.3) that back the mixer sliders. Each play call passes the per-sound level it was authored at; the service rescales it by the live master (`effective = base × master / reference`) so a slider attenuates its whole channel proportionally. `playVoice(src, volume, category)` takes a `SoundCategory` (`'music' | 'sfx' | 'voice'`). Stages register their OST via `setBgMusic(src)`; the live bg element's volume tracks the music slider, and autoplay-blocked starts resume on the first user gesture.
 - `src/app/characters/` — one folder per character. Each character is a concrete `@Component` subclass of `Character` plus its sprite stylesheet.
   - `terry.{ts,scss}` — `Terry extends Character`, selector `app-terry`, owns its animation map + sprite styles.
 - `src/app/components/`
   - `character/character.ts` — abstract `@Directive()` base class; owns physics, input wiring, and animation state machine; declares `protected abstract readonly animations`. Has no template/styles of its own — concrete subclasses supply both.
   - `character/character.html` — shared template used by every character subclass via relative `templateUrl`.
   - `stage/stage.ts` — owns parallax bg, misc layer, train; measures own width + edges; computes `blocked` flags; instantiates the active `Character` subclass via `*ngComponentOutlet`.
-  - `music-control/music-control.ts` — bg music toggle
+  - `audio-mixer/audio-mixer.ts` — global volume mixer (three sliders: music / SFX / voices) bound to the `AudioService` master-volume signals. Lives at the app root, outside any stage, so it persists across stage navigation.
 - `public/assets/img/` — sprite strips and stage backgrounds (served at `/assets/img/…`)
 - `public/assets/sfx/` — audio
 

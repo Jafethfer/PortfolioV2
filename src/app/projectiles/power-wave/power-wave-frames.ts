@@ -1,4 +1,4 @@
-import { AnimationFrame } from '../models/character';
+import { AnimationFrame } from '../../models/character';
 
 /**
  * Power Wave flame-projectile sprite metadata. Extracted from row 51 of

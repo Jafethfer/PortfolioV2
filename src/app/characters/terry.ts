@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Character } from '../components/character/character';
 import { AnimationData, AnimationName, CharacterVoices, SpecialMove } from '../models/character';
-import { PowerWave } from '../projectiles/power-wave';
-import { Hat, HAT_FLIGHT_MS } from '../projectiles/hat';
+import { PowerWave } from '../projectiles/power-wave/power-wave';
+import { Hat, HAT_FLIGHT_MS } from '../projectiles/hat/hat';
 import {
   BURNING_KNUCKLE_FRAMES,
   CRACK_SHOOT_FRAMES,
@@ -53,6 +53,10 @@ export class Terry extends Character {
   protected override readonly animationFrames: Partial<Record<AnimationName, AnimationData>> = {
     idle: {
       loop: true,
+      // Ping-pong the breathing cycle (0→1→2→3→2→1→0…) so it eases back
+      // instead of snapping frame 3→0. Step cycles (walk/backwards/crouch)
+      // stay plain forward loops below — bouncing them would moonwalk.
+      bounce: true,
       frames: [
         {
           src: 'assets/img/characters/terry/idle/0.png',
@@ -73,14 +77,6 @@ export class Terry extends Character {
         {
           src: 'assets/img/characters/terry/idle/2.png',
           w: 65,
-          h: 107,
-          anchorX: 31,
-          anchorY: 100,
-          durationMs: 150,
-        },
-        {
-          src: 'assets/img/characters/terry/idle/3.png',
-          w: 64,
           h: 107,
           anchorX: 31,
           anchorY: 100,
@@ -1421,7 +1417,7 @@ export class Terry extends Character {
         { src: 'assets/sfx/terry/terry-power-wave-2.mp3', frame: 5 },
       ],
       // No whiff â€” Power Wave is a stationary cast; the projectile owns
-      // its own travel/impact SFX (added separately when those clips ship).
+      // its own launch/flight SFX (see `PowerWave.spawnSfx`).
       frames: {
         frames: withDurations(POWER_WAVE_FRAMES, [40, 70, 90, 80, 80, 100, 150]),
       },

@@ -17,6 +17,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { REFERENCE_WIDTH } from '../../constants/viewport';
+import { AudioService } from '../../services/audio.service';
 import { StageTransitionService } from '../../services/stage-transition.service';
 import { Character } from '../character/character';
 import { Projectile } from '../projectile/projectile';
@@ -63,8 +64,9 @@ export interface StageFrame {
  */
 @Directive()
 export abstract class Stage {
-  /** Background music for the stage. Optional — stages without an OST
-   * yet can omit the music-control button in their template. */
+  /** Background music for the stage. Optional — stages without an OST yet
+   * leave it unset and no track is registered with the mixer. Started in
+   * `_startStageMusic`; the global `<app-audio-mixer>` owns its volume. */
   protected readonly musicSrc?: string;
 
   /** Per-tick scroll rates for ground panning when the character is
@@ -94,6 +96,7 @@ export abstract class Stage {
   private readonly _router = inject(Router);
   private readonly _route = inject(ActivatedRoute);
   private readonly _transition = inject(StageTransitionService);
+  private readonly _audio = inject(AudioService);
 
   /** Resolved neighbour stage paths for Next/Previous navigation, derived
    * from the router config order (single source of truth — no separate
@@ -162,6 +165,17 @@ export abstract class Stage {
     this._wireProjectileSpawns();
     this._runGameLoop();
     this._wireResize();
+    this._startStageMusic();
+  }
+
+  /** Register this stage's OST with the audio mixer once rendered. Deferred to
+   * `afterNextRender` because `musicSrc` is a subclass field, not yet
+   * initialized while the base constructor runs. The mixer's music slider owns
+   * the volume from here on; autoplay-blocked starts resume on first input. */
+  private _startStageMusic(): void {
+    afterNextRender(() => {
+      if (this.musicSrc) this._audio.setBgMusic(this.musicSrc);
+    });
   }
 
   /** Resolve this stage's neighbour paths from the ordered router config. Only
