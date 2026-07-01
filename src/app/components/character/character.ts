@@ -1051,6 +1051,24 @@ export abstract class Character {
     this._attackStartTick = this._loop.tick();
     this._attackDurationTicks = Math.round(totalMs / GameLoopService.TICK_MS);
     this.inAttack.set(true);
+    // Optional per-animation forward travel for a NORMAL attack (e.g. a
+    // lunging crouch kick). Sets up the same travel window the physics tick's
+    // `_applySpecialTravel` consumes; specials use `_commitSpecialTravel`
+    // instead and never carry travel on their AnimationData, so this only
+    // fires for normals that opt in via `AnimationData.travelDistancePct`.
+    const data = opts.frames;
+    if (data?.travelDistancePct) {
+      const startFrame = data.travelStartFrame ?? 0;
+      const endFrame = data.travelEndFrame ?? data.frames.length;
+      const windupTicks = this._windupTicks(data.frames, startFrame);
+      const travelMs = data.frames
+        .slice(startFrame, endFrame)
+        .reduce((sum, f) => sum + f.durationMs, 0);
+      const travelTicks = Math.max(1, Math.round(travelMs / GameLoopService.TICK_MS));
+      this._specialXStep = (this.worldWidth() * data.travelDistancePct) / travelTicks;
+      this._specialTravelStartTick = this._attackStartTick + windupTicks;
+      this._specialTravelEndTick = this._specialTravelStartTick + travelTicks;
+    }
   }
 
   /** Backstep â€” a quick backwards hop triggered by leftâ†’left. Reuses the

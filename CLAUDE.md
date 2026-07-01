@@ -2,6 +2,18 @@
 
 Interactive portfolio site. The stage features Terry Bogard (KOF) walking, jumping, crouching across a parallax background with a train and stage music. Angular 21 (standalone, signals, SCSS).
 
+## Commenting policy
+
+Only write comments that explain **core engine mechanics** — the non-obvious *why* behind engine behavior (the physics/jump state machine, signal/effect wiring, audio rescaling, projectile spawn flow, data-contract interfaces in `models/`). If the code already says *what* it does, don't restate it.
+
+Do **not** write low-value comments, especially in character/animation **data** files (`characters/*.ts`, `*-frames.ts`, character `*.scss`):
+- No narrating a data literal — frame source rows/numbers, poses, silhouettes, per-frame `w/h/anchorX/durationMs`, or which sheet a sprite came from.
+- No per-animation description blocks (what a punch/jump/crouch "looks like" or "reads as").
+- No comparisons between characters (e.g. "how Joe differs from Terry", "same as Terry's walk", "matches Terry's timing").
+- No rationale for a tuning number in a subclass (why a duration/anchor/volume has its value).
+
+For a character subclass, the only acceptable comment is a one-line class identifier (e.g. `/** Joe Higashi — concrete Character subclass (Muay Thai fighter, JoeStage). */`). Frame-mapping details belong in commit messages or the Joe/Terry progress notes, not in the source. When in doubt, leave the comment out.
+
 ## Repo layout
 
 - `src/index.html`, `src/main.ts`, `src/styles.scss` — entry + stage/parallax CSS (sprite styles live with each character)
@@ -59,11 +71,35 @@ node sprite-tool.mjs crop    <source> <transparent> <row> <frames> <out> [align=
 ```
 - Detects **67 rows** by connected components of the light-teal frame-box colour (0,128,128).
 - `contact` builds an indexed grid (3×5 pixel digit font baked in) — split into 10-row chunks for easy browsing.
+- `cropframes <src> <trans> <row> <i,j,k> <outDir>` crops a hand-picked frame LIST to tight bboxes (`0.png…`), printing per-frame `w/h/anchorX_feet/anchorX_boxC/anchorY`.
+- `mergeframes <src> <trans> <row> <i,j,…> <out.png>` crops the **combined span** of several adjacent frame boxes as ONE sprite — for a pose the box detector split across boxes (e.g. Joe's crouch-sweep windup lived across row3 boxes 5+6). Union of the boxes' extents, tight-bboxed.
 - `crop` has two alignment modes:
   - **`center` (default)** — detect each sprite's bounding box by scanning per-column bg-fraction in the source sheet (≥85% → "between frames"). Pick the (N−1) widest gap runs, **merge runs separated by 1–2 columns** (anti-aliasing splits gaps), then place each divider at the centre of the **tightest pure-bg subrun** (≥99.5% bg) within the gap so toes/fingertips that bleed into the gap don't get cropped. Each sprite's bbox is centred in its output cell. Right for step animations (walk, idle) where every frame has roughly the same silhouette width.
   - **`box`** — use the source sheet's frame BOXES (the cyan/teal rectangles) directly as the cropping spans, and centre each box in its output cell. Boxes vary in width when a limb extends but stay positioned around the character's body anchor, so this keeps the body's pixel position constant across frames — correct for attack animations where one frame extends an arm/leg far beyond the others. Note: residual body shift from genuine artistic lean in the source is preserved (this mode only removes the artificial centring shift).
 - Y bounds are expanded into the safe gap to neighbouring rows so motion lines / extended limbs aren't clipped.
 - Output cells are `maxFrameW + 4` wide with each sprite centred — prevents adjacent-frame bleed during step animations.
+
+### `anchor-montage.mjs` — alignment verifier
+```
+node anchor-montage.mjs <out.png> <file,anchorX,anchorY> <file,anchorX,anchorY> …
+```
+Composites each cropped frame onto a fixed cell so its `anchorX` lands on a shared red guide column and `anchorY` (foot) on the cell baseline, and also emits `<out>-overlay.png` with all frames stacked semi-transparent. Ghosting in the overlay shows body drift, so it's the go-to check for whether a chosen anchor (feet-centre vs bbox-centre) keeps the torso planted before wiring an animation into the character.
+
+**Output convention:** all verification/preview PNGs (anchor montages, `joe-zoom` contact sheets, etc.) are written to the `PortfolioV2Assets\` root so they persist and are easy to open. These `.mjs` tools all run from that folder (that's where the Jimp install lives); do not copy them elsewhere.
+
+### `foot-detect.mjs` / `zoom-ruler.mjs` — foot-position helpers
+```
+node foot-detect.mjs <file> <file> …
+node zoom-ruler.mjs <out.png> <file> <file> …
+```
+`foot-detect` scans the bottom ~12% of each sprite and reports the ground-contact pixel **clusters** (x-range + centre). `zoom-ruler` stacks the frames scaled up with a 5px column ruler so foot columns can be read by eye. Both report clusters **by screen x-position only** — they do NOT know anatomical left vs right, and cannot tell which of two grounded feet is the pivot. That identity must come from the user (or the reference animation).
+
+### Planted-foot anchoring (kicks and any pivot move)
+For a move where one foot must stay planted while a limb extends (kicks especially), the rule is: **`anchorX − pivotFootColumn` must be the same constant on every frame.** That pins the pivot foot to one world spot; the body/leg then extend around it. Method:
+1. Get the pivot foot's column per frame from `foot-detect` (single ground cluster = unambiguous; if a frame has two feet, **ask which one is the pivot** — the tool can't tell).
+2. Pick the constant `K` so the pivot lands where **idle** leaves that same foot (no pop on entry): measure idle's foot world (`26 + (idleFootCol − idleAnchorX)·scale`) and solve `anchorX = pivotFootColumn − (idleFootCol − idleAnchorX)`.
+3. `anchorX` going **negative** on a wide extension frame is expected and correct (Terry's heavy kick frame 4 is `-6`; Joe's light-kick extension is `-2`).
+Do NOT anchor kicks on the bbox-centre or foot-centre — those track the moving silhouette, so the planted foot visibly slides.
 
 ## Row → animation mapping
 
