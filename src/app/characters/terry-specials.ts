@@ -1,31 +1,15 @@
 import { AnimationFrame } from '../models/character';
 
-/**
- * Sprite frame data for Terry's special moves. Kept separate from `terry.ts`
- * so each special's sprite metadata (the part stable across light/heavy/EX
- * variants) can live in one place â€” `terry.ts` consumes these via the
- * `withDurations` helper, applying per-variant frame timings on top.
- */
-
-/** Sprite metadata minus per-frame timing â€” the part that's stable across
- * a move's light/heavy/EX variants. Each variant supplies its own
- * `durationMs[]` via `withDurations` to control timing independently while
- * pointing at the same images. */
+/** Sprite metadata minus per-frame timing. */
 export type SpriteFrame = Omit<AnimationFrame, 'durationMs'>;
 
-/** Zips a shared sprite array with a per-variant durations array. Lengths
- * are assumed to match â€” author error if they don't. */
+/** Zips a shared sprite array with a per-variant durations array. */
 export const withDurations = (
   sprites: readonly SpriteFrame[],
   durations: readonly number[],
 ) => sprites.map((f, i) => ({ ...f, durationMs: durations[i] }));
 
-/**
- * Crack Shoot â€” shared by the light and heavy variants. Every airborne
- * frame's foot anchor would otherwise swing 17-54px as Terry rotates, so
- * `anchorX` is pinned to `bodyAnchorX` (31) on every frame to keep the
- * body planted around the standing position.
- */
+/** Crack Shoot frames. */
 export const CRACK_SHOOT_FRAMES: readonly SpriteFrame[] = [
   { src: 'assets/img/characters/terry/crack-shoot/0.png', w: 66,  h: 113, anchorX: 31, anchorY: 105 },
   { src: 'assets/img/characters/terry/crack-shoot/1.png', w: 84,  h: 113, anchorX: 31, anchorY: 105 },
@@ -37,38 +21,7 @@ export const CRACK_SHOOT_FRAMES: readonly SpriteFrame[] = [
   { src: 'assets/img/characters/terry/crack-shoot/7.png', w: 57,  h: 113, anchorX: 31, anchorY: 105 },
 ];
 
-/**
- * Burning Knuckle â€” shared by the light and heavy variants. Re-extracted
- * via per-cell OUTER_BG flood-fill (see `extract-burning-knuckle.mjs`)
- * since the row spans two sub-rows and the trailing flames bridge column
- * gaps. Per-frame `anchorX` points at each pose's body centerline so wide
- * flame-trailing frames (6-8) and narrow stance frames stay aligned with
- * each other and with idle when rendered.
- *
- * Frames 0-5: stance â†’ V-pose flash â†’ lean back â†’ brace â†’ charge fist â†’
- *             flame growing
- * Frames 6-8: punch released â†’ big punch with trailing flame â†’ continuing
- *             punch (this is the forward-charge window)
- * Frames 9-10: arms cock back with flame â†’ brace recovery
- */
-/**
- * Rising Tackle â€” shared by the light and heavy variants. Source-cell
- * crops of row 46 (the spinning anti-air uppercut).
- *
- * Anchoring is mixed by phase:
- *  - Ground frames 0-2 (windup â†’ crouch â†’ launch): anchor to the
- *    rightmost-bottom-pixel cluster (Terry's planted right foot) âˆ’ 26,
- *    matching idle's planted-foot-vs-anchor relationship â€” same
- *    convention heavy kick uses, so the foot stays locked at the same
- *    world-X across idle and the windup.
- *  - Airborne frames 3-7 (leap + spinning flip): anchor to the body
- *    centroid âˆ’ 26. That places the body's centerline at the same
- *    world-X as the planted foot, so Terry rises straight up from the
- *    launch point instead of pivoting around whichever limb happens to
- *    extend rightmost in each rotation pose.
- *  - Frames 8-9: unused in the current setup (the fall-after-arc
- *    handoff uses the jumpFall sprite for descent + landing).
- */
+/** Rising Tackle frames. */
 export const RISING_TACKLE_FRAMES: readonly SpriteFrame[] = [
   { src: 'assets/img/characters/terry/rising-tackle/0.png', w: 57, h: 119, anchorX: 24, anchorY: 118 },
   { src: 'assets/img/characters/terry/rising-tackle/1.png', w: 63, h: 119, anchorX: 28, anchorY: 118 },
@@ -82,25 +35,7 @@ export const RISING_TACKLE_FRAMES: readonly SpriteFrame[] = [
   { src: 'assets/img/characters/terry/rising-tackle/9.png', w: 64, h: 119, anchorX: 30, anchorY: 118 },
 ];
 
-/**
- * Power Wave â€” shared by the light and heavy variants. Extracted via
- * per-cell OUTER_BG flood-fill (see `extract-power-wave.mjs`) because the
- * row spans two sub-rows (7 character frames on top + a flame-projectile
- * strip below). Per-frame `anchorX` = each frame's torso centroid + 3 (the
- * idle anchor-vs-centroid offset), so Terry's body stays planted at the
- * same world-X across the entire move â€” Power Wave is a stationary cast,
- * no X/Y travel for Terry. The wave projectile itself will be added later
- * as a separate entity.
- *
- * Frame 0: stance (brief settle into the cast)
- * Frame 1: arms pulling back, gathering energy
- * Frame 2: ball charged overhead â€” tallest frame because the ball
- *          extends well above Terry's head
- * Frame 3: ball cocked back at the right shoulder (the windup peak)
- * Frame 4: lunging forward, ball releasing
- * Frame 5: arm extended forward (release pose â€” when the wave would spawn)
- * Frame 6: recovery
- */
+/** Power Wave frames. */
 export const POWER_WAVE_FRAMES: readonly SpriteFrame[] = [
   { src: 'assets/img/characters/terry/power-wave/0.png', w: 57, h: 100, anchorX: 27, anchorY:  99 },
   { src: 'assets/img/characters/terry/power-wave/1.png', w: 80, h: 107, anchorX: 41, anchorY: 106 },

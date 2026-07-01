@@ -11,15 +11,7 @@ import {
   withDurations,
 } from './terry-specials';
 
-/**
- * Terry Bogard (Fatal Fury / KOF). Concrete character. Owns the mapping from
- * abstract animation names to sprite CSS classes, and its sprite stylesheet
- * lives next to this file as `terry.scss`.
- *
- * Adding another character: copy this pair (`<name>.ts` + `<name>.scss`),
- * swap the animation class names, drop the matching sprite strips into
- * `public/assets/img/`, then have App pass the new class to <app-stage>.
- */
+/** Terry Bogard — concrete Character subclass. */
 @Component({
   selector: 'app-terry',
   templateUrl: '../components/character/character.html',
@@ -30,32 +22,19 @@ export class Terry extends Character {
   protected override readonly voices: CharacterVoices = {
     lightPunch: 'assets/sfx/terry/terry-light-punch.mp3',
     heavyPunch: 'assets/sfx/terry/terry-heavy-punch.mp3',
-    // Reuse the punch shout for kicks â€” same exertion grunt works for both.
     lightKick: 'assets/sfx/terry/terry-light-punch.mp3',
     heavyKick: 'assets/sfx/terry/terry-heavy-punch.mp3',
     taunt: 'assets/sfx/terry/terry-taunt.mp3',
-    // Non-voice combat SFX live in `misc/` because they're character-agnostic
-    // (every fighter's jab makes the same whoosh). Played at `sfxVolume`
-    // alongside the character-specific voice clip.
     lightPunchWhiff: 'assets/sfx/misc/light-punch-whiff.mp3',
     heavyPunchWhiff: 'assets/sfx/misc/heavy-punch-whiff.mp3',
-    // Reuse the punch whiff for kicks â€” same generic whoosh works for both.
     lightKickWhiff: 'assets/sfx/misc/light-punch-whiff.mp3',
     heavyKickWhiff: 'assets/sfx/misc/heavy-punch-whiff.mp3',
     jump: 'assets/sfx/misc/jump.mp3',
-    // lightKick / heavyKick still TBD â€” no SFX file yet.
   };
 
-  /** Per-frame (data-driven) animations. Each frame has its own image and an
-   * anchor (foot-centre) â€” the runtime positions every frame so its anchor
-   * lands at the same world X, which keeps Terry's body stable even when a
-   * limb extends. Cropped via `sprite-tool.mjs crop-frames`. */
   protected override readonly animationFrames: Partial<Record<AnimationName, AnimationData>> = {
     idle: {
       loop: true,
-      // Ping-pong the breathing cycle (0→1→2→3→2→1→0…) so it eases back
-      // instead of snapping frame 3→0. Step cycles (walk/backwards/crouch)
-      // stay plain forward loops below — bouncing them would moonwalk.
       bounce: true,
       frames: [
         {
@@ -84,14 +63,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /**
-     * Walk-forward step cycle. The auto-detected foot/body anchors drift
-     * by 10+ sprite-px between frames because Terry's stepping legs (and
-     * to a lesser extent, his swinging arm) shift the centroid. Hand-set
-     * `anchorX` to `floor(w/2)` instead â€” each frame's bounding box is
-     * roughly centred on the body in the source sheet, so frame-centre is
-     * a more stable anchor than detected feet for step cycles.
-     */
     forward: {
       loop: true,
       frames: [
@@ -129,7 +100,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Same step-cycle treatment as `forward` â€” frame-centre anchors. */
     backwards: {
       loop: true,
       frames: [
@@ -167,11 +137,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Backstep â€” quick backwards hop, 2 frames from row 8. Frame 0 is the
-     * launch pose (Terry leaning back, planting his front foot), frame 1
-     * the recovery (arms pulled into guard). Body-anchored â€” both frames'
-     * `anchorX` is close to idle's 31 so the body stays centered as Terry
-     * slides backwards. */
     backstep: {
       frames: [
         {
@@ -192,9 +157,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Crouch entry: standing â†’ deep crouch. Plays once, holds on the deep
-     * crouch frame until input releases. Foot-anchored since both poses have
-     * feet on the ground. */
     crouch: {
       frames: [
         {
@@ -215,8 +177,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Held deep-crouch pose â€” reached via crouchForward â†’ release direction.
-     * Reuses crouch's frame 1 as a single static frame. */
     crouchStill: {
       frames: [
         {
@@ -229,8 +189,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Crouch-walk step cycle. Body-anchored (feet swing) â€” `anchorY = h-1`
-     * means the image bottom aligns to the ground. */
     crouchForward: {
       loop: true,
       frames: [
@@ -284,13 +242,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Crouching light punch â€” Terry stays in deep crouch and jabs forward
-     * (row 34 of the sheet). Fires when A is pressed while Down is held.
-     * All three frames' anchorX is pinned to body-x (~28) so the extending
-     * arm doesn't shove the torso across frame 0 â†’ 1; matches `crouchStill`
-     * (anchorX=29) so the transition in/out of the punch stays stable.
-     * anchorY = h - 1 - 6 â‰ˆ 63 places the body baseline matching the
-     * deep-crouch entry's anchorY=80 / h=87 (both â‰ˆ 6 px above bbox bottom). */
     crouchLightPunch: {
       frames: [
         {
@@ -319,14 +270,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Crouching heavy punch â€” Terry stays in deep crouch and delivers a
-     * committed straight (row 35 of the sheet). Fires when S is pressed
-     * while Down is held. Five frames at 60/100/180/40/60 = 440ms total â€”
-     * matching the standing heavy's 440ms and emphasising the extended-
-     * arm beat (frame 2 at 180ms, ~40% of total). The two standing
-     * anticipation frames (60+40) collapse into the single crouch windup
-     * pose (frame 1 at 100ms). anchorX pinned near body-x (28-29) so the
-     * extending arm doesn't shove the torso. */
     crouchHeavyPunch: {
       frames: [
         {
@@ -371,14 +314,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Crouching light kick â€” Terry sweeps low (row 36 of the sheet).
-     * Fires when Z is pressed while Down is held. Five frames at
-     * 40/40/140/40/40 = 300ms total â€” matches the standing light kick's
-     * 300ms and weights the extended-sweep pose (frame 2 at 140ms,
-     * ~47% of total), same pattern as the heavy punches. anchorX is
-     * body-mode (torso centroid) so Terry's body stays at world-X while
-     * the leg sweeps right â€” without that, foot-mode anchors would yank
-     * the body left as the kicking leg's foot pulls the anchor right. */
     crouchLightKick: {
       frames: [
         {
@@ -423,16 +358,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Crouching heavy kick â€” Terry sticks his leg high and forward (row 37
-     * of the sheet). Fires when X is pressed while Down is held. Five
-     * frames at 80/130/280/120/160 = 770ms total â€” extension still
-     * dominates (frame 2 at 280ms, ~36%), but retract (frame 3) and
-     * recover (frame 4) are roughly doubled vs. the snappier punch
-     * pattern so Terry eases out of the kick instead of snapping back.
-     * Frame 2's anchorX is overridden from the auto-detected 57 to 25:
-     * the kicking leg cuts through the torso band and pulls the body-mode
-     * centroid right, even though Terry's actual torso is on the left of
-     * the bbox. */
     crouchHeavyKick: {
       frames: [
         {
@@ -477,8 +402,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Vertical jump â€” ascent. Cropped from the legacy `terry-jump.png` strip
-     * (6 frames at 68Ã—136 each); preparation through launch. */
     jumpUp: {
       frames: [
         {
@@ -507,8 +430,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Vertical jump â€” descent. Last frame is the "hat-down" pose; `loop:
-     * false` makes the engine hold on it until the physics tick lands. */
     jumpFall: {
       frames: [
         {
@@ -529,9 +450,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Landing pose â€” set by the state machine on land if it ever wants to
-     * play a recover. Currently the state machine goes idle â†’ on land, so
-     * jumpGround is wired but unused. */
     jumpGround: {
       frames: [
         {
@@ -544,14 +462,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Forward jump â€” ascent half. Frames 0-3 of the cropped 8-frame strip.
-     * Physics transitions to `jumpForwardFall` at the apex.
-     *
-     * Brief launch crouch (frame 0), then the rotation frames (1-3) cycle
-     * fast â€” quick frame cadence reads as continuous spinning motion
-     * instead of three separately-held poses. Total (380ms) finishes well
-     * before the 500ms ascent so the engine holds on the apex pose for
-     * the remaining ~120ms before the physics-driven cut to the fall. */
     jumpForward: {
       frames: [
         {
@@ -588,11 +498,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Forward jump â€” descent half. Frames 4-6 of the cropped strip. The
-     * landing-stand frame (7) is intentionally NOT included so the engine
-     * holds on the "hat-down" pose (frame 6) until ground contact, instead
-     * of cutting to the standing pose mid-air. Per-frame durations slow
-     * toward landing so the hat-down brace reads as deliberate, not snappy. */
     jumpForwardFall: {
       frames: [
         {
@@ -621,7 +526,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Backward jump â€” ascent half. Frames 0-2 of the cropped 6-frame strip. */
     jumpBackward: {
       frames: [
         {
@@ -650,9 +554,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Backward jump â€” descent half. Frames 3-4; last frame holds for the
-     * remainder of the descent. Frame 5 (landing) is omitted, same as the
-     * forward variant. */
     jumpBackwardFall: {
       frames: [
         {
@@ -673,15 +574,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Recovery played after any heavy aerial attack (punch or kick)
-     * finishes. Reuses jump-forward frames 5 / 6 / 7 (hat-down brace â†’
-     * hat-down hold â†’ landing stand) so the pose reads as "post-attack
-     * settle". Direction-agnostic â€” same animation regardless of whether
-     * Terry's mid-forward, mid-backward, or mid-vertical jump â€” because
-     * the alternative (direction-dispatched jump-fall variants) restarts
-     * at frame 0 and looks jarring when the attack ends late in the jump.
-     * `loop: false` makes the last frame hold until the jump physics
-     * lands. */
     airHeavyRecover: {
       frames: [
         {
@@ -710,14 +602,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Air heavy punch â€” Terry's committed mid-air punch (row 39 of the
-     * sheet). Played only mid-jump. Unlike the light variant which holds
-     * the extended pose until landing, the heavy variant schedules a
-     * recovery: after the 3 frames finish the engine swaps to
-     * `airHeavyRecover` (jump-forward frames 5-7) so Terry visibly resets
-     * his stance mid-air. Frame 2 has anchorX overridden to body-x (~28)
-     * so the long forward arm extension doesn't shove the torso sideways
-     * when frame 1 â†’ 2 plays. */
     airHeavyPunch: {
       frames: [
         {
@@ -746,12 +630,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Air light punch â€” Terry jabs while airborne (row 38 of the sheet).
-     * Played only mid-jump; jump physics keep running underneath so the
-     * sprite tracks the leap arc. `loop: false` plus a long frame-2 duration
-     * pins the extended-punch pose until the jump's land tick overrides the
-     * animation. anchorX is held near `bodyAnchorX` so Terry's body stays at
-     * a stable world-X while the punching arm extends across frames 1-2. */
     airLightPunch: {
       frames: [
         {
@@ -780,12 +658,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Air light kick â€” same row-42 sprites as the heavy variant (windup
-     * curl â†’ cocked â†’ extended kick), but with snappier frame timing and
-     * no recovery hand-off; the extended pose holds until landing the
-     * same way `airLightPunch` does. Frame 2 anchorX is overridden to
-     * body-x (~28) so the long forward leg/arm extension doesn't shove
-     * Terry's torso right when frame 1 â†’ 2 plays. */
     airLightKick: {
       frames: [
         {
@@ -814,12 +686,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Air light kick â€” vertical-jump (in-place) variant from row 40 of
-     * the sheet. Different silhouette from the forward/backward variant:
-     * Terry's legs tuck under, kicking down rather than forward. Same
-     * "hold last frame until landing" behavior as `airLightKick`. Frame 2
-     * anchorX is overridden to body-x (~28) so the extending leg doesn't
-     * shove Terry's torso right when frame 1 â†’ 2 plays. */
     airLightKickUp: {
       frames: [
         {
@@ -848,15 +714,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Air heavy kick â€” vertical-jump (in-place) variant from row 41 of
-     * the sheet. Six frames cover the full leap-and-kick cycle: launch
-     * V-pose â†’ curl â†’ tucked rise â†’ cock-back â†’ leg-extended kick â†’
-     * follow-through. Like the directional heavy variant, schedules
-     * `airHeavyRecover` (set by `airHeavyKick()` via `recover: true`)
-     * after the kick frames finish so Terry resets his stance mid-air
-     * before landing. Frame 4 (kick extension, w=108) has its anchorX
-     * overridden to body-x (~25) so the forward-extended leg doesn't
-     * drag Terry's torso right when frame 3 â†’ 4 plays. */
     airHeavyKickUp: {
       frames: [
         {
@@ -909,10 +766,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Air heavy kick â€” same row-42 sprites as the light variant. Slower
-     * per-frame timing for the heavier feel, and `airHeavyKick()` passes
-     * `recover: true` so the engine swaps to `airHeavyRecover` after the
-     * kick frames finish (matching how heavy punch recovers mid-air). */
     airHeavyKick: {
       frames: [
         {
@@ -969,11 +822,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Heavy punch â€” 6-frame windup â†’ big extension â†’ recovery (row 27 of
-     * the sheet). Frame 3 is the full-extension swing (100px wide vs ~66 for
-     * the others); foot-detected anchors stay stable around (32-33, 97).
-     * Frame 3 lingers ~3Ã— the windup frames so the extended-arm pose is
-     * the dominant visible beat â€” total 440ms (60/60/40/180/40/60). */
     heavyPunch: {
       frames: [
         {
@@ -1026,14 +874,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Light kick â€” 4-frame brace â†’ extended kick â†’ retract â†’ recover.
-     * Cropped from row 28 via the flood-fill extractor (sprite-tool's gap
-     * detector misread the wide extended-kick cell as two frames because of
-     * the empty cell-bg between Terry's body and his outstretched foot).
-     * Per-frame `anchorX` = each frame's torso centroid + 3 (the idle
-     * frames' own anchor-vs-centroid offset), so the body lands at the
-     * same world-X as idle on transition â€” without that 3px nudge the
-     * sprite jumps left/right when you trigger the kick. */
     lightKick: {
       frames: [
         {
@@ -1070,18 +910,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Heavy kick â€” 8-frame windup â†’ knee raise â†’ full extension â†’ retract
-     * â†’ recover. Re-extracted from row 29 as SOURCE-CELL crops (not
-     * alpha-tight) â€” alpha trimming made foot detection unreliable since
-     * cropped-X depended on whatever body part extended leftmost.
-     *
-     * Per-frame `anchorX` = PLANTED foot X (detected via rightmost
-     * bottom-pixel cluster â€” Terry's right foot, which stays planted
-     * during the kick) âˆ’ 26. The âˆ’26 offset matches idle's relationship
-     * (idle planted foot at X=57, anchor=31, so 31 âˆ’ 57 = âˆ’26), so the
-     * planted foot lands at the same world position across idle and every
-     * kick frame. The kicking foot (Terry's LEFT in the sprite) is what
-     * swings up and forward â€” opposite of what I initially assumed. */
     heavyKick: {
       frames: [
         {
@@ -1150,13 +978,6 @@ export class Terry extends Character {
         },
       ],
     },
-    /** Victory / hat-throw outro (row 74). Terry celebrates then raises his
-     * arm to toss his cap. Played by `Character.playOutro` after the
-     * back-dash, before the stage-load transition. `loop: false` holds the
-     * final raised-arm pose. Box-mode crops â€” uniform 75Ã—144 cells with the
-     * body centered, so every frame shares the same anchor (bodyâ€‘x 37, foot
-     * line 138). Anchors/durations are first-pass estimates â€” tune from
-     * motion. (Tool detected 10 boxes; trim a frame here if it's really 9.) */
     victory: {
       frames: [
         {
@@ -1235,82 +1056,42 @@ export class Terry extends Character {
     },
   };
 
-  /** Special moves â€” each is a directional motion + an attack button. The
-   * base `Character` class scans this on every attack-button press and, on
-   * match, plays the special's frames + audio in place of the normal attack. */
   protected override readonly specials: readonly SpecialMove[] = [
-    /** Crack Shoot â€” Terry's QCB-style forward flip kick. Frames 4-6 are
-     * the airborne flip, frame 7 the grounded landing pose. Whiff reuses
-     * the generic heavy whoosh until a Crack-Shoot-specific clip exists. */
     {
       name: 'crackShoot',
       motion: ['down', 'left'],
       button: 'lightKick',
-      // Shout fires on the launch frame (4) so it lands with the flip,
-      // not during the windup.
       voices: [{ src: 'assets/sfx/terry/terry-crackshoot.mp3', frame: 4 }],
       whiffSrc: 'assets/sfx/misc/special-travel.mp3',
-      // 25% of stage width â€” a touch shorter than a forward jump (40%),
-      // tuned shorter since the active hit window is mid-flip not the apex.
       travelDistancePct: 0.25,
-      // X+Y travel runs through frame 6; frame 7 pins to ground for the
-      // landing pose (see `_physicsTick` past-travel-end branch).
       travelStartFrame: 4,
       travelEndFrame: 7,
-      // Low forward leap â€” half-ish of a default jump's peak â€” to sell
-      // the mid-air flip without competing with the jump's verticality.
       arcHeight: 20,
-      // Frame timing: snappy windup (0-3 at 40-60ms), quick flip (4-6 at
-      // 80-100ms), longer landing recovery (7 at 180ms). The voice cue +
-      // travel both anchor to frame 4, so shortening the windup shifts
-      // them earlier proportionally â€” exactly the snappier feel we want.
       frames: { frames: withDurations(CRACK_SHOOT_FRAMES, [40, 40, 50, 60, 100, 100, 80, 180]) },
     },
-    /** Heavy Crack Shoot â€” same flip, more committed. Same sprites and
-     * motion as the light variant; tuning differs: longer windup, bigger
-     * arc, more travel, slower airborne frames so the bigger leap reads. */
     {
       name: 'crackShootHeavy',
       motion: ['down', 'left'],
       button: 'heavyKick',
       voices: [{ src: 'assets/sfx/terry/terry-crackshoot.mp3', frame: 4 }],
       whiffSrc: 'assets/sfx/misc/special-travel.mp3',
-      // 50% of the stage (vs 25% light) â€” Terry leaps roughly twice as far.
       travelDistancePct: 0.5,
       travelStartFrame: 4,
       travelEndFrame: 7,
-      // Double the light arc â€” reads as a higher leap matching the travel.
       arcHeight: 40,
-      // Frames 1-3 are heavier windup (sells the bigger commitment); 4-6
-      // hold longer so the wider leap doesn't blur past in a few ticks.
-      // Travel distance is unaffected by frame timing â€” `_specialXStep`
-      // scales by travelTicks.
       frames: {
         frames: withDurations(CRACK_SHOOT_FRAMES, [80, 120, 120, 140, 170, 170, 140, 180]),
       },
     },
-    /** Burning Knuckle â€” Terry's QCF charging-fist punch. Frames 0-5 are
-     * the windup (stance â†’ V-pose flash â†’ lean back â†’ brace â†’ charge),
-     * frames 6-8 are the airborne charge forward (punch released â†’ big
-     * punch with trailing flame â†’ recovery with fading flame), frames 9-10
-     * are grounded recovery. No Y arc â€” Terry stays at ground level the
-     * whole move, just translates forward fast during the charge window. */
     {
       name: 'burningKnuckle',
       motion: ['down', 'left'],
       button: 'lightPunch',
-      // Shout fires on the charge frame (6) so it lands with the punch.
       voices: [{ src: 'assets/sfx/terry/terry-burning-knuckle.mp3', frame: 6 }],
       whiffSrc: 'assets/sfx/misc/special-travel.mp3',
-      // 25% of stage width during the charge window â€” light commitment.
       travelDistancePct: 0.3,
-      // Travel only during the punch-with-flame frames (6, 7, 8); frames
-      // 9-10 are stationary recovery.
       travelStartFrame: 6,
       travelEndFrame: 10,
-      // No `arcHeight` â€” Burning Knuckle is a horizontal charge, not a leap.
-      // Quick windup, single-frame V-pose flash, short charge, punctuated
-      // by the punch frame (7) lingering slightly to register the impact.
       frames: {
         frames: withDurations(
           BURNING_KNUCKLE_FRAMES,
@@ -1318,25 +1099,15 @@ export class Terry extends Character {
         ),
       },
     },
-    /** Heavy Burning Knuckle â€” bigger commitment. Same sprites and motion
-     * as the light variant; tuning differs: longer windup frames so the
-     * charge reads as more dangerous, more travel distance. No arc still. */
     {
       name: 'burningKnuckleHeavy',
       motion: ['down', 'left'],
       button: 'heavyPunch',
       voices: [{ src: 'assets/sfx/terry/terry-burning-knuckle.mp3', frame: 6 }],
       whiffSrc: 'assets/sfx/misc/special-travel.mp3',
-      // 40% of the stage (vs 25% light) â€” Terry charges further.
       travelDistancePct: 0.6,
       travelStartFrame: 6,
       travelEndFrame: 10,
-      // Windup frames 1-5 hold ~50% longer than light to sell the bigger
-      // commitment, but the travel frames (6-8) are SHORTER than light â€”
-      // heavier variants linger on the buildup and then snap through the
-      // forward charge fast. Per-tick X step scales as 1 / travelTicks, so
-      // shorter durations here = visibly faster traversal across the same
-      // 40% distance.
       frames: {
         frames: withDurations(
           BURNING_KNUCKLE_FRAMES,
@@ -1344,51 +1115,28 @@ export class Terry extends Character {
         ),
       },
     },
-    /** Rising Tackle (light) â€” anti-air spinning uppercut, leaps straight
-     * up. Frames 0-2 are the windup crouch, frames 3-8 are the airborne
-     * spin (this is the arc window), frames 9-10 are landing recovery.
-     * No X travel â€” pure Y arc, peaking at ~half a jump's apex height. */
     {
       name: 'risingTackle',
       motion: ['down', 'up'],
       button: 'lightPunch',
-      // Shout fires on the launch frame (3) so it lands with the leap.
       voices: [{ src: 'assets/sfx/terry/terry-rising-tackle.mp3', frame: 3 }],
       whiffSrc: 'assets/sfx/misc/special-travel.mp3',
-      // Y arc only â€” Terry leaps straight up, no horizontal travel.
-      // `fallAfterArc` makes the arc rise-only (peaks at end of travel
-      // window) and hands off to the jump's descent physics after the
-      // animation ends, so Terry physically falls back to ground using
-      // the `jumpFall` sprite.
       arcHeight: 40,
       travelDistancePct: 0.05,
       fallAfterArc: true,
       travelStartFrame: 3,
-      // 8 frames here â€” the source's grounded recovery frames are dropped
-      // because the fall phase (jumpFall sprite descending) replaces them.
-      // Airborne window is frames 3-7.
       travelEndFrame: 8,
       frames: {
         frames: withDurations(RISING_TACKLE_FRAMES.slice(0, 8), [50, 50, 50, 60, 80, 80, 80, 110]),
       },
     },
-    /** Rising Tackle (heavy) â€” bigger commitment, peaks at a full jump's
-     * apex height. Same frames, motion, and button family as light;
-     * windup frames hold longer to sell the deeper crouch and the
-     * airborne spin reads slower since the arc is taller. */
     {
       name: 'risingTackleHeavy',
       motion: ['down', 'up'],
       button: 'heavyPunch',
       voices: [{ src: 'assets/sfx/terry/terry-rising-tackle.mp3', frame: 3 }],
       whiffSrc: 'assets/sfx/misc/special-travel.mp3',
-      // Matches the default jump's peak (jumpVerticalStep Ã— apexTicks
-      // = 5 Ã— 17 = 85) â€” Terry rises as high as he would in a jump.
       arcHeight: 120,
-      // Small forward leap on the heavy variant â€” Terry takes a step
-      // into the rising tackle instead of going straight up. X applies
-      // only during the rising phase (frames 3-7); the jump-fall descent
-      // afterward has no X motion.
       travelDistancePct: 0.1,
       fallAfterArc: true,
       travelStartFrame: 3,
@@ -1400,24 +1148,14 @@ export class Terry extends Character {
         ),
       },
     },
-    /** Power Wave (light) â€” QCF projectile cast. Terry stays planted (no
-     * X or Y travel â€” the wave projectile is what flies forward).
-     * Frames 0-3 are the windup (settle â†’ gather â†’ charge ball
-     * overhead â†’ cock back). Frame 4 is the lunge / release pose.
-     * Frame 5 is the arm-extended pose where the wave SPAWNS, same beat
-     * as the "Wave!" voice cue. Frame 6 is recovery. */
     {
       name: 'powerWave',
       motion: ['down', 'right'],
       button: 'lightPunch',
-      // Shout splits across two clips â€” "Power!" at launch, "Wave!" on
-      // the release frame (5, arm extended).
       voices: [
         { src: 'assets/sfx/terry/terry-power-wave-1.mp3', frame: 0 },
         { src: 'assets/sfx/terry/terry-power-wave-2.mp3', frame: 5 },
       ],
-      // No whiff â€” Power Wave is a stationary cast; the projectile owns
-      // its own launch/flight SFX (see `PowerWave.spawnSfx`).
       frames: {
         frames: withDurations(POWER_WAVE_FRAMES, [40, 70, 90, 80, 80, 100, 150]),
       },
@@ -1428,10 +1166,6 @@ export class Terry extends Character {
         spawnOffsetY: 0,
       },
     },
-    /** Power Wave (heavy) â€” same sprites, motion, and projectile class
-     * as the light variant; windup frames (1-3) hold longer to sell
-     * the bigger charge, and the projectile travels noticeably faster
-     * via the per-spawn `speed` override on `ProjectileSpawn`. */
     {
       name: 'powerWaveHeavy',
       motion: ['down', 'right'],
@@ -1448,34 +1182,13 @@ export class Terry extends Character {
         spawnFrame: 5,
         spawnOffsetX: 40,
         spawnOffsetY: 0,
-        // Heavy wave is 1.5x the light variant's 24 px/tick â€” reads as
-        // a more committed cast with a faster, harder-to-react-to wave.
-        // Always well above `walkScrollRate` (20) so it never gets
-        // dragged backward by world-scroll compensation.
         speed: 36,
       },
     },
   ];
 
-  /** Idle's detected foot anchor (sprite-x 31). Used as the world-X reference
-   * so other per-frame animations align with idle, and so the strip-mode
-   * walk/backwards/crouch animations don't visually jump too far when
-   * transitioning to/from idle. */
   protected override readonly bodyAnchorX = 31;
 
-  /**
-   * Terry's send-off: two back-dashes, then his "OK!" victory pose tossing his
-   * cap. The cap (the `Hat` projectile) arcs off Terry's raised fist, lands,
-   * and rests on the ground for a beat before the loading transition starts.
-   *
-   * Cap spawn placement: the fist sits at ~(62, 10) in the 75×144 victory cell.
-   * `worldX` references the sprite's left region and `frameTransform` pins each
-   * frame's anchor to a "body line" `bodyAnchorX` (31) source-px from it — so
-   * the fist is 31 + (62 − 37) = 56 source-px right of `worldX` and 138 − 10 =
-   * 128 up. Offsets are scaled by the spawn frame's rendered height over the
-   * 107 baseline, so the 144-tall frame needs the raw deltas × 107/144 (~0.74):
-   * X ≈ 56 × 0.74 ≈ 41, Y ≈ −128 × 0.74 ≈ −95 (tuned to 38 / −95 from motion).
-   */
   override async playOutro(): Promise<void> {
     this.scripted.set(true);
     await this.backDash();
