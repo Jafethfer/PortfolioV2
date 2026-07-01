@@ -1,4 +1,4 @@
-import { AnimationFrame } from '../models/character';
+import { AnimationFrame } from '../../models/character';
 
 /** Sprite metadata minus per-frame timing. */
 export type SpriteFrame = Omit<AnimationFrame, 'durationMs'>;

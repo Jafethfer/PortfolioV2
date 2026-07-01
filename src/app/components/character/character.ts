@@ -31,7 +31,7 @@ import { REFERENCE_WIDTH } from '../../constants/viewport';
  * Abstract character base. Owns the physics, input wiring, and animation
  * state machine. Subclasses are concrete @Component classes that supply
  * their own `animations` map (mapping abstract names to sprite CSS classes)
- * and styleUrl (the matching sprite stylesheet) â€” same shape as a game-engine
+ * and styleUrl (the matching sprite stylesheet) — same shape as a game-engine
  * character prefab.
  *
  * Subclasses must:
@@ -41,13 +41,13 @@ import { REFERENCE_WIDTH } from '../../constants/viewport';
  *      `providers: [{ provide: Character, useExisting: forwardRef(() => Self) }]`
  *    so the Stage can `viewChild.required(Character)`.
  *
- * Tuning fields are plain class properties â€” override with `protected override`
+ * Tuning fields are plain class properties — override with `protected override`
  * to retune walk speed, jump distance, etc. per character.
  */
 @Directive()
 export abstract class Character {
   protected readonly voices: CharacterVoices = {};
-  /** Per-frame animation data â€” one entry per `AnimationName` the character
+  /** Per-frame animation data — one entry per `AnimationName` the character
    * uses. Each frame has its own image and an `anchorX/Y` (in sprite-pixel
    * coords) so the runtime positions every frame so its anchor lands at the
    * same world coordinate. Characters must declare an entry for every
@@ -55,16 +55,16 @@ export abstract class Character {
    * initial state). */
   protected readonly animationFrames: Partial<Record<AnimationName, AnimationData>> = {};
   /** Character-specific special moves. Subclasses override this; the base
-   * class handles dispatch generically â€” on each attack-button press, scans
+   * class handles dispatch generically — on each attack-button press, scans
    * this array (longest motion first), and if `matchMotion` matches the
    * required motion the special's frames + audio play instead of the
    * normal attack. Default `[]` for characters without specials. */
   protected readonly specials: readonly SpecialMove[] = [];
   /** The body anchor X (in source pixels) for strip-rendered animations like
    * idle/walk. Used to align per-frame animations with strip ones at
-   * transition time â€” without this, transitioning idle â†’ per-frame jumps the
+   * transition time — without this, transitioning idle → per-frame jumps the
    * sprite left/right by the difference between sprite-left and body-centre.
-   * Default 35 â‰ˆ centre of a 70-wide idle sprite; subclasses override. */
+   * Default 35 ≈ centre of a 70-wide idle sprite; subclasses override. */
   protected readonly bodyAnchorX: number = 35;
   /** Source-pixel height of the idle/standing sprite — the baseline every
    * per-frame sprite is scaled against (`frame.h × renderedHeight /
@@ -89,28 +89,28 @@ export abstract class Character {
   /** Per-tick Y descent during a normal jump's fall phase. Higher than
    * `jumpVerticalStep` so Terry rises slowly (heavy "lift" feel) but falls
    * faster, killing the float that comes with a symmetric arc. Tuned so
-   * descentTicks Ã— this â‰ˆ ascentTicks Ã— jumpVerticalStep â€” peak is reached
+   * descentTicks × this ≈ ascentTicks × jumpVerticalStep — peak is reached
    * via slow ascent, then gravity feels weighted on the way back down. */
   protected readonly jumpDescentVerticalStep: number = 7;
   /** Per-tick Y descent during the post-special fall (after `fallAfterArc`).
    * Faster than `jumpDescentVerticalStep` so Terry doesn't loiter mid-air
-   * after a Rising Tackle â€” anti-air specials feel snappier landing quickly. */
+   * after a Rising Tackle — anti-air specials feel snappier landing quickly. */
   protected readonly specialFallVerticalStep: number = 9;
   protected readonly jumpYScale: number = 0.4;
   /** Fraction of the surrounding world width covered by a single backstep
-   * (leftâ†’left double-tap). Sign is implicit â€” backstep is always
+   * (left→left double-tap). Sign is implicit — backstep is always
    * backwards-relative-to-facing; for now that's left. Tune per character
    * if heavier fighters should hop less. */
   protected readonly backstepDistancePct: number = 0.4;
-  /** Peak vertical arc of a backstep (same accumulated-Y units as a jump â€”
-   * rendered as `y Ã— jumpYScale` cqw). Parabolic rise+fall over the whole
+  /** Peak vertical arc of a backstep (same accumulated-Y units as a jump —
+   * rendered as `y × jumpYScale` cqw). Parabolic rise+fall over the whole
    * animation, so Terry leaves the ground, peaks at the midpoint, and
    * lands at the recovery frame. Tune lower if a character should slide
    * instead of hop. */
   protected readonly backstepArcHeight: number = 30;
   /** Sound cues for the backstep, each pinned to a frame index in the
    * backstep animation. Default is a single landing-thud cue on the
-   * recovery frame (1) â€” the push-off itself is silent, so the only audible
+   * recovery frame (1) — the push-off itself is silent, so the only audible
    * beat is when Terry's feet hit the ground at the end of the hop.
    * Played at `backstepSfxVolume`. Override to silence or layer in extra
    * cues per character. */
@@ -129,7 +129,7 @@ export abstract class Character {
    * data exists for `heavyPunch`, total duration is derived from the sum of
    * frame durations and this value is ignored. */
   protected readonly heavyPunchDurationMs: number = 500;
-  /** Fallback kick lock-in durations â€” used only when no per-frame data is
+  /** Fallback kick lock-in durations — used only when no per-frame data is
    * supplied. With per-frame data, total lock-in is derived from frame
    * durations as usual. */
   protected readonly lightKickDurationMs: number = 300;
@@ -137,7 +137,7 @@ export abstract class Character {
   protected readonly voiceVolume: number = 0.3;
   /** Volume for non-voice combat SFX (whiffs, hit confirms, jump). The
    * source files have low natural gain so we set this higher than you'd
-   * expect â€” `0.7` lands roughly at parity with `voiceVolume = 0.3` when
+   * expect — `0.7` lands roughly at parity with `voiceVolume = 0.3` when
    * the two play simultaneously. Overridable per character. */
   protected readonly sfxVolume: number = 0.7;
   /** Volume for the whiff/whoosh SFX played at the start of a SPECIAL move.
@@ -154,7 +154,7 @@ export abstract class Character {
   readonly blockedLeft = input(false);
   /** Pixel width of the surrounding world. Used to convert `jumpDistancePct`
    * into a per-tick px step at takeoff. The character has no other way of
-   * knowing â€” it doesn't reach into the DOM for stage geometry. */
+   * knowing — it doesn't reach into the DOM for stage geometry. */
   readonly worldWidth = input(0);
   /** True when the stage has at least one projectile alive (forwarded from
    * `Stage.hasActiveProjectile`). Specials whose `projectile` config is set
@@ -168,9 +168,9 @@ export abstract class Character {
   private readonly _loop = inject(GameLoopService);
   private readonly _audio = inject(AudioService);
 
-  // Public reactive state â€” Stage reads worldX() to drive train scrolling.
-  // Animation is typed as `string` (not `AnimationName`) so specials â€” whose
-  // names live outside the built-in union â€” can be assigned without a cast.
+  // Public reactive state — Stage reads worldX() to drive train scrolling.
+  // Animation is typed as `string` (not `AnimationName`) so specials — whose
+  // names live outside the built-in union — can be assigned without a cast.
   // Built-ins set literal `AnimationName` values; lookups into the built-in
   // `animations` map narrow with a cast and fall back to '' for specials.
   readonly animation = signal<string>('idle');
@@ -190,7 +190,7 @@ export abstract class Character {
    * animations). Reset when a new per-frame animation starts. */
   readonly currentFrameIndex = signal(0);
   /** Flips to true once `_initialX` and `width` have been measured. Stage
-   * gates edge checks on this â€” without it, the few-tick window before the
+   * gates edge checks on this — without it, the few-tick window before the
    * first afterNextRender fires causes `worldX` (with `_initialX === 0`)
    * to fall well below `leftLimit`, falsely tripping `blockedLeft`. */
   readonly ready = signal(false);
@@ -207,16 +207,16 @@ export abstract class Character {
    * stage's per-tick scroll logic: if `motionIntent` is `'right'` AND
    * `blockedRight` is true, the stage should scroll the world left.
    *
-   * Precedence: active special's travel direction â†’ active directional
-   * jump â†’ user input. Specials and jumps win over input because once
+   * Precedence: active special's travel direction → active directional
+   * jump → user input. Specials and jumps win over input because once
    * committed they carry forward regardless of whether the player is
    * still holding the key. Without this, a special that drives Terry
-   * into the edge just clamps to the limit â€” the stage never sees
+   * into the edge just clamps to the limit — the stage never sees
    * "still trying to push right" and never scrolls. Returns `null` for
    * vertical jumps with no input and stationary specials. */
   get motionIntent(): Direction {
     // Defer to `specialXVelocity` so we only report a special-driven
-    // intent when the special is actually inside its travel window â€”
+    // intent when the special is actually inside its travel window —
     // otherwise the stage would scroll all through a special's windup
     // and recovery frames even though Terry isn't moving yet.
     const sv = this.specialXVelocity;
@@ -229,7 +229,7 @@ export abstract class Character {
 
   /** Per-tick X step the active special is applying THIS tick, in px
    * (positive = right, negative = left). Zero outside a special's
-   * actual travel window â€” windup and recovery frames return 0 even
+   * actual travel window — windup and recovery frames return 0 even
    * though the special is still in progress, because Terry isn't
    * actually moving during those frames. Stage reads this as the scroll
    * rate when non-zero, so a Burning Knuckle that pushes Terry into
@@ -243,7 +243,7 @@ export abstract class Character {
     return this._specialXStep;
   }
 
-  // Internal physics state â€” not signal, no rendering depends on it.
+  // Internal physics state — not signal, no rendering depends on it.
   private _initialX = 0;
   private _jumpStartTick = 0;
   private _jumpXStep = 0;
@@ -253,15 +253,15 @@ export abstract class Character {
   private _attackDurationTicks = 0;
   /** Per-tick X step applied during a traveling special. Zero for normal
    * attacks and stationary specials. Sign carries direction (positive =
-   * right). Computed at special launch from `travelDistancePct` Ã— stage
-   * width Ã· traveling ticks; reset when the attack ends. */
+   * right). Computed at special launch from `travelDistancePct` × stage
+   * width ÷ traveling ticks; reset when the attack ends. */
   private _specialXStep = 0;
-  /** Absolute loop tick at which `_specialXStep` starts being applied â€” so
+  /** Absolute loop tick at which `_specialXStep` starts being applied — so
    * a special with `travelStartFrame > 0` holds in place during its windup
    * frames and only launches when the active frame is reached. */
   private _specialTravelStartTick = 0;
   /** Absolute loop tick at which travel ends. Frames past this tick render
-   * on the ground (Y pinned to 0) and X no longer accumulates â€” lets a
+   * on the ground (Y pinned to 0) and X no longer accumulates — lets a
    * special declare a grounded recovery pose distinct from its airborne
    * frames. */
   private _specialTravelEndTick = 0;
@@ -283,21 +283,21 @@ export abstract class Character {
   /** Absolute loop tick at which the active heavy aerial's animation
    * finishes (sum of frame durations). The past-apex branch in
    * `_physicsTick` fires the swap to `airHeavyRecover` once BOTH
-   * conditions are met: tick â‰¥ this AND elapsed â‰¥ apexTicks. That's the
-   * "recover at MAX(animation end, descent start)" rule â€” kicks pressed
+   * conditions are met: tick ≥ this AND elapsed ≥ apexTicks. That's the
+   * "recover at MAX(animation end, descent start)" rule — kicks pressed
    * early hold their last frame until apex, kicks pressed close to apex
    * play through past apex before recovering, kicks pressed during
    * descent play through and recover on their own end tick. 0 = no
    * recovery scheduled (light aerials, or recover already fired). */
   private _airHeavyAttackEndTick = 0;
   /** True between the first air-attack trigger of a jump and landing. One air
-   * normal per jump â€” the gate has to outlive the active animation because the
-   * heavy variant transitions through `airHeavyPunch` â†’ `airHeavyPunchRecover`
+   * normal per jump — the gate has to outlive the active animation because the
+   * heavy variant transitions through `airHeavyPunch` → `airHeavyPunchRecover`
    * mid-air, so an animation-name check would let a second press slip through
    * during the recovery window. Cleared on land. */
   private _airAttackUsed = false;
   /** Voice + whiff SFX queued to play when the special's travel window
-   * starts â€” so the fighter's shout and the travel whoosh both sync with
+   * starts — so the fighter's shout and the travel whoosh both sync with
    * Terry's actual forward motion instead of firing at the very start of
    * the windup. Cleared when played or when the attack ends. */
   /** Queue of voice cues from the active special, each tagged with the
@@ -318,16 +318,16 @@ export abstract class Character {
   private _pendingProjectileSpawns: { config: ProjectileSpawn; tick: number }[] = [];
   private _pendingWhiffVolume = 0;
   /** The Audio element from the currently-playing jump SFX, so a special
-   * that cancels the jump (e.g. Rising Tackle on `downâ†’up+P`, where the
+   * that cancels the jump (e.g. Rising Tackle on `down→up+P`, where the
    * Up press fires the jump a few ms before the punch arrives) can stop
-   * the whoosh â€” otherwise the jump SFX bleeds over into the special. */
+   * the whoosh — otherwise the jump SFX bleeds over into the special. */
   private _activeJumpSfx: HTMLAudioElement | null = null;
   private _frameStartTick = 0;
   /** Step direction (+1 forward / -1 reverse) for `bounce` (ping-pong)
    * animations. Reset to +1 whenever the animation changes. */
   private _frameDir = 1;
   /** Keeps preloaded Image objects alive for the character's lifetime so
-   * the browser's memory cache doesn't evict them â€” otherwise the dev
+   * the browser's memory cache doesn't evict them — otherwise the dev
    * server's no-store cache-control would force a fresh fetch on every
    * `[src]` change. Production builds with long-cache headers wouldn't
    * need this, but keeping refs is cheap and bulletproof. */
@@ -357,7 +357,7 @@ export abstract class Character {
 
   /** Transform for a per-frame `<img>` element. Anchors `frame.anchorX` to
    * the same world X as a strip animation's body centre (`bodyAnchorX`), so
-   * idle â†” per-frame transitions don't visually jump and frame-to-frame
+   * idle ↔ per-frame transitions don't visually jump and frame-to-frame
    * anchor stays constant inside a per-frame animation. The anchor offset is
    * expressed in `cqw` (via `var(--character-height) / spriteBaseHeight`) so
    * it scales with the sprite when the stage resizes, matching the cqw-based
@@ -372,7 +372,7 @@ export abstract class Character {
     return `translateX(${xPart})`;
   }
 
-  /** CSS width string for an `<img>` rendering a per-frame sprite â€” matches
+  /** CSS width string for an `<img>` rendering a per-frame sprite — matches
    * the cqw scaling formula used by strip-mode sprite classes. */
   frameWidth(frame: AnimationFrame): string {
     return `calc(${frame.w} * var(--character-height) / ${this.spriteBaseHeight})`;
@@ -638,7 +638,7 @@ export abstract class Character {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  /** Combat / character actions â€” call from custom keybinds or a Directive. */
+  /** Combat / character actions — call from custom keybinds or a Directive. */
   lightPunch(): void {
     this._startAttack({
       animation: 'lightPunch',
@@ -675,7 +675,7 @@ export abstract class Character {
       fallbackDurationMs: this.heavyKickDurationMs,
     });
   }
-  /** Crouching light punch â€” triggered when lightPunch is pressed while
+  /** Crouching light punch — triggered when lightPunch is pressed while
    * Down is held. Reuses the standing light punch's voice + whiff (same
    * grunt, same whoosh); only the animation differs. The state machine
    * picks `crouchStill` (not `crouch` entry) when the attack lock-in
@@ -690,7 +690,7 @@ export abstract class Character {
       fallbackDurationMs: this.lightPunchDurationMs,
     });
   }
-  /** Crouching heavy punch â€” triggered when heavyPunch is pressed while
+  /** Crouching heavy punch — triggered when heavyPunch is pressed while
    * Down is held. Mirrors `crouchLightPunch` (shared voice + whiff with
    * its standing counterpart, state machine returns to `crouchStill`
    * when the lock-in ends). */
@@ -703,7 +703,7 @@ export abstract class Character {
       fallbackDurationMs: this.heavyPunchDurationMs,
     });
   }
-  /** Crouching light kick â€” triggered when lightKick is pressed while
+  /** Crouching light kick — triggered when lightKick is pressed while
    * Down is held. Same shape as the other crouching attacks (shared
    * voice + whiff, state machine returns to `crouchStill`). */
   crouchLightKick(): void {
@@ -715,7 +715,7 @@ export abstract class Character {
       fallbackDurationMs: this.lightKickDurationMs,
     });
   }
-  /** Crouching heavy kick â€” triggered when heavyKick is pressed while
+  /** Crouching heavy kick — triggered when heavyKick is pressed while
    * Down is held. Same shape as the other crouching attacks. */
   crouchHeavyKick(): void {
     this._startAttack({
@@ -726,7 +726,7 @@ export abstract class Character {
       fallbackDurationMs: this.heavyKickDurationMs,
     });
   }
-  /** Air light punch â€” fires only mid-jump. See `_startAirAttack`. Last
+  /** Air light punch — fires only mid-jump. See `_startAirAttack`. Last
    * frame holds until landing. */
   airLightPunch(): void {
     this._startAirAttack({
@@ -735,10 +735,10 @@ export abstract class Character {
       whiffSrc: this.voices['lightPunchWhiff'],
     });
   }
-  /** Air heavy punch â€” fires only mid-jump. See `_startAirAttack`. Unlike
+  /** Air heavy punch — fires only mid-jump. See `_startAirAttack`. Unlike
    * the light variant, heavy schedules a recovery: after the punch frames
    * finish, the sprite snaps back to a jump-fall pose so Terry visibly
-   * recovers in the air before landing (and is "punishable" â€” can't act
+   * recovers in the air before landing (and is "punishable" — can't act
    * again until landing). */
   airHeavyPunch(): void {
     this._startAirAttack({
@@ -748,7 +748,7 @@ export abstract class Character {
       recover: true,
     });
   }
-  /** Air light kick â€” direction-aware sprite. Forward/backward jumps use
+  /** Air light kick — direction-aware sprite. Forward/backward jumps use
    * `airLightKick` (forward-pointing knee/leg); vertical (in-place) jumps
    * use `airLightKickUp` from a different sheet row (legs tucked under,
    * kicking down). Both variants hold the extended pose until landing,
@@ -761,7 +761,7 @@ export abstract class Character {
       whiffSrc: this.voices['lightKickWhiff'],
     });
   }
-  /** Air heavy kick â€” direction-aware sprite. Forward/backward jumps use
+  /** Air heavy kick — direction-aware sprite. Forward/backward jumps use
    * `airHeavyKick` (forward kick extension); vertical (in-place) jumps
    * use `airHeavyKickUp` from a different sheet row (full leap-and-kick
    * sequence with windup, cock-back, and follow-through). Both variants
@@ -968,7 +968,7 @@ export abstract class Character {
 
   /** Shared kickoff for air normals (light / heavy). Distinct from
    * `_startAttack` because air attacks DO NOT enter the `inAttack` lock-in
-   * â€” that would freeze jump physics. The sprite is swapped to the air
+   * — that would freeze jump physics. The sprite is swapped to the air
    * animation; jump physics keep advancing underneath; the animation's
    * `loop: false` holds the last frame.
    *
@@ -977,7 +977,7 @@ export abstract class Character {
    * variants so Terry visibly recovers his stance mid-air). Without
    * `recover`, the last frame holds until the jump's land tick.
    *
-   * One air normal per jump â€” re-presses while either air punch is up are
+   * One air normal per jump — re-presses while either air punch is up are
    * ignored. */
   private _startAirAttack(opts: {
     readonly animation: AnimationName;
@@ -996,7 +996,7 @@ export abstract class Character {
     // Heavy aerials schedule a recovery transition. The past-apex branch
     // in `_physicsTick` consumes the milestone once BOTH gates are true:
     // animation frames have all played AND Terry has crossed apex. This
-    // is the "MAX(animation end, descent start)" rule â€” kicks pressed
+    // is the "MAX(animation end, descent start)" rule — kicks pressed
     // early hold their last frame until apex, kicks pressed close to
     // apex play through past apex, kicks pressed during descent play
     // through then recover on their own end tick.
@@ -1009,7 +1009,7 @@ export abstract class Character {
     }
   }
 
-  /** Shared attack kickoff â€” plays the voice + whiff, sets the animation, and
+  /** Shared attack kickoff — plays the voice + whiff, sets the animation, and
    * computes the lock-in window. When `frames` is supplied, total duration is
    * derived from the sum of frame durations so the physics-tick lock and the
    * visual animation finish together; otherwise `fallbackDurationMs` is used. */
@@ -1017,11 +1017,11 @@ export abstract class Character {
     readonly animation: string;
     readonly voiceSrc?: string;
     readonly whiffSrc?: string;
-    /** Per-call whiff volume â€” specials pass `specialWhiffVolume` (lower)
+    /** Per-call whiff volume — specials pass `specialWhiffVolume` (lower)
      * so sustained whoosh SFX don't drown the vocal shout. Built-in
      * jab/kick attacks omit this and get the default `sfxVolume`. */
     readonly whiffVolume?: number;
-    /** When true, suppress immediate whiff playback â€” the caller queues it
+    /** When true, suppress immediate whiff playback — the caller queues it
      * to fire at `_specialTravelStartTick` so the whoosh syncs with the
      * actual movement. Built-in attacks leave this unset and get instant
      * playback. */
@@ -1071,7 +1071,7 @@ export abstract class Character {
     }
   }
 
-  /** Backstep â€” a quick backwards hop triggered by leftâ†’left. Reuses the
+  /** Backstep — a quick backwards hop triggered by left→left. Reuses the
    * special-travel machinery (lock-in via `inAttack`, per-tick X update via
    * `_specialXStep`) but with no voice/whiff and a negative X step. Travel
    * spans the full animation. */
@@ -1090,10 +1090,8 @@ export abstract class Character {
       fallbackDurationMs: 200,
     });
     if (this.inAttack() && this.animation() === 'backstep') {
-      // Travel (X + Y arc) spans only the launch frame (0); the remaining
-      // frames are grounded recovery â€” same pattern Crack Shoot uses for
-      // its landing pose. The parabolic arc returns Y to 0 at travel end,
-      // so the second frame onward shows Terry planted on the ground.
+      // Travel (X + Y arc) spans only the launch frame (0); the parabolic arc
+      // returns Y to 0 at travel end, so later frames are grounded recovery.
       const travelMs = frames.frames[0].durationMs;
       const travelTicks = Math.max(1, Math.round(travelMs / GameLoopService.TICK_MS));
       this._specialXStep = -(this.worldWidth() * this.backstepDistancePct) / travelTicks;
@@ -1130,10 +1128,10 @@ export abstract class Character {
     if (dir === 'right') this.animation.set('jumpForward');
     else if (dir === 'left') this.animation.set('jumpBackward');
     else this.animation.set('jumpUp');
-    // Same whoosh regardless of direction â€” vertical, forward, backward all
+    // Same whoosh regardless of direction — vertical, forward, backward all
     // use the character-agnostic jump SFX from `voices.jump`. Stash the
     // Audio so `_runSpecial` can stop it when a follow-up motion (e.g.
-    // `downâ†’up+P` for Rising Tackle) converts the jump into a special.
+    // `down→up+P` for Rising Tackle) converts the jump into a special.
     this._activeJumpSfx = this._audio.playVoice(this.voices['jump'], this.jumpSfxVolume, 'sfx');
   }
 
@@ -1150,8 +1148,7 @@ export abstract class Character {
     if (this._loop.tick() - this._frameStartTick < durationTicks) return;
     const n = data.frames.length;
     if (data.bounce && n > 2) {
-      // Ping-pong: walk to the last frame, then back to the first, forever.
-      // Reflect off either end so the end frames aren't shown twice in a row.
+      // Reflect one step short of each end so end frames aren't repeated.
       let next = idx + this._frameDir;
       if (next >= n) { next = n - 2; this._frameDir = -1; }
       else if (next < 0) { next = 1; this._frameDir = 1; }

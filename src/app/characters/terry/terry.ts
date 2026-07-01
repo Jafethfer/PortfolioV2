@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { Character } from '../components/character/character';
-import { AnimationData, AnimationName, CharacterVoices, SpecialMove } from '../models/character';
-import { PowerWave } from '../projectiles/power-wave/power-wave';
-import { Hat, HAT_FLIGHT_MS } from '../projectiles/hat/hat';
+import { Character } from '../../components/character/character';
+import { AnimationData, AnimationName, CharacterVoices, SpecialMove } from '../../models/character';
+import { PowerWave } from '../../projectiles/power-wave/power-wave';
+import { Hat, HAT_FLIGHT_MS } from '../../projectiles/hat/hat';
 import {
   BURNING_KNUCKLE_FRAMES,
   CRACK_SHOOT_FRAMES,
@@ -14,7 +14,7 @@ import {
 /** Terry Bogard — concrete Character subclass. */
 @Component({
   selector: 'app-terry',
-  templateUrl: '../components/character/character.html',
+  templateUrl: '../../components/character/character.html',
   styleUrl: './terry.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

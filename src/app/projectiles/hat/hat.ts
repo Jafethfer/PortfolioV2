@@ -60,9 +60,7 @@ export class Hat extends Projectile {
       untracked(() => {
         const t = this._tick();
         if (t >= this._flightTicks) {
-          // Landed: freeze the spin on the resting frame (8, the flat cap)
-          // and stop advancing. The cap rests on the ground until the stage
-          // is torn down on nav.
+          // Landed: freeze on the resting frame and stop advancing.
           this.currentFrameIndex.set(8);
           return;
         }

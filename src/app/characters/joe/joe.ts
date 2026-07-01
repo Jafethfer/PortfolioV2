@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { Character } from '../components/character/character';
-import { AnimationData, AnimationName } from '../models/character';
+import { Character } from '../../components/character/character';
+import { AnimationData, AnimationName } from '../../models/character';
 
 /** Joe Higashi — concrete `Character` subclass (Muay Thai fighter, `JoeStage`). */
 @Component({
   selector: 'app-joe',
-  templateUrl: '../components/character/character.html',
+  templateUrl: '../../components/character/character.html',
   styleUrl: './joe.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { Terry } from './characters/terry';
-import { Joe } from './characters/joe';
+import { Terry } from './characters/terry/terry';
+import { Joe } from './characters/joe/joe';
 import { TerryStage } from './stages/terry-stage/terry-stage';
 import { JoeStage } from './stages/joe-stage/joe-stage';
 

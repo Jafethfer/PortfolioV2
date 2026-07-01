@@ -23,10 +23,10 @@
   container-type: inline-size;
   width: 75%;
   position: relative;
-  // Clips anything extending past the stage â€” most visibly, the
+  // Clips anything extending past the stage — most visibly, the
   // character's feet dipping below the ground line at the apex of a jump.
   overflow: hidden;
-  // The temple/water backdrop is ~3Ã— wider than the visible stage so
+  // The temple/water backdrop is ~3× wider than the visible stage so
   // background-position-x can scroll a long way before wrapping.
   // background-image set inline on the template so it resolves via
   // <base href> instead of being bundled by the css-resource plugin.
@@ -52,12 +52,12 @@
   animation-delay: 4.8s;
 }
 
-// Terry's ground image is intentionally 2Ã— the container width â€” that's
+// Terry's ground image is intentionally 2× the container width — that's
 // the scroll room `_scrollGround` pans through when the character is
 // pinned at an edge. Height is set in cqw so it scales with the stage.
 // Kept here as a plain class (not a Tailwind utility) because Tailwind v4
 // doesn't reliably scan arbitrary-value utilities like `w-[200%]` from
-// inside TS string literals â€” moving the sizing to SCSS sidesteps that.
+// inside TS string literals — moving the sizing to SCSS sidesteps that.
 .terry-ground {
   width: 200%;
   height: 16.69cqw;
