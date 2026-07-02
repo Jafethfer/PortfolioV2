@@ -1,13 +1,4 @@
-import { AnimationFrame } from '../../models/character';
-
-/** Sprite metadata minus per-frame timing. */
-export type SpriteFrame = Omit<AnimationFrame, 'durationMs'>;
-
-/** Zips a shared sprite array with a per-variant durations array. */
-export const withDurations = (
-  sprites: readonly SpriteFrame[],
-  durations: readonly number[],
-) => sprites.map((f, i) => ({ ...f, durationMs: durations[i] }));
+import { SpriteFrame } from '../../helpers/special-frame';
 
 /** Crack Shoot frames. */
 export const CRACK_SHOOT_FRAMES: readonly SpriteFrame[] = [

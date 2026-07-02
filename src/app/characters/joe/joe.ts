@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Character } from '../../components/character/character';
-import { AnimationData, AnimationName } from '../../models/character';
+import { AnimationData, AnimationName, CharacterVoices, SpecialMove } from '../../models/character';
+import { HURRICANE_UPPER_FRAMES, SLASH_KICK_FRAMES, TIGER_KICK_FRAMES } from './joe-specials';
+import { withDurations } from '../../helpers/special-frame';
+import { HurricaneUpper } from '../../projectiles/hurricane-upper/hurricane-upper';
 
 /** Joe Higashi — concrete `Character` subclass (Muay Thai fighter, `JoeStage`). */
 @Component({
@@ -12,6 +15,100 @@ import { AnimationData, AnimationName } from '../../models/character';
 export class Joe extends Character {
   protected override readonly spriteBaseHeight = 107;
   protected override readonly bodyAnchorX = 26;
+
+  protected override readonly voices: CharacterVoices = {
+    lightPunch: 'assets/sfx/joe/light-punch.mp3',
+    heavyPunch: 'assets/sfx/joe/heavy-punch.mp3',
+    lightKick: 'assets/sfx/joe/light-punch.mp3',
+    heavyKick: 'assets/sfx/joe/heavy-punch.mp3',
+    lightPunchWhiff: 'assets/sfx/misc/light-punch-whiff.mp3',
+    heavyPunchWhiff: 'assets/sfx/misc/heavy-punch-whiff.mp3',
+    lightKickWhiff: 'assets/sfx/misc/light-punch-whiff.mp3',
+    heavyKickWhiff: 'assets/sfx/misc/heavy-punch-whiff.mp3',
+    jump: 'assets/sfx/misc/jump.mp3',
+  };
+
+  protected override readonly specials: readonly SpecialMove[] = [
+    {
+      name: 'slashKick',
+      motion: ['left', 'right'],
+      button: 'lightKick',
+      voices: [{ src: 'assets/sfx/joe/slash-kick.mp3', frame: 4 }],
+      whiffSrc: 'assets/sfx/misc/special-travel.mp3',
+      travelDistancePct: 0.3,
+      travelStartFrame: 4,
+      travelEndFrame: 7,
+      frames: { frames: withDurations(SLASH_KICK_FRAMES, [50, 40, 40, 40, 50, 60, 80, 150]) },
+    },
+    {
+      name: 'slashKickHeavy',
+      motion: ['left', 'right'],
+      button: 'heavyKick',
+      voices: [{ src: 'assets/sfx/joe/slash-kick.mp3', frame: 4 }],
+      whiffSrc: 'assets/sfx/misc/special-travel.mp3',
+      travelDistancePct: 0.6,
+      travelStartFrame: 4,
+      travelEndFrame: 7,
+      frames: { frames: withDurations(SLASH_KICK_FRAMES, [60, 120, 90, 80, 70, 80, 100, 170]) },
+    },
+    {
+      name: 'tigerKick',
+      motion: ['down', 'up'],
+      button: 'lightKick',
+      voices: [{ src: 'assets/sfx/joe/tiger-kick.mp3', frame: 3 }],
+      whiffSrc: 'assets/sfx/misc/special-travel.mp3',
+      travelDistancePct: 0.05,
+      travelStartFrame: 3,
+      travelEndFrame: 9,
+      arcHeight: 55,
+      frames: { frames: withDurations(TIGER_KICK_FRAMES, [80, 60, 60, 70, 78, 78, 78, 78, 382]) },
+    },
+    {
+      name: 'tigerKickHeavy',
+      motion: ['down', 'up'],
+      button: 'heavyKick',
+      voices: [{ src: 'assets/sfx/joe/tiger-kick.mp3', frame: 3 }],
+      whiffSrc: 'assets/sfx/misc/special-travel.mp3',
+      travelDistancePct: 0.08,
+      travelStartFrame: 3,
+      travelEndFrame: 9,
+      arcHeight: 90,
+      frames: { frames: withDurations(TIGER_KICK_FRAMES, [150, 140, 110, 90, 92, 92, 92, 92, 458]) },
+    },
+    {
+      name: 'hurricaneUpper',
+      motion: ['down', 'right'],
+      button: 'lightPunch',
+      voices: [
+        { src: 'assets/sfx/joe/hurricane-upper-1.mp3', frame: 0 },
+        { src: 'assets/sfx/joe/hurricane-upper-2.mp3', frame: 4 },
+      ],
+      frames: { frames: withDurations(HURRICANE_UPPER_FRAMES, [60, 60, 70, 70, 150]) },
+      projectile: {
+        componentClass: HurricaneUpper,
+        spawnFrame: 4,
+        spawnOffsetX: 40,
+        spawnOffsetY: 0,
+      },
+    },
+    {
+      name: 'hurricaneUpperHeavy',
+      motion: ['down', 'right'],
+      button: 'heavyPunch',
+      voices: [
+        { src: 'assets/sfx/joe/hurricane-upper-1.mp3', frame: 0 },
+        { src: 'assets/sfx/joe/hurricane-upper-2.mp3', frame: 4 },
+      ],
+      frames: { frames: withDurations(HURRICANE_UPPER_FRAMES, [80, 100, 90, 90, 170]) },
+      projectile: {
+        componentClass: HurricaneUpper,
+        spawnFrame: 4,
+        spawnOffsetX: 40,
+        spawnOffsetY: 0,
+        speed: 36,
+      },
+    },
+  ];
 
   protected override readonly animationFrames: Partial<Record<AnimationName, AnimationData>> = {
     idle: {

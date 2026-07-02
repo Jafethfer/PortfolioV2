@@ -89,6 +89,10 @@ export abstract class Projectile {
    * projectile's CSS `--projectile-height` var divides by this value
    * so a frame of `h === heightBaseline` renders exactly at that height. */
   protected readonly heightBaseline: number = 76;
+  /** Frame index the loop returns to after the last frame. Frames before it
+   * play once (an intro/build-up), then the steady loop runs from here.
+   * Default 0 loops the whole strip. */
+  protected readonly loopStartIndex: number = 0;
 
   /** Launch/flight SFX, played once when the projectile spawns. Optional —
    * subclasses set it (left undefined = silent). Played on the mixer's
@@ -126,6 +130,11 @@ export abstract class Projectile {
   }
 
   constructor() {
+    // Stamp the spawn tick so the first frame gets its full duration. Without
+    // this, `_frameStartTick` is 0 while `tick()` is a large running counter, so
+    // the first `_advanceFrame` sees a huge elapsed time and skips frame 0.
+    this._frameStartTick = this._loop.tick();
+
     afterNextRender(() => {
       const node = this.el()?.nativeElement;
       // Measure the host slot's left edge so we can convert the
@@ -202,7 +211,7 @@ export abstract class Projectile {
       this.currentFrameIndex.set(idx + 1);
       this._frameStartTick = this._loop.tick();
     } else if (data.loop) {
-      this.currentFrameIndex.set(0);
+      this.currentFrameIndex.set(this.loopStartIndex);
       this._frameStartTick = this._loop.tick();
     }
   }

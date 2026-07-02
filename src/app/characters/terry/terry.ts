@@ -8,8 +8,8 @@ import {
   CRACK_SHOOT_FRAMES,
   POWER_WAVE_FRAMES,
   RISING_TACKLE_FRAMES,
-  withDurations,
 } from './terry-specials';
+import { withDurations } from '../../helpers/special-frame';
 
 /** Terry Bogard — concrete Character subclass. */
 @Component({
