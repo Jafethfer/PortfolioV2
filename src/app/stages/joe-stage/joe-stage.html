@@ -5,6 +5,15 @@
   [style.background-position-x.px]="-bgShiftPx()"
   [style.background-size]="bgSize()"
 >
+  <app-parallax
+    [cards]="infoCards"
+    [cardsY]="infoCardsY"
+    [progress]="parallaxProgress()"
+    [hasNext]="hasNextStage"
+    [hasPrevious]="hasPreviousStage"
+    (next)="goToNextStage()"
+    (previous)="goToPreviousStage()"
+  />
   <div class="w-full relative">
     <ng-container #characterHost></ng-container>
     <ng-container #projectileHost></ng-container>

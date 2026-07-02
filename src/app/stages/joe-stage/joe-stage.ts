@@ -8,6 +8,9 @@ import {
 } from '@angular/core';
 import { Stage, StageFrame } from '../../components/stage/stage';
 import { LegendSpecial } from '../../services/legend.service';
+import { Parallax } from '../../components/parallax/parallax';
+import { Character } from '../../components/character/character';
+import { infoCardsStage2 } from '../../constants/stage-info-cards';
 
 /** Joe Higashi's stage: Thailand. Backdrop and ground are 2-frame loops and
  * scroll 1:1 together (flat camera, no independent parallax layer). */
@@ -15,6 +18,7 @@ import { LegendSpecial } from '../../services/legend.service';
   selector: 'app-joe-stage',
   templateUrl: './joe-stage.html',
   styleUrl: './joe-stage.scss',
+  imports: [Parallax],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JoeStage extends Stage {
@@ -26,6 +30,12 @@ export class JoeStage extends Stage {
     { motion: ['↓', '→'], buttons: ['A', 'S'], label: 'Hurricane Upper' },
     { motion: [], buttons: ['A', 'S'], label: 'Bakuretsuken (mash)' },
   ];
+
+  protected readonly infoCards = infoCardsStage2;
+  protected readonly infoCardsY = '38%';
+  protected readonly parallaxProgress = signal(0);
+  // World position captured on the first tick; progress is measured from it.
+  private _progressAnchor: number | null = null;
 
   readonly groundEl = viewChild.required<ElementRef<HTMLDivElement>>('groundEl');
   readonly groundImgEl = viewChild.required<ElementRef<HTMLImageElement>>('groundImgEl');
@@ -66,6 +76,37 @@ export class JoeStage extends Stage {
     this.bgCycle.advance(tick);
     this.groundCycle.advance(tick);
     this._scrollWorld();
+    const character = this.character();
+    if (character && character.ready()) this._updateParallaxProgress(character);
+  }
+
+  /**
+   * Drive the parallax cards from Joe's forward travel: `worldX + bgShiftPx`
+   * (on-screen position plus the distance the world has scrolled past the edge),
+   * anchored at spawn and normalized against the far-right reachable position so
+   * the cards land at the end exactly as Joe runs out of stage. Mirrors Terry's
+   * train-scroll progress, using the bg shift (0 → max) as the scroll measure.
+   */
+  private _updateParallaxProgress(character: Character): void {
+    const charW = character.width();
+    const pos = character.worldX() + this.bgShiftPx();
+    if (this._progressAnchor === null) this._progressAnchor = pos;
+    const maxPos = this.rightLimit - charW + this.maxBgShiftPx();
+    const range = Math.max(1, maxPos - this._progressAnchor);
+    const progress = Math.min(1, Math.max(0, (pos - this._progressAnchor) / range));
+    this.parallaxProgress.set(progress);
+  }
+
+  /** Re-anchor the progress baseline on resize so the current card position is
+   * preserved (the stage is `vw`-sized, so the px inputs rescale). */
+  protected override _onResize(): void {
+    const character = this.character();
+    if (!character || !character.ready() || this._progressAnchor === null) return;
+    const charW = character.width();
+    const pos = character.worldX() + this.bgShiftPx();
+    const maxPos = this.rightLimit - charW + this.maxBgShiftPx();
+    const p = Math.min(0.999, this.parallaxProgress());
+    this._progressAnchor = (pos - p * maxPos) / (1 - p);
   }
 
   /**

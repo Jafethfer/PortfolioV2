@@ -10,8 +10,15 @@
     class="parallax-track"
     [style.transform]="'translateX(' + -offset() + 'px)'"
   >
-    @for (card of cards(); track card.title) {
-      <app-info-card [title]="card.title" [body]="card.body" />
+    @for (card of cards(); track $index) {
+      <app-info-card
+        [title]="card.title"
+        [body]="card.body"
+        [image]="card.image"
+        [imageAlt]="card.imageAlt ?? ''"
+        [logos]="card.logos ?? []"
+        [links]="card.links ?? []"
+      />
     }
   </div>
 </div>

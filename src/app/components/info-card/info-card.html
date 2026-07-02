@@ -1,2 +1,25 @@
-<h2>{{ title() }}</h2>
-<p>{{ body() }}</p>
+@if (image()) {
+  <img class="card-image" [src]="image()" [alt]="imageAlt()" />
+}
+@if (title()) {
+  <h2>{{ title() }}</h2>
+}
+@if (body()) {
+  <p>{{ body() }}</p>
+}
+@if (logos().length) {
+  <div class="card-logos">
+    @for (logo of logos(); track logo) {
+      <img [src]="logo" alt="" />
+    }
+  </div>
+}
+@if (links().length) {
+  <div class="card-links">
+    @for (link of links(); track link.url) {
+      <a class="card-link" [href]="link.url" target="_blank" rel="noopener noreferrer">
+        {{ link.label }}
+      </a>
+    }
+  </div>
+}
