@@ -14,12 +14,24 @@
       <span class="text-white/90">[Add a line or two about yourself here.]</span>
     </p>
 
-    <button
-      type="button"
-      class="start rounded border-2 border-amber-400 bg-amber-400/10 font-bold uppercase tracking-[0.25em] text-amber-300 transition-colors hover:bg-amber-400 hover:text-black"
-      (click)="start()"
-    >
-      Press Start
-    </button>
+    <div class="loader mx-auto">
+      <div class="track relative overflow-hidden rounded-full bg-white/10">
+        <div class="fill absolute inset-y-0 left-0 rounded-full" [style.width.%]="percent()"></div>
+      </div>
+
+      <button
+        type="button"
+        class="start"
+        [class.ready]="ready()"
+        [disabled]="!ready()"
+        (click)="start()"
+      >
+        @if (ready()) {
+          Press Start
+        } @else {
+          Loading… {{ percent() }}%
+        }
+      </button>
+    </div>
   </div>
 </div>

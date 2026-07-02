@@ -1,6 +1,8 @@
 <div class="page">
   <router-outlet />
 </div>
-<app-legend />
-<app-audio-mixer />
+@if (!isLanding()) {
+  <app-legend />
+  <app-audio-mixer />
+}
 <app-stage-transition />

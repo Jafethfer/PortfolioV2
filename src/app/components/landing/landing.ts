@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { StageTransitionService } from '../../services/stage-transition.service';
+import { AssetPreloadService } from '../../services/asset-preload.service';
 
 /**
  * Title / landing screen — the app's entry route (`''`). Sits in the same 16:9
@@ -18,9 +19,23 @@ import { StageTransitionService } from '../../services/stage-transition.service'
 })
 export class Landing {
   private readonly _transition = inject(StageTransitionService);
+  private readonly _assets = inject(AssetPreloadService);
 
-  /** Cover the screen with the loading grid-wipe, then reveal stage-1. */
+  /** Preload progress for the loading bar; Start unlocks when `ready` is true. */
+  readonly progress = this._assets.progress;
+  readonly ready = this._assets.done;
+  readonly percent = computed(() => Math.round(this.progress() * 100));
+
+  constructor() {
+    // Warm the asset cache the moment the title screen appears, so everything
+    // is decoded/fetched by the time the visitor hits Start.
+    this._assets.start();
+  }
+
+  /** Cover the screen with the loading grid-wipe, then reveal stage-1. No-op
+   * until assets finish preloading (the button is disabled until then). */
   start(): void {
+    if (!this.ready()) return;
     this._transition.navigateTo('/stage-1');
   }
 }
