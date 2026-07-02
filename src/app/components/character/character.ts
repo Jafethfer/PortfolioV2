@@ -30,16 +30,19 @@ import { REFERENCE_WIDTH } from '../../constants/viewport';
 /**
  * Abstract character base. Owns the physics, input wiring, and animation
  * state machine. Subclasses are concrete @Component classes that supply
- * their own `animations` map (mapping abstract names to sprite CSS classes)
- * and styleUrl (the matching sprite stylesheet) — same shape as a game-engine
+ * their own `animationFrames` map (per-frame image + anchor data) and
+ * styleUrl (the matching sprite stylesheet) — same shape as a game-engine
  * character prefab.
  *
  * Subclasses must:
  *  - decorate with @Component, sharing the character template
  *      `templateUrl: '../components/character/character.html'`
- *  - register themselves as a Character via:
- *      `providers: [{ provide: Character, useExisting: forwardRef(() => Self) }]`
- *    so the Stage can `viewChild.required(Character)`.
+ *  - declare an `animationFrames` entry for every animation they set
+ *    (`idle` is always required — it's the initial state).
+ *
+ * The Stage instantiates the chosen subclass imperatively
+ * (`viewContainerRef.createComponent`) and forwards its geometry via
+ * `ComponentRef.setInput` — no provider registration needed.
  *
  * Tuning fields are plain class properties — override with `protected override`
  * to retune walk speed, jump distance, etc. per character.
@@ -164,15 +167,18 @@ export abstract class Character {
 
   readonly el = viewChild.required<ElementRef<HTMLElement>>('el');
 
-  private readonly _input = inject(InputService);
-  private readonly _loop = inject(GameLoopService);
-  private readonly _audio = inject(AudioService);
+  // Injected engine services. `protected` so character-specific moves (wired
+  // via the `interceptAttack` / `tickCustomAttack` hooks) can read input,
+  // schedule off the loop tick, and play audio the same way the base does.
+  protected readonly _input = inject(InputService);
+  protected readonly _loop = inject(GameLoopService);
+  protected readonly _audio = inject(AudioService);
 
   // Public reactive state — Stage reads worldX() to drive train scrolling.
   // Animation is typed as `string` (not `AnimationName`) so specials — whose
   // names live outside the built-in union — can be assigned without a cast.
-  // Built-ins set literal `AnimationName` values; lookups into the built-in
-  // `animations` map narrow with a cast and fall back to '' for specials.
+  // Built-ins set literal `AnimationName` values; `currentAnimData` resolves
+  // the name by looking up `animationFrames` first, then scanning `specials`.
   readonly animation = signal<string>('idle');
   readonly accumulated = signal(4);
   readonly accumulatedY = signal(0);
@@ -292,14 +298,10 @@ export abstract class Character {
   private _airHeavyAttackEndTick = 0;
   /** True between the first air-attack trigger of a jump and landing. One air
    * normal per jump — the gate has to outlive the active animation because the
-   * heavy variant transitions through `airHeavyPunch` → `airHeavyPunchRecover`
+   * heavy variant transitions through `airHeavyPunch` → `airHeavyRecover`
    * mid-air, so an animation-name check would let a second press slip through
    * during the recovery window. Cleared on land. */
   private _airAttackUsed = false;
-  /** Voice + whiff SFX queued to play when the special's travel window
-   * starts — so the fighter's shout and the travel whoosh both sync with
-   * Terry's actual forward motion instead of firing at the very start of
-   * the windup. Cleared when played or when the attack ends. */
   /** Queue of voice cues from the active special, each tagged with the
    * absolute tick at which it should fire (computed from `SpecialMove.voices`
    * frame indices at launch). The physics tick drains entries as their
@@ -737,9 +739,9 @@ export abstract class Character {
   }
   /** Air heavy punch — fires only mid-jump. See `_startAirAttack`. Unlike
    * the light variant, heavy schedules a recovery: after the punch frames
-   * finish, the sprite snaps back to a jump-fall pose so Terry visibly
-   * recovers in the air before landing (and is "punishable" — can't act
-   * again until landing). */
+   * finish, the sprite swaps to `airHeavyRecover` so Terry visibly
+   * recovers his stance mid-air before landing (and is "punishable" — can't
+   * act again until landing). */
   airHeavyPunch(): void {
     this._startAirAttack({
       animation: 'airHeavyPunch',
@@ -780,9 +782,11 @@ export abstract class Character {
     this._audio.playVoice(this.voices.taunt, this.voiceVolume);
   }
 
-  /** Generic attack-button dispatcher. Tries a motion-matched special first,
-   * then routes to the air / crouch / ground normal for that button. */
+  /** Generic attack-button dispatcher. Lets a subclass intercept first (for a
+   * character-specific move like Joe's mash flurry), then tries a motion-matched
+   * special, then routes to the air / crouch / ground normal for that button. */
   private _tryAttack(button: AttackButton): void {
+    if (this.interceptAttack(button)) return;
     if (this._tryRunSpecial(button)) return;
     // Buttons without an air normal yet are no-ops in the air.
     if (this.inJump()) return this._dispatchAirAttack(button);
@@ -790,6 +794,20 @@ export abstract class Character {
     // the character has no crouching variant for the button.
     if (this._input.downKey() && this._dispatchCrouchAttack(button)) return;
     this._dispatchGroundAttack(button);
+  }
+
+  /** Extension hook: a subclass returns true to fully handle an attack-button
+   * press itself (e.g. a mash-triggered move), suppressing the base's special /
+   * normal dispatch for that press. Default: no interception. */
+  protected interceptAttack(_button: AttackButton): boolean {
+    return false;
+  }
+
+  /** Extension hook: a subclass returns true to own the physics tick this frame
+   * (e.g. sustaining a character-specific move), so the base skips its own
+   * attack / jump / ground handling. Default: not handled. */
+  protected tickCustomAttack(): boolean {
+    return false;
   }
 
   /** Scan specials bound to `button` (longest motion first, so a 4-input
@@ -1172,6 +1190,7 @@ export abstract class Character {
    */
   private _physicsTick(): void {
     if (this._specialFallingDescent) return this._tickSpecialFallingDescent();
+    if (this.tickCustomAttack()) return;
     if (this.inAttack()) return this._tickAttack();
     if (this.inJump()) return this._tickJump();
     this._tickGroundMovement();
@@ -1391,7 +1410,7 @@ export abstract class Character {
   /** Pick the right grounded animation from the currently-held input. Used on
    * landing (from a jump or a post-special descent) where there's no input
    * *change* for the state-machine effect to react to. */
-  private _snapToGroundAnimation(): void {
+  protected _snapToGroundAnimation(): void {
     const dir = this._input.lastDir();
     const down = this._input.downKey();
     if (down) this.animation.set(dir === 'right' ? 'crouchForward' : 'crouch');

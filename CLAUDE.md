@@ -37,7 +37,7 @@ For a character subclass, the only acceptable comment is a one-line class identi
 ## Architectural rules
 
 - **Characters do not know about the stage.** The character receives `worldWidth`, `blockedRight`, `blockedLeft` as Angular inputs from its parent and never reaches into the DOM for stage geometry.
-- **Polymorphism by class inheritance — game-engine style.** Each character is a `@Component` that `extends Character` (the abstract `@Directive()` base). The subclass supplies its own `selector`, shared `templateUrl: '../components/character/character.html'`, dedicated `styleUrl: './<name>.scss'`, `protected override readonly animations` map, optional `voices`, and `protected override` tuning fields (walkSpeed, jumpDistancePct, etc).
+- **Polymorphism by class inheritance — game-engine style.** Each character is a `@Component` that `extends Character` (the abstract `@Directive()` base). The subclass supplies its own `selector`, shared `templateUrl: '../components/character/character.html'`, dedicated `styleUrl: './<name>.scss'`, `protected override readonly animationFrames` map, optional `voices`, and `protected override` tuning fields (walkSpeed, jumpDistancePct, etc).
 - **Stage spawns the character imperatively.** Stage's template has `<ng-container #characterHost></ng-container>` as a host slot. In `afterNextRender`, Stage calls `viewContainerRef.createComponent(this.characterClass())` and stores `ComponentRef.instance` in a `signal<Character | null>`; Stage forwards its computed `worldWidth`/`blockedRight`/`blockedLeft` into the spawned instance via `ComponentRef.setInput`. This mirrors a game scene instantiating a player prefab, and avoids the `viewChild` resolution issues that come with `*ngComponentOutlet`. App picks the character with `[characterClass]="SomeCharacter"`. Adding a character = new `<name>.ts` + `<name>.scss` pair under `src/app/characters/` and a one-line change in App.
 - **Signals over imperative state.** All character state is `signal()` (e.g. `accumulated`, `animation`, `inJump`). The template binds to `animClass()` / `transform()` computeds. Physics runs in an `effect()` that depends only on `loop.tick()`; everything else is read inside `untracked()` so we don't feedback-loop.
 - **Jump phases are tick-driven, not setTimeout-driven.** `_physicsTick` checks elapsed ticks since takeoff against `jumpApexMs` and `jumpDurationMs` to decide ascend/descend/land. Easier to reason about than scheduled callbacks.
@@ -135,7 +135,7 @@ Vertical jump (`.terry-jump-up` / `.terry-jump-fall` / `.terry-jump-ground`) sti
 Per-tick (30 ms) from `_physicsTick` in `character.ts`:
 - Walk: ±`walkSpeed` (default 10) px/tick
 - Crouch-forward: +`crouchSpeed` (default 5) px/tick (half walk)
-- Jump: ±`_jumpXStep` per tick, computed at takeoff as `worldWidth × jumpDistancePct / jumpTicks` (default `0.30 / 33`) so a leap covers ~30% of the stage regardless of viewport.
+- Jump: ±`_jumpXStep` per tick, computed at takeoff as `worldWidth × jumpDistancePct / jumpTicks` (default `0.4 / 29`) so a leap covers ~40% of the stage regardless of viewport.
 
 Train scroll rate is owned by the Stage (`walkScrollRate` / `crouchScrollRate` inputs, default 20 / 10) — it scrolls each tick the character is **pinned at an edge AND still holding the direction key into that edge** (right key at the right limit, left key at the left limit). Releasing the key stops the scroll even though the character is still pixel-aligned with the edge. Equivalently: when the character has nowhere left to walk, the world walks instead.
 

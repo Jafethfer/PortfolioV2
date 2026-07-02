@@ -7,6 +7,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { Stage, StageFrame } from '../../components/stage/stage';
+import { LegendSpecial } from '../../services/legend.service';
 
 /** Joe Higashi's stage: Thailand. Backdrop and ground are 2-frame loops and
  * scroll 1:1 together (flat camera, no independent parallax layer). */
@@ -18,6 +19,13 @@ import { Stage, StageFrame } from '../../components/stage/stage';
 })
 export class JoeStage extends Stage {
   protected override readonly musicSrc = 'assets/sfx/stage/joe-higashi-stage-ost.mp3';
+
+  protected override readonly legendSpecials: readonly LegendSpecial[] = [
+    { motion: ['←', '→'], buttons: ['Z', 'X'], label: 'Slash Kick' },
+    { motion: ['↓', '↑'], buttons: ['Z', 'X'], label: 'Tiger Kick' },
+    { motion: ['↓', '→'], buttons: ['A', 'S'], label: 'Hurricane Upper' },
+    { motion: [], buttons: ['A', 'S'], label: 'Bakuretsuken (mash)' },
+  ];
 
   readonly groundEl = viewChild.required<ElementRef<HTMLDivElement>>('groundEl');
   readonly groundImgEl = viewChild.required<ElementRef<HTMLImageElement>>('groundImgEl');

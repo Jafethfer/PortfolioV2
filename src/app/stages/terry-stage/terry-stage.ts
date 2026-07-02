@@ -3,6 +3,7 @@ import { Character } from '../../components/character/character';
 import { Stage } from '../../components/stage/stage';
 import { Parallax } from '../../components/parallax/parallax';
 import { infoCardsStage1 } from '../../constants/stage-info-cards';
+import { LegendSpecial } from '../../services/legend.service';
 
 /** Terry's stage. The train scrolls only while the
  * character is pinned at a stage edge; the backdrop and misc layer pan via CSS. */
@@ -15,6 +16,13 @@ import { infoCardsStage1 } from '../../constants/stage-info-cards';
 })
 export class TerryStage extends Stage {
   protected override readonly musicSrc = 'assets/sfx/stage/terry-stage-ost.mp3';
+
+  protected override readonly legendSpecials: readonly LegendSpecial[] = [
+    { motion: ['↓', '←'], buttons: ['A', 'S'], label: 'Burning Knuckle' },
+    { motion: ['↓', '←'], buttons: ['Z', 'X'], label: 'Crack Shoot' },
+    { motion: ['↓', '→'], buttons: ['A', 'S'], label: 'Power Wave' },
+    { motion: ['↓', '↑'], buttons: ['A', 'S'], label: 'Rising Tackle' },
+  ];
 
   readonly trainEl = viewChild.required<ElementRef<HTMLDivElement>>('trainEl');
   readonly trainImgEl = viewChild.required<ElementRef<HTMLImageElement>>('trainImgEl');

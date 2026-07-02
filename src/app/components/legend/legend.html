@@ -37,12 +37,18 @@
       <li><kbd>X</kbd> Heavy kick</li>
     </ul>
 
-    <h4 class="font-semibold opacity-70 mb-1">Specials</h4>
-    <ul class="space-y-1">
-      <li><kbd>&darr;</kbd><kbd>&larr;</kbd> + <kbd>A</kbd>/<kbd>S</kbd> Burning Knuckle</li>
-      <li><kbd>&darr;</kbd><kbd>&larr;</kbd> + <kbd>Z</kbd>/<kbd>X</kbd> Crack Shoot</li>
-      <li><kbd>&darr;</kbd><kbd>&rarr;</kbd> + <kbd>A</kbd>/<kbd>S</kbd> Power Wave</li>
-      <li><kbd>&darr;</kbd><kbd>&uarr;</kbd> + <kbd>A</kbd>/<kbd>S</kbd> Rising Tackle</li>
-    </ul>
+    @if (specials().length) {
+      <h4 class="font-semibold opacity-70 mb-1">Specials</h4>
+      <ul class="space-y-1">
+        @for (s of specials(); track s.label) {
+          <li>
+            @for (d of s.motion; track $index) {<kbd>{{ d }}</kbd>}
+            @if (s.motion.length && s.buttons.length) {<span class="mx-1">+</span>}
+            @for (b of s.buttons; track $index; let last = $last) {<kbd>{{ b }}</kbd>@if (!last) {<span>/</span>}}
+            <span class="ml-1">{{ s.label }}</span>
+          </li>
+        }
+      </ul>
+    }
   </div>
 }
