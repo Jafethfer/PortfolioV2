@@ -17,12 +17,14 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { REFERENCE_WIDTH } from '../../constants/viewport';
+import { AudioService } from '../../services/audio.service';
 import { StageTransitionService } from '../../services/stage-transition.service';
 import { Character } from '../character/character';
 import { Projectile } from '../projectile/projectile';
 import { ProjectileSpawnRequest } from '../../models/character';
 import { InputService } from '../../services/input.service';
 import { GameLoopService } from '../../services/game-loop.service';
+import { LegendService, LegendSpecial } from '../../services/legend.service';
 
 /** One image in a stage layer animation. Subclasses that animate a layer
  * (Joe's water shimmer, Joe's clapping audience) declare an array of
@@ -63,9 +65,17 @@ export interface StageFrame {
  */
 @Directive()
 export abstract class Stage {
-  /** Background music for the stage. Optional — stages without an OST
-   * yet can omit the music-control button in their template. */
+  /** Background music for the stage. Optional — stages without an OST yet
+   * leave it unset and no track is registered with the mixer. Started in
+   * `_startStageMusic`; the global `<app-audio-mixer>` owns its volume. */
   protected readonly musicSrc?: string;
+
+  /** Special-move rows for the controls legend, describing THIS stage's
+   * character. Published to the root-level `<app-legend>` on render (the
+   * Movement / Attacks rows are universal and stay in the legend template).
+   * Default empty — a stage with no specials hides the legend's Specials
+   * section. Override per stage. */
+  protected readonly legendSpecials: readonly LegendSpecial[] = [];
 
   /** Per-tick scroll rates for ground panning when the character is
    * pinned at an edge. Plain protected fields (not `input()`) because
@@ -94,6 +104,8 @@ export abstract class Stage {
   private readonly _router = inject(Router);
   private readonly _route = inject(ActivatedRoute);
   private readonly _transition = inject(StageTransitionService);
+  private readonly _audio = inject(AudioService);
+  private readonly _legend = inject(LegendService);
 
   /** Resolved neighbour stage paths for Next/Previous navigation, derived
    * from the router config order (single source of truth — no separate
@@ -162,6 +174,26 @@ export abstract class Stage {
     this._wireProjectileSpawns();
     this._runGameLoop();
     this._wireResize();
+    this._startStageMusic();
+    this._registerLegend();
+  }
+
+  /** Publish this stage's specials to the root-level legend once rendered.
+   * Deferred to `afterNextRender` for the same reason as `musicSrc`:
+   * `legendSpecials` is a subclass field, not yet set while the base
+   * constructor runs. */
+  private _registerLegend(): void {
+    afterNextRender(() => this._legend.setSpecials(this.legendSpecials));
+  }
+
+  /** Register this stage's OST with the audio mixer once rendered. Deferred to
+   * `afterNextRender` because `musicSrc` is a subclass field, not yet
+   * initialized while the base constructor runs. The mixer's music slider owns
+   * the volume from here on; autoplay-blocked starts resume on first input. */
+  private _startStageMusic(): void {
+    afterNextRender(() => {
+      if (this.musicSrc) this._audio.setBgMusic(this.musicSrc);
+    });
   }
 
   /** Resolve this stage's neighbour paths from the ordered router config. Only
@@ -169,7 +201,9 @@ export abstract class Stage {
    * Read once — the component is freshly created on each navigation. */
   private _resolveStageNeighbors(): { previous: string | null; next: string | null } {
     const stagePaths = this._router.config
-      .filter((r) => !!r.component)
+      // Only real stages count — the `''` Landing route has a component but no
+      // `characterClass`, so it's excluded from the prev/next cycle.
+      .filter((r) => !!r.component && !!r.data?.['characterClass'])
       .map((r) => r.path ?? '');
     const idx = stagePaths.indexOf(this._route.snapshot.routeConfig?.path ?? '');
     return {

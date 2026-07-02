@@ -1,0 +1,26 @@
+<div class="mixer absolute top-0 left-0 z-50 flex flex-col gap-1 p-2 bg-black/60 text-white text-xs select-none">
+  <label class="flex items-center gap-2">
+    <span class="w-12">Music</span>
+    <input
+      type="range" min="0" max="1" step="0.01"
+      [value]="audio.musicVolume()"
+      (input)="audio.musicVolume.set($any($event.target).valueAsNumber)"
+    />
+  </label>
+  <label class="flex items-center gap-2">
+    <span class="w-12">SFX</span>
+    <input
+      type="range" min="0" max="1" step="0.01"
+      [value]="audio.sfxVolume()"
+      (input)="audio.sfxVolume.set($any($event.target).valueAsNumber)"
+    />
+  </label>
+  <label class="flex items-center gap-2">
+    <span class="w-12">Voices</span>
+    <input
+      type="range" min="0" max="1" step="0.01"
+      [value]="audio.voiceVolume()"
+      (input)="audio.voiceVolume.set($any($event.target).valueAsNumber)"
+    />
+  </label>
+</div>

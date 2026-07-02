@@ -12,6 +12,8 @@ import {
 } from '@angular/core';
 import { AnimationData, AnimationFrame, Direction } from '../../models/character';
 import { GameLoopService } from '../../services/game-loop.service';
+import { AudioService } from '../../services/audio.service';
+import { REFERENCE_WIDTH } from '../../constants/viewport';
 
 /**
  * Abstract projectile base. Mirrors `Character` in structure — owns
@@ -67,9 +69,18 @@ export abstract class Projectile {
 
   /** Subclasses must provide. */
   protected abstract readonly frames: AnimationData;
-  /** Px/tick advance. Default ~14 (≈ walk × 1.4 — reads as a clearly
-   * faster forward motion than the character itself). */
+  /** Px/tick advance, calibrated against `referenceWidth`. Default ~14
+   * (≈ walk × 1.4 — reads as a clearly faster forward motion than the
+   * character itself). The effective per-tick advance is scaled by
+   * `worldWidth / referenceWidth` (see `_physicsTick`) so the wave covers
+   * the same FRACTION of the stage per tick on any viewport — matching how
+   * `Character` scales its walk speed and `Stage` its scroll rate. */
   protected readonly speed: number = 14;
+  /** Reference stage width the `speed` above is calibrated against. Matches
+   * the shared `REFERENCE_WIDTH` the character/stage use, so a wave keeps the
+   * same speed RELATIONSHIP to the world-scroll rate on every viewport (it
+   * must outpace the scroll or it gets dragged backward). */
+  protected readonly referenceWidth: number = REFERENCE_WIDTH;
   /** Despawn cap, as a fraction of stage width travelled from spawn.
    * 1.2 means the projectile flies 120% of the stage width before
    * vanishing — covers the full visible area with room to spare. */
@@ -78,6 +89,17 @@ export abstract class Projectile {
    * projectile's CSS `--projectile-height` var divides by this value
    * so a frame of `h === heightBaseline` renders exactly at that height. */
   protected readonly heightBaseline: number = 76;
+  /** Frame index the loop returns to after the last frame. Frames before it
+   * play once (an intro/build-up), then the steady loop runs from here.
+   * Default 0 loops the whole strip. */
+  protected readonly loopStartIndex: number = 0;
+
+  /** Launch/flight SFX, played once when the projectile spawns. Optional —
+   * subclasses set it (left undefined = silent). Played on the mixer's
+   * `'sfx'` channel, so the SFX slider scales it. */
+  protected readonly spawnSfx?: string;
+  /** Volume the `spawnSfx` is authored at (pre-mixer level). */
+  protected readonly spawnSfxVolume: number = 0.5;
 
   private _hostLeft = 0;
   private _startAccumulated = 0;
@@ -86,6 +108,7 @@ export abstract class Projectile {
 
   readonly el = viewChild<ElementRef<HTMLImageElement>>('el');
   protected readonly _loop = inject(GameLoopService);
+  protected readonly _audio = inject(AudioService);
 
   readonly currentFrameData = computed<AnimationFrame | null>(
     () => this.frames.frames[this.currentFrameIndex()] ?? null,
@@ -107,6 +130,11 @@ export abstract class Projectile {
   }
 
   constructor() {
+    // Stamp the spawn tick so the first frame gets its full duration. Without
+    // this, `_frameStartTick` is 0 while `tick()` is a large running counter, so
+    // the first `_advanceFrame` sees a huge elapsed time and skips frame 0.
+    this._frameStartTick = this._loop.tick();
+
     afterNextRender(() => {
       const node = this.el()?.nativeElement;
       // Measure the host slot's left edge so we can convert the
@@ -114,6 +142,10 @@ export abstract class Projectile {
       this._hostLeft = node ? node.getBoundingClientRect().x : 0;
       this._startAccumulated = this.spawnX() - this._hostLeft;
       this.accumulated.set(this._startAccumulated);
+
+      // Launch SFX — fires as the projectile appears (the stage spawns it on
+      // the special's release frame), so the whoosh syncs with the visual.
+      this._audio.playVoice(this.spawnSfx, this.spawnSfxVolume, 'sfx');
 
       // Preload all frame images so the per-tick src change doesn't
       // flash while the next frame fetches.
@@ -137,7 +169,12 @@ export abstract class Projectile {
   private _physicsTick(): void {
     if (this.expired()) return;
     const dirSign = this.direction() === 'left' ? -1 : 1;
-    const speed = this.speedOverride() ?? this.speed;
+    const baseSpeed = this.speedOverride() ?? this.speed;
+    // Scale to the current viewport so the wave covers the same fraction of
+    // the stage per tick regardless of width — the character's walk speed and
+    // the stage's scroll rate scale the same way, keeping their relationship
+    // (the wave must outpace the scroll) constant across viewports.
+    const speed = (baseSpeed * this.worldWidth()) / this.referenceWidth;
     const travelCap = this.travelDistancePctOverride() ?? this.travelDistancePct;
     this.accumulated.update((x) => x + speed * dirSign);
     // Off-screen despawn: the <img>'s left edge in absolute screen
@@ -174,7 +211,7 @@ export abstract class Projectile {
       this.currentFrameIndex.set(idx + 1);
       this._frameStartTick = this._loop.tick();
     } else if (data.loop) {
-      this.currentFrameIndex.set(0);
+      this.currentFrameIndex.set(this.loopStartIndex);
       this._frameStartTick = this._loop.tick();
     }
   }

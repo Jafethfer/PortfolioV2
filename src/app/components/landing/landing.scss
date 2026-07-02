@@ -1,0 +1,48 @@
+// Landing screen — mirrors the stage frame so `.page` centers it identically:
+// `display: contents` hands the 75%-wide `.landing` straight to the flex parent,
+// and `container-type: inline-size` makes the `cqw` type scale (below) track the
+// frame width, matching how the stages size their sprites.
+:host {
+  display: contents;
+}
+
+.landing {
+  container-type: inline-size;
+  width: 75%;
+  background: radial-gradient(circle at 50% 32%, #1e2632 0%, #0a0e15 72%);
+}
+
+// All type sized in `cqw` so it scales with the 16:9 frame on any viewport.
+.kicker {
+  font-size: 1.4cqw;
+  letter-spacing: 0.4em;
+  margin-bottom: 2.5cqw;
+}
+
+.title {
+  font-size: 8cqw;
+  margin-bottom: 3cqw;
+}
+
+.intro {
+  max-width: 62cqw;
+  font-size: 1.7cqw;
+  margin-bottom: 5cqw;
+}
+
+.start {
+  font-size: 1.7cqw;
+  padding: 1.3cqw 4cqw;
+  // Arcade "press start" blink.
+  animation: press-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes press-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}

@@ -7,83 +7,53 @@ import {
   viewChild,
 } from '@angular/core';
 import { Stage, StageFrame } from '../../components/stage/stage';
-import { MusicControl } from '../../components/music-control/music-control';
+import { LegendSpecial } from '../../services/legend.service';
 
-/**
- * Joe Higashi's stage â€” Thailand (Fatal Fury 2 / Mega Drive). Two key
- * differences from Terry's stage drove the per-stage-owned-template
- * refactor:
- *
- *   1. Both the backdrop and the ground band animate as 2-frame loops
- *      (water shimmer / clapping audience) â€” built on the base's
- *      `makeFrameCycle` helper, advanced from `_onTick`.
- *   2. The backdrop scrolls *with* the ground (1:1), not as a slow
- *      independent parallax. When the character is pinned at the edge,
- *      both move together, giving a flat-camera feel instead of layered
- *      depth.
- *
- * No middle parallax layer â€” the misc-layer div simply isn't in this
- * template.
- */
+/** Joe Higashi's stage: Thailand. Backdrop and ground are 2-frame loops and
+ * scroll 1:1 together (flat camera, no independent parallax layer). */
 @Component({
   selector: 'app-joe-stage',
   templateUrl: './joe-stage.html',
   styleUrl: './joe-stage.scss',
-  imports: [MusicControl],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JoeStage extends Stage {
   protected override readonly musicSrc = 'assets/sfx/stage/joe-higashi-stage-ost.mp3';
 
-  // Scrollable ground container + its `<img>`. The img is sized via
-  // `.joe-ground` (50cqw tall, `w-full`); no horizontal overflow today
-  // since the image isn't authored at 2Ã— width. Even so, `_onTick` runs
-  // the same pinned-at-edge check Terry uses, so as soon as Joe's
-  // ground is widened the scroll just starts working.
+  protected override readonly legendSpecials: readonly LegendSpecial[] = [
+    { motion: ['←', '→'], buttons: ['Z', 'X'], label: 'Slash Kick' },
+    { motion: ['↓', '↑'], buttons: ['Z', 'X'], label: 'Tiger Kick' },
+    { motion: ['↓', '→'], buttons: ['A', 'S'], label: 'Hurricane Upper' },
+    { motion: [], buttons: ['A', 'S'], label: 'Bakuretsuken (mash)' },
+  ];
+
   readonly groundEl = viewChild.required<ElementRef<HTMLDivElement>>('groundEl');
   readonly groundImgEl = viewChild.required<ElementRef<HTMLImageElement>>('groundImgEl');
 
-  /** How many stage-widths wide the backdrop is. Drives both the inline
-   * `background-size` and the cap on `bgShiftPx` so the bg can't slide
-   * past its right edge. `3` means the temple image renders at 300% of
-   * the stage width and has 200% of stage width worth of slide room.
-   * The bg image is NOT tiled â€” `bg-no-repeat` in the template â€” so
-   * overshooting would reveal empty stage. */
+  // How many stage-widths wide the backdrop is. Drives `bgSize` and caps
+  // `bgShiftPx` so the (non-tiled) bg can't slide past its right edge.
   protected readonly bgWidthMultiplier: number = 2;
-  /** Vertical proportion of the stage the backdrop fills (the ground
-   * band takes the rest). Joe's backdrop is sky/water/mountains â€” no
-   * ground in the image itself â€” so it stops above the audience band. */
+  // Vertical proportion of the stage the backdrop fills; the ground band takes
+  // the rest.
   protected readonly bgHeightPct: number = 68;
 
-  /** Inline `background-size` value for stageEl. Single source of truth
-   * via `bgWidthMultiplier` Ã— 100% width + `bgHeightPct` % height. */
   readonly bgSize = computed(
     () => `${this.bgWidthMultiplier * 100}% ${this.bgHeightPct}%`,
   );
 
-  /** How far (in px) the bg has been shifted so far. Bound to
-   * `[style.background-position-x.px]` on the stage element so the
-   * temple backdrop slides in lockstep with the ground when blocked at
-   * an edge. Sign convention matches scroll: positive = bg has moved
-   * "left" relative to its initial position. */
+  // Px the bg has been shifted; bound to `background-position-x` so the backdrop
+  // slides in lockstep with the ground when blocked at an edge.
   readonly bgShiftPx = signal(0);
 
-  /** Max px the bg can slide before its right edge meets the right edge
-   * of the stage. `(multiplier - 1) Ã— stageWidth`. `_onTick` clamps
-   * `bgShiftPx` against this so the user can't push past the image. */
+  // Max bg slide before its right edge meets the stage's; clamps `bgShiftPx`.
   readonly maxBgShiftPx = computed(
     () => (this.bgWidthMultiplier - 1) * this.width(),
   );
 
-  // Frame cycles â€” see `Stage.makeFrameCycle`. Each cycle exposes its
-  // own `currentSrc` signal (bound in the template) and an `advance`
-  // method called every tick.
   protected readonly bgCycle = this.makeFrameCycle(JOE_BG_FRAMES);
   protected readonly groundCycle = this.makeFrameCycle(JOE_GROUND_FRAMES);
 
   protected override _onAfterRender(): void {
-    // If/when the ground image is authored wider than the container,
-    // start centered like Terry's train.
     const ground = this.groundEl().nativeElement;
     const groundImg = this.groundImgEl().nativeElement;
     if (groundImg.scrollWidth > ground.clientWidth) {
@@ -99,11 +69,9 @@ export class JoeStage extends Stage {
   }
 
   /**
-   * Scroll-linked motion: whenever the character is pinned at an edge and
-   * still trying to move into it, slide both the ground band and the backdrop
-   * by the same per-tick delta. `motionIntent` covers active specials too —
-   * during a special's travel window the scroll rate matches its per-tick X
-   * step, so the world keeps pace with the special's actual travel speed.
+   * While the character is pinned at an edge and still moving into it, slide the
+   * ground and backdrop by the same per-tick delta. `motionIntent` covers active
+   * specials, so the scroll rate matches the special's per-tick X step.
    */
   private _scrollWorld(): void {
     const character = this.character();

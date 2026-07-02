@@ -5,10 +5,14 @@
 
 :host {
   display: contents;
-  // Pulls the spawned character down into Joe's audience band so they
-  // land on the grass line. The 50cqw-tall ground means a much deeper
-  // pull than Terry's stage — tune in cqw so it scales with the stage.
-  --character-foot-offset: -50cqw;
+  // The stage's ground line: height above the bottom of `.w-full.relative`.
+  // Single source of truth — the character's feet and all projectiles anchor to
+  // it via `bottom: var(--ground-y)`, so they can't drift. Trial value — tune so
+  // the feet and Power Wave sit on the grass line.
+  // In `cqw` (not `cqh`): `.stage` is an inline-size container so `cqh` wouldn't
+  // resolve against it, and aspect-video locks height ∝ width, so a width-
+  // fraction is a stable vertical position matching the cqw-based sprites.
+  --ground-y: 4cqw;
 }
 
 .stage {

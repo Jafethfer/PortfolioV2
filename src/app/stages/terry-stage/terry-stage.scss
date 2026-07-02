@@ -1,21 +1,15 @@
-// Terry-stage-specific styling: outer-container layout + parallax bg/misc
-// sizing + the three keyframe animations that drive the slow temple scroll,
-// the mid-layer pan, and the train's rhythmic bump. Everything here is
-// scoped to TerryStage via Angular view encapsulation.
+// TerryStage layout, parallax bg/misc sizing, and scroll/bump keyframes.
 
 :host {
   display: contents;
-  // Pulls the spawned character down into the train area so their feet
-  // land roughly on top of the rail. Inherited by the child character
-  // component via CSS custom-property cascade.
-  --character-foot-offset: -10%;
-  // Spawn Terry at the far left so he starts at the beginning of the stage
-  // and walks rightward through the parallax cards (read left-to-right).
+  // Spawn at the far left so Terry walks rightward through the parallax cards.
   --character-spawn-x: 4cqw;
-  // Y of the ground line measured from the bottom of `.w-full.relative`.
-  // Train height (16.69cqw) minus Terry's foot-overlap (2.5cqw = 10% of
-  // 25cqw idle) = where Terry's feet actually plant. Used by projectile
-  // components to render at ground level via `bottom: var(--ground-y)`.
+  // The stage's ground line: height above the bottom of `.w-full.relative`.
+  // Single source of truth — the character's feet and all projectiles anchor to
+  // it via `bottom: var(--ground-y)`, so they can't drift. Tune to the rail.
+  // In `cqw` (not `cqh`): `.stage` is an inline-size container so `cqh` wouldn't
+  // resolve against it, and aspect-video locks height ∝ width, so a width-
+  // fraction is a stable vertical position matching the cqw-based sprites.
   --ground-y: 6cqw;
 }
 
@@ -23,10 +17,8 @@
   container-type: inline-size;
   width: 75%;
   position: relative;
-  // Clips anything extending past the stage â€” most visibly, the
-  // character's feet dipping below the ground line at the apex of a jump.
   overflow: hidden;
-  // The temple/water backdrop is ~3Ã— wider than the visible stage so
+  // The temple/water backdrop is ~3× wider than the visible stage so
   // background-position-x can scroll a long way before wrapping.
   // background-image set inline on the template so it resolves via
   // <base href> instead of being bundled by the css-resource plugin.
@@ -52,12 +44,10 @@
   animation-delay: 4.8s;
 }
 
-// Terry's ground image is intentionally 2Ã— the container width â€” that's
-// the scroll room `_scrollGround` pans through when the character is
-// pinned at an edge. Height is set in cqw so it scales with the stage.
-// Kept here as a plain class (not a Tailwind utility) because Tailwind v4
-// doesn't reliably scan arbitrary-value utilities like `w-[200%]` from
-// inside TS string literals â€” moving the sizing to SCSS sidesteps that.
+// 2× the container width is the scroll room the train pans through when the
+// character is pinned at an edge. Kept as a plain class, not a Tailwind
+// `w-[200%]` utility — Tailwind v4 doesn't reliably scan arbitrary values from
+// inside TS string literals.
 .terry-ground {
   width: 200%;
   height: 16.69cqw;

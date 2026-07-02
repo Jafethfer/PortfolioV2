@@ -81,6 +81,23 @@ export interface AnimationData {
   /** When true, frames loop forever; when false (default), the animation
    * holds on the last frame until something else changes the state. */
   readonly loop?: boolean;
+  /** When true, the loop ping-pongs (back-and-forth) instead of wrapping:
+   * `0→1→…→N-1→N-2→…→1→0→…`. Gives idle/breathing cycles a smooth bob
+   * without snapping from the last pose back to the first, and without
+   * authoring a palindrome frame list. Implies looping. No effect for
+   * fewer than 3 frames (a 2-frame ping-pong is identical to a plain loop). */
+  readonly bounce?: boolean;
+  /** Optional forward travel over the attack's lock-in, as a fraction of the
+   * world width (same model as `SpecialMove.travelDistancePct`). Lets a NORMAL
+   * attack step forward — e.g. a lunging crouch kick. Distributed across
+   * `[travelStartFrame, travelEndFrame)`; pinned at the stage edge. Only read
+   * for attack animations (played via `_startAttack`); ignored for looping
+   * locomotion. Positive = facing direction. */
+  readonly travelDistancePct?: number;
+  /** Frame index where travel begins (default 0). */
+  readonly travelStartFrame?: number;
+  /** Frame index (exclusive) where travel ends (default past the last frame). */
+  readonly travelEndFrame?: number;
 }
 
 /**

@@ -1,7 +1,9 @@
 import { Routes } from '@angular/router';
-import { Terry } from './characters/terry';
+import { Terry } from './characters/terry/terry';
+import { Joe } from './characters/joe/joe';
 import { TerryStage } from './stages/terry-stage/terry-stage';
 import { JoeStage } from './stages/joe-stage/joe-stage';
+import { Landing } from './components/landing/landing';
 
 /**
  * Stage routing. Each entry mounts a concrete `Stage` subclass and feeds
@@ -10,11 +12,15 @@ import { JoeStage } from './stages/joe-stage/joe-stage';
  * of matching names, so `data.characterClass` lands on the stage's
  * `characterClass = input.required<Type<Character>>()`).
  *
- * Both stages currently spawn Terry; swap the `characterClass` here when
- * another character ships.
+ * Stage-1 spawns Terry; stage-2 (Joe's Thailand stage) spawns Joe. Swap the
+ * `characterClass` here when another character ships.
+ *
+ * The entry route (`''`) is the `Landing` title screen — it has no
+ * `characterClass`, which is how `Stage._resolveStageNeighbors` tells it apart
+ * from the stages so it never appears in the prev/next stage cycle.
  */
 export const routes: Routes = [
-  { path: '', redirectTo: 'stage-1', pathMatch: 'full' },
+  { path: '', component: Landing },
   { path: 'stage-1', component: TerryStage, data: { characterClass: Terry } },
-  { path: 'stage-2', component: JoeStage, data: { characterClass: Terry } },
+  { path: 'stage-2', component: JoeStage, data: { characterClass: Joe } },
 ];
