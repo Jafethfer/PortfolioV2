@@ -5,7 +5,7 @@ import { ASSET_MANIFEST } from '../generated/asset-manifest';
  * opening 300 sockets and stalling early progress updates. */
 const CONCURRENCY = 12;
 
-const IMAGE = /\.(png|jpe?g|webp|avif|gif|svg)$/i;
+const IMAGE = /\.(png|jpe?g|webp|avif|svg)$/i;
 
 /**
  * Warms the browser cache with every asset in `ASSET_MANIFEST` (generated from

@@ -1,0 +1,19 @@
+:host {
+  display: contents;
+  // Spawn near the left so Ryo walks rightward through the parallax cards.
+  --character-spawn-x: 6cqw;
+  // Ground line: Ryo's feet sit this far above the stage bottom. Tune to the
+  // dojo floor baked into the WebP.
+  --ground-y: 5cqw;
+}
+
+.stage {
+  container-type: inline-size;
+  width: 75%;
+  position: relative;
+  overflow: hidden;
+  // The WebP (2.61:1) fills the stage height and overflows horizontally; the
+  // overflow is the room `background-position-x` pans across as Ryo walks.
+  background-size: auto 100%;
+  background-repeat: no-repeat;
+}

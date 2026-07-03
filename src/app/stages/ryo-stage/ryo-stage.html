@@ -1,0 +1,21 @@
+<div
+  #stageEl
+  class="stage aspect-video flex items-end"
+  style="background-image: url('assets/img/stage/ryo-stage/ryo-stage.webp')"
+  [style.background-position-x.px]="-bgShiftPx()"
+>
+  <!-- Scroll-driven parallax overlay (info cards + stage nav). -->
+  <app-parallax
+    [cards]="infoCards"
+    [cardsY]="infoCardsY"
+    [progress]="parallaxProgress()"
+    [hasNext]="hasNextStage"
+    [hasPrevious]="hasPreviousStage"
+    (next)="goToNextStage()"
+    (previous)="goToPreviousStage()"
+  />
+  <div class="w-full relative">
+    <ng-container #characterHost></ng-container>
+    <ng-container #projectileHost></ng-container>
+  </div>
+</div>

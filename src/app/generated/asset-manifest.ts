@@ -267,6 +267,7 @@ export const ASSET_MANIFEST: readonly string[] = [
   'assets/img/stage/joe-stage/background-1.png',
   'assets/img/stage/joe-stage/ground-0.png',
   'assets/img/stage/joe-stage/ground-1.png',
+  'assets/img/stage/ryo-stage/ryo-stage.webp',
   'assets/img/stage/terry-stage/base-layer.png',
   'assets/img/stage/terry-stage/misc.png',
   'assets/img/stage/terry-stage/train.png',
