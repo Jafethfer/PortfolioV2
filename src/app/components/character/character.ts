@@ -228,6 +228,12 @@ export abstract class Character {
     if (sv < 0) return 'left';
     if (this._forwardJump) return 'right';
     if (this._backwardJump) return 'left';
+    // Raw input only counts when the character is free to walk. During a
+    // neutral jump, an attack, or a special's windup/recovery it's pinned in
+    // place, so a held direction into the edge must NOT scroll the world (the
+    // traveling-special / directional-jump cases above already handled the
+    // states where a committed move legitimately pushes into the edge).
+    if (this.inJump() || this.inAttack()) return null;
     return this._input.lastDir();
   }
 
