@@ -10,3 +10,8 @@ export const withDurations = (
   sprites: readonly SpriteFrame[],
   durations: readonly number[],
 ) => sprites.map((f, i) => ({ ...f, durationMs: durations[i] }));
+
+/** Sum of a frame list's per-frame durations (ms) — an animation/special's
+ * total run length. */
+export const totalDurationMs = (frames: readonly { durationMs: number }[]): number =>
+  frames.reduce((sum, f) => sum + f.durationMs, 0);

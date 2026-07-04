@@ -25,6 +25,7 @@ import {
 import { InputService } from '../../services/input.service';
 import { GameLoopService } from '../../services/game-loop.service';
 import { AudioService, SoundCategory } from '../../services/audio.service';
+import { MashFlurry, MashFlurryConfig } from '../../helpers/mash-flurry';
 import { REFERENCE_WIDTH } from '../../constants/viewport';
 
 /**
@@ -792,6 +793,31 @@ export abstract class Character {
    * attack / jump / ground handling. Default: not handled. */
   protected tickCustomAttack(): boolean {
     return false;
+  }
+
+  /** Build a {@link MashFlurry} bound to this character's engine internals
+   * (tick clock, grounded/standing gate, animation lock, audio). A subclass
+   * wires the returned controller into the two hooks above — `interceptAttack`
+   * → `press`, `tickCustomAttack` → `tick` — and supplies only the config
+   * (buttons, clips, finisher, SFX). Shared by every mash-flurry character. */
+  protected _createMashFlurry(config: MashFlurryConfig): MashFlurry {
+    return new MashFlurry(
+      {
+        currentTick: () => this._loop.tick(),
+        canStart: () => !this.inJump() && !this._input.downKey(),
+        showAnimation: (animation) => {
+          this.inAttack.set(true);
+          this.animation.set(animation);
+        },
+        playVoice: (src) => this._audio.playVoice(src, this.voiceVolume),
+        playLoopingWhoosh: (src) => this._audio.playVoice(src, this.sfxVolume, 'sfx'),
+        end: () => {
+          this.inAttack.set(false);
+          this._snapToGroundAnimation();
+        },
+      },
+      config,
+    );
   }
 
   /** Scan specials bound to `button` (longest motion first, so a 4-input

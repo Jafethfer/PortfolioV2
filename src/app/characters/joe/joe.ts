@@ -14,7 +14,7 @@ import {
   SLASH_KICK_FRAMES,
   TIGER_KICK_FRAMES,
 } from './joe-specials';
-import { withDurations } from '../../helpers/special-frame';
+import { withDurations, totalDurationMs } from '../../helpers/special-frame';
 import { GameLoopService } from '../../services/game-loop.service';
 import { HurricaneUpper } from '../../projectiles/hurricane-upper/hurricane-upper';
 
@@ -126,10 +126,9 @@ export class Joe extends Character {
       },
     },
     // Bakuretsuken — Joe's mash-punch flurry. Empty motion: it never fires via
-    // the base's motion dispatch. Instead `interceptAttack` counts rapid punch
-    // presses and drives these two clips directly (the flurry loops while
-    // mashing, then the heavy finisher plays on release). See the hook methods
-    // at the bottom of the class.
+    // the base's motion dispatch. The `MashFlurry` controller (see the bottom
+    // of the class) counts rapid punch presses and plays these clips once: the
+    // loop for both light and heavy, chased by the finisher for heavy only.
     {
       name: 'bakuretsuken',
       motion: [],
@@ -880,130 +879,43 @@ export class Joe extends Character {
   };
 
   // ── Bakuretsuken (mash-punch flurry) ──────────────────────────────────────
-  // A Joe-only move, kept out of the base engine: it plugs into the generic
-  // `interceptAttack` / `tickCustomAttack` hooks and drives the two special
-  // clips (`bakuretsuken` loop + `bakuretsukenFinish`) declared above.
+  // Three rapid punch presses trigger ONE flurry: light plays the loop then
+  // ends; heavy plays the loop then the knockback finisher (grunt on its first
+  // frame). Re-triggerable; mashing never sustains it endlessly. All the
+  // mash/timing logic lives in the shared `MashFlurry` controller — here we
+  // only supply the per-button config.
+  private readonly _flurryLoopMs =
+    2 * totalDurationMs(this.specials.find((s) => s.name === 'bakuretsuken')!.frames.frames);
+  private readonly _flurryFinishMs = totalDurationMs(
+    this.specials.find((s) => s.name === 'bakuretsukenFinish')!.frames.frames,
+  );
+  private readonly _flurry = this._createMashFlurry({
+    variants: [
+      {
+        button: 'lightPunch',
+        loopAnimation: 'bakuretsuken',
+        loopDurationMs: this._flurryLoopMs,
+      },
+      {
+        button: 'heavyPunch',
+        loopAnimation: 'bakuretsuken',
+        loopDurationMs: this._flurryLoopMs,
+        finishAnimation: 'bakuretsukenFinish',
+        finishDurationMs: this._flurryFinishMs,
+        finishVoiceSrc: this.voices['bakuretsuken'],
+      },
+    ],
+    triggerCount: 3,
+    mashWindowMs: 220,
+    tickMs: GameLoopService.TICK_MS,
+    whooshSrc: this.voices['bakuretsukenSfx'],
+  });
 
-  /** Max gap between consecutive same-button punch presses that still counts as
-   * mashing — both to reach the 3-press trigger and, once flurrying, to sustain
-   * it. A larger gap ends the flurry. */
-  private readonly _mashWindowMs = 220;
-  private _mashButton: AttackButton | null = null;
-  private _mashCount = 0;
-  private _lastPunchTick = 0;
-  private _bakuActive = false;
-  private _bakuHeavy = false;
-  private _bakuFinishing = false;
-  private _bakuFinishEndTick = 0;
-  private _gruntTick = 0;
-  private _gruntPlayed = false;
-  /** The looping flurry-whoosh element, stopped when the flurry phase ends. */
-  private _flurrySfx: HTMLAudioElement | null = null;
-
-  private get _mashWindowTicks(): number {
-    return Math.round(this._mashWindowMs / GameLoopService.TICK_MS);
-  }
-
-  /** Count rapid punch presses; the 3rd (grounded, no Down) starts the flurry.
-   * Presses 1–2 fall through to the base's normal jab. While the flurry is up,
-   * every press keeps it alive and all input is swallowed. */
   protected override interceptAttack(button: AttackButton): boolean {
-    const isPunch = button === 'lightPunch' || button === 'heavyPunch';
-    if (this._bakuActive) {
-      // Only the button that STARTED the flurry sustains it — mashing the other
-      // punch is swallowed but doesn't refresh the keep-alive, so switching
-      // buttons lets the flurry end instead of running forever.
-      const flurryButton = this._bakuHeavy ? 'heavyPunch' : 'lightPunch';
-      if (button === flurryButton) this._lastPunchTick = this._loop.tick();
-      return true;
-    }
-    if (!isPunch) return false;
-    // Grounded + standing only. Air/crouch punches fire their own normals and
-    // must NOT feed the streak — otherwise presses counted mid-jump leave it
-    // satisfied and Joe flurries the instant he lands. Reset so mashing after
-    // landing (or standing up) starts fresh from the first press.
-    if (this.inJump() || this._input.downKey()) {
-      this._mashCount = 0;
-      this._mashButton = null;
-      return false;
-    }
-    const tick = this._loop.tick();
-    if (button === this._mashButton && tick - this._lastPunchTick <= this._mashWindowTicks) {
-      this._mashCount++;
-    } else {
-      this._mashButton = button;
-      this._mashCount = 1;
-    }
-    this._lastPunchTick = tick;
-    if (this._mashCount >= 3) {
-      this._startBakuretsuken(button === 'heavyPunch');
-      return true;
-    }
-    return false;
+    return this._flurry.press(button);
   }
 
-  /** Sustain the flurry while mashing continues, then finish. The `bakuretsuken`
-   * loop advances via the base frame engine; this only decides when to stop. */
   protected override tickCustomAttack(): boolean {
-    if (!this._bakuActive) return false;
-    const tick = this._loop.tick();
-    if (this._bakuFinishing) {
-      if (!this._gruntPlayed && tick >= this._gruntTick) {
-        this._audio.playVoice(this.voices['bakuretsuken'], this.voiceVolume);
-        this._gruntPlayed = true;
-      }
-      if (tick >= this._bakuFinishEndTick) this._endBakuretsuken();
-      return true;
-    }
-    if (tick - this._lastPunchTick <= this._mashWindowTicks) return true; // still mashing
-    if (this._bakuHeavy) this._startBakuretsukenFinish(tick);
-    else this._endBakuretsuken();
-    return true;
-  }
-
-  /** Launch the looping flurry, overriding any normal-jab lock-in from the first
-   * two presses. No fixed duration — `tickCustomAttack` owns the end. */
-  private _startBakuretsuken(heavy: boolean): void {
-    this._bakuActive = true;
-    this._bakuHeavy = heavy;
-    this._bakuFinishing = false;
-    this._mashCount = 0;
-    this._lastPunchTick = this._loop.tick();
-    this.inAttack.set(true);
-    this.animation.set('bakuretsuken');
-    // Loop the whoosh for the whole flurry; `_stopFlurrySfx` kills it once the
-    // looping phase ends (recover for light, finisher for heavy).
-    const sfx = this._audio.playVoice(this.voices['bakuretsukenSfx'], this.sfxVolume, 'sfx');
-    if (sfx) sfx.loop = true;
-    this._flurrySfx = sfx;
-  }
-
-  /** Play the one-shot heavy finisher, scheduling the grunt to land on frame
-   * index 1 (the 6.png wind-up) rather than at the swap tick. */
-  private _startBakuretsukenFinish(tick: number): void {
-    const finish = this.specials.find((s) => s.name === 'bakuretsukenFinish');
-    if (!finish) return this._endBakuretsuken();
-    const frames = finish.frames.frames;
-    this._stopFlurrySfx();
-    this._bakuFinishing = true;
-    this._gruntPlayed = false;
-    this.animation.set('bakuretsukenFinish');
-    this._gruntTick = tick + Math.round(frames[0].durationMs / GameLoopService.TICK_MS);
-    const totalMs = frames.reduce((sum, f) => sum + f.durationMs, 0);
-    this._bakuFinishEndTick = tick + Math.round(totalMs / GameLoopService.TICK_MS);
-  }
-
-  private _endBakuretsuken(): void {
-    this._stopFlurrySfx();
-    this._bakuActive = false;
-    this._bakuFinishing = false;
-    this.inAttack.set(false);
-    this._snapToGroundAnimation();
-  }
-
-  private _stopFlurrySfx(): void {
-    if (!this._flurrySfx) return;
-    this._flurrySfx.pause();
-    this._flurrySfx = null;
+    return this._flurry.tick();
   }
 }

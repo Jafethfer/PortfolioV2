@@ -13,6 +13,10 @@
   // resolve against it, and aspect-video locks height ∝ width, so a width-
   // fraction is a stable vertical position matching the cqw-based sprites.
   --ground-y: 4cqw;
+  // Spawn near the left so Joe walks rightward through the parallax cards
+  // (without this the character falls back to the 20cqw default and starts too
+  // far right, forcing the world to scroll left to catch up).
+  --character-spawn-x: 5cqw;
 }
 
 .stage {
@@ -26,9 +30,10 @@
 }
 
 .joe-ground {
-  // Width is set inline from the component (matches `bgWidthMultiplier`
-  // so ground + bg stay in sync). Height is auto so the image's native
-  // aspect drives the displayed height — author the source PNG at the
-  // proportions you want on screen and CSS won't crop or stretch it.
+  // Width is set inline from the component (`groundWidthMultiplier`). Height is
+  // auto so the image's native aspect drives the displayed height — author the
+  // source PNG at the proportions you want on screen and CSS won't crop or
+  // stretch it. The width multiplier is scaled to the source's cropped width so
+  // that on-screen scale (and the grass line) stays fixed.
   height: auto;
 }

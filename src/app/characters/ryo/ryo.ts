@@ -1,6 +1,17 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Character } from '../../components/character/character';
-import { AnimationData, AnimationName, CharacterVoices } from '../../models/character';
+import {
+  AnimationData,
+  AnimationName,
+  AttackButton,
+  CharacterVoices,
+  SpecialMove,
+} from '../../models/character';
+import { withDurations, totalDurationMs } from '../../helpers/special-frame';
+import { GameLoopService } from '../../services/game-loop.service';
+import { KO_OH_KEN_FRAMES, HAOH_SHOKOU_KEN_FRAMES, ZAN_RETSU_KEN_FRAMES } from './ryo-specials';
+import { KoOhKen } from '../../projectiles/ko-oh-ken/ko-oh-ken';
+import { HaohShokouKen } from '../../projectiles/haoh-shokou-ken/haoh-shokou-ken';
 
 /** Ryo Sakazaki — concrete `Character` subclass (Kyokugen karate, `RyoStage`). */
 @Component({
@@ -13,6 +24,66 @@ export class Ryo extends Character {
   protected override readonly spriteBaseHeight = 107;
   protected override readonly bodyAnchorX = 26;
 
+  protected override readonly specials: readonly SpecialMove[] = [
+    {
+      name: 'koOhKen',
+      motion: ['down', 'right'],
+      button: 'lightPunch',
+      voices: [{ src: 'assets/sfx/ryo/ko-oh-ken.mp3', frame: 2 }],
+      frames: { frames: withDurations(KO_OH_KEN_FRAMES, [50, 60, 60, 60, 70, 90, 60, 130]) },
+      projectile: {
+        componentClass: KoOhKen,
+        spawnFrame: 5,
+        spawnOffsetX: 48,
+        spawnOffsetY: -55,
+      },
+    },
+    {
+      name: 'koOhKenHeavy',
+      motion: ['down', 'right'],
+      button: 'heavyPunch',
+      voices: [{ src: 'assets/sfx/ryo/ko-oh-ken.mp3', frame: 2 }],
+      frames: { frames: withDurations(KO_OH_KEN_FRAMES, [60, 90, 90, 80, 90, 100, 70, 150]) },
+      projectile: {
+        componentClass: KoOhKen,
+        spawnFrame: 5,
+        spawnOffsetX: 48,
+        spawnOffsetY: -55,
+        speed: 36,
+      },
+    },
+    {
+      name: 'haohShokouKen',
+      motion: ['left', 'down', 'right'],
+      button: 'heavyPunch',
+      voices: [
+        { src: 'assets/sfx/ryo/haoh-shokou-ken-1.mp3', frame: 0 },
+        { src: 'assets/sfx/ryo/haoh-shoukou-ken-2.mp3', frame: 5 },
+      ],
+      frames: { frames: withDurations(HAOH_SHOKOU_KEN_FRAMES, [100, 100, 100, 100, 200, 400]) },
+      projectile: {
+        componentClass: HaohShokouKen,
+        spawnFrame: 5,
+        spawnOffsetX: 48,
+        spawnOffsetY: -25,
+      },
+    },
+    // Zan-Retsu-Ken — Ryo's mash-punch flurry. Empty motion: it never fires via
+    // the base's motion dispatch. The `MashFlurry` controller (see the bottom
+    // of the class) counts rapid heavy-punch presses and plays this clip once.
+    {
+      name: 'zanRetsuKen',
+      motion: [],
+      button: 'heavyPunch',
+      frames: {
+        frames: withDurations(
+          ZAN_RETSU_KEN_FRAMES,
+          [70, 55, 55, 55, 55, 55, 55, 55, 70, 55, 55, 55, 55, 55, 55, 55, 55, 200],
+        ),
+      },
+    },
+  ];
+
   protected override readonly voices: CharacterVoices = {
     lightPunch: 'assets/sfx/ryo/light-punch.mp3',
     heavyPunch: 'assets/sfx/ryo/heavy-punch.mp3',
@@ -23,6 +94,8 @@ export class Ryo extends Character {
     lightKickWhiff: 'assets/sfx/misc/light-punch-whiff.mp3',
     heavyKickWhiff: 'assets/sfx/misc/heavy-punch-whiff.mp3',
     jump: 'assets/sfx/misc/jump.mp3',
+    zanRetsuKen: 'assets/sfx/ryo/zan-retsu-ken.mp3',
+    zanRetsuKenSfx: 'assets/sfx/ryo/zan-retsu-ken-sfx.mp3',
   };
 
   protected override readonly animationFrames: Partial<Record<AnimationName, AnimationData>> = {
@@ -523,6 +596,126 @@ export class Ryo extends Character {
         },
       ],
     },
+    // Backward jump = the forward somersault run in reverse (a backflip),
+    // reusing the same jump-forward sprites.
+    jumpBackward: {
+      frames: [
+        {
+          src: 'assets/img/characters/ryo/jump-forward/5.png',
+          w: 69,
+          h: 107,
+          anchorX: 38,
+          anchorY: 107,
+          durationMs: 250,
+        },
+        {
+          src: 'assets/img/characters/ryo/jump-forward/4.png',
+          w: 110,
+          h: 45,
+          anchorX: 50,
+          anchorY: 45,
+          durationMs: 80,
+        },
+        {
+          src: 'assets/img/characters/ryo/jump-forward/3.png',
+          w: 43,
+          h: 75,
+          anchorX: 22,
+          anchorY: 75,
+          durationMs: 80,
+        },
+      ],
+    },
+    jumpBackwardFall: {
+      frames: [
+        {
+          src: 'assets/img/characters/ryo/jump-forward/2.png',
+          w: 75,
+          h: 43,
+          anchorX: 38,
+          anchorY: 43,
+          durationMs: 80,
+        },
+        {
+          src: 'assets/img/characters/ryo/jump-forward/1.png',
+          w: 73,
+          h: 80,
+          anchorX: 38,
+          anchorY: 80,
+          durationMs: 80,
+        },
+        {
+          src: 'assets/img/characters/ryo/jump-forward/0.png',
+          w: 51,
+          h: 118,
+          anchorX: 22,
+          anchorY: 118,
+          durationMs: 180,
+        },
+      ],
+    },
+    airLightPunch: {
+      frames: [
+        {
+          src: 'assets/img/characters/ryo/air-light-punch/0.png',
+          w: 63,
+          h: 79,
+          anchorX: 28,
+          anchorY: 79,
+          durationMs: 70,
+        },
+        {
+          src: 'assets/img/characters/ryo/air-light-punch/1.png',
+          w: 91,
+          h: 79,
+          anchorX: 40,
+          anchorY: 79,
+          durationMs: 2000,
+        },
+      ],
+    },
+    airHeavyPunch: {
+      frames: [
+        {
+          src: 'assets/img/characters/ryo/air-heavy-punch/0.png',
+          w: 63,
+          h: 79,
+          anchorX: 28,
+          anchorY: 79,
+          durationMs: 80,
+        },
+        {
+          src: 'assets/img/characters/ryo/air-heavy-punch/1.png',
+          w: 91,
+          h: 79,
+          anchorX: 40,
+          anchorY: 79,
+          durationMs: 130,
+        },
+      ],
+    },
+    // Post-heavy-air recovery — the base swaps to this after a heavy aerial's
+    // frames finish. Reuses the descending jump-fall sprites (row1 #6/#7).
+    airHeavyRecover: {
+      frames: [
+        {
+          src: 'assets/img/characters/ryo/jump-fall/0.png',
+          w: 53,
+          h: 103,
+          anchorX: 30,
+          anchorY: 103,
+          durationMs: 120,
+        },
+        {
+          src: 'assets/img/characters/ryo/jump-fall/1.png',
+          w: 51,
+          h: 118,
+          anchorX: 27,
+          anchorY: 118,
+          durationMs: 2000,
+        },
+      ],
+    },
     airLightKickUp: {
       frames: [
         {
@@ -540,6 +733,69 @@ export class Ryo extends Character {
           anchorX: 34,
           anchorY: 91,
           durationMs: 2000,
+        },
+      ],
+    },
+    airLightKick: {
+      frames: [
+        {
+          src: 'assets/img/characters/ryo/air-light-kick-fwd/0.png',
+          w: 49,
+          h: 75,
+          anchorX: 23,
+          anchorY: 75,
+          durationMs: 70,
+        },
+        {
+          src: 'assets/img/characters/ryo/air-light-kick-fwd/1.png',
+          w: 96,
+          h: 81,
+          anchorX: 37,
+          anchorY: 81,
+          durationMs: 2000,
+        },
+      ],
+    },
+    // Heavy air kicks reuse the light-kick sprites; the difference is the base
+    // schedules airHeavyRecover after these frames (so the extend frame gets a
+    // short duration instead of the light variant's hold-until-landing).
+    airHeavyKickUp: {
+      frames: [
+        {
+          src: 'assets/img/characters/ryo/air-light-kick/0.png',
+          w: 49,
+          h: 75,
+          anchorX: 23,
+          anchorY: 75,
+          durationMs: 70,
+        },
+        {
+          src: 'assets/img/characters/ryo/air-light-kick/1.png',
+          w: 115,
+          h: 91,
+          anchorX: 34,
+          anchorY: 91,
+          durationMs: 160,
+        },
+      ],
+    },
+    airHeavyKick: {
+      frames: [
+        {
+          src: 'assets/img/characters/ryo/air-light-kick-fwd/0.png',
+          w: 49,
+          h: 75,
+          anchorX: 23,
+          anchorY: 75,
+          durationMs: 70,
+        },
+        {
+          src: 'assets/img/characters/ryo/air-light-kick-fwd/1.png',
+          w: 96,
+          h: 81,
+          anchorX: 37,
+          anchorY: 81,
+          durationMs: 160,
         },
       ],
     },
@@ -704,4 +960,34 @@ export class Ryo extends Character {
       ],
     },
   };
+
+  // ── Zan-Retsu-Ken (mash-punch flurry) ─────────────────────────────────────
+  // Heavy-punch-only, no finisher. Three rapid heavy-punch presses trigger ONE
+  // full playthrough of the `zanRetsuKen` clip; it ends itself when the frames
+  // run out and is re-triggerable. All the mash/timing logic lives in the
+  // shared `MashFlurry` controller — here we only supply the config.
+  private readonly _flurry = this._createMashFlurry({
+    variants: [
+      {
+        button: 'heavyPunch',
+        loopAnimation: 'zanRetsuKen',
+        loopDurationMs: totalDurationMs(
+          this.specials.find((s) => s.name === 'zanRetsuKen')!.frames.frames,
+        ),
+        startVoiceSrc: this.voices['zanRetsuKen'],
+      },
+    ],
+    triggerCount: 3,
+    mashWindowMs: 220,
+    tickMs: GameLoopService.TICK_MS,
+    whooshSrc: this.voices['zanRetsuKenSfx'],
+  });
+
+  protected override interceptAttack(button: AttackButton): boolean {
+    return this._flurry.press(button);
+  }
+
+  protected override tickCustomAttack(): boolean {
+    return this._flurry.tick();
+  }
 }
