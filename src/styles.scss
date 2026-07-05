@@ -3,6 +3,15 @@ html, body {
   height: 100%;
   background: #000;
   overflow: hidden;
+  // Suppress the long-press callout menu (iOS) and the selection-handle menu so
+  // a held tap over a sprite/card/background acts as a gamepad hold, not a
+  // browser context gesture. `touch-action: none` does NOT cover these — the
+  // callout and text-selection menus are separate behaviours. Both inherit, so
+  // setting them here covers the whole scene; interactive controls (joystick,
+  // mixer sliders) still work since neither property disables pointer input.
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 img,

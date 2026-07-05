@@ -13,6 +13,10 @@ import { TouchControls } from './components/touch-controls/touch-controls';
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Swallow the long-press / right-click context menu across the whole scene
+  // (Android & desktop fire `contextmenu`; iOS uses the callout suppressed in
+  // styles.scss). Bubbles up to the root, so one listener covers every element.
+  host: { '(contextmenu)': 'swallowContextMenu($event)' },
 })
 export class App {
   private readonly _router = inject(Router);
@@ -31,5 +35,9 @@ export class App {
 
   private _isChromeless(url: string): boolean {
     return url === '/' || url === '' || url === '/end';
+  }
+
+  protected swallowContextMenu(event: Event): void {
+    event.preventDefault();
   }
 }
