@@ -21,7 +21,7 @@
 
 .stage {
   container-type: inline-size;
-  width: 75%;
+  width: var(--stage-width);
   position: relative;
   overflow: hidden;
   // `background-size` is set inline from the component (driven by

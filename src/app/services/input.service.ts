@@ -37,6 +37,11 @@ export class InputService {
   readonly downKey = signal(false);
   /** Increments on each ArrowUp keydown — consumers detect change to fire one-shot. */
   readonly jumpPressed = signal(0);
+  /** Whether the jump direction is being HELD. Only the on-screen joystick sets
+   * this (keyboard jump is a pure one-shot), so the character's land-time
+   * re-jump — hold up to keep hopping — is a touch-stick behavior and desktop
+   * keeps its single-jump-per-press feel. */
+  readonly jumpHeld = signal(false);
   /** Increments on each `A` keydown — one-shot for the light-punch attack. */
   readonly lightPunchPressed = signal(0);
   /** Increments on each `S` keydown — one-shot for the heavy-punch attack. */
@@ -156,47 +161,99 @@ export class InputService {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Device-agnostic input API. Keyboard handlers and the on-screen touch gamepad
+  // both drive state through these methods, so the motion buffer, backstep
+  // double-tap, and `lastDir` fallback logic live in exactly ONE place and
+  // specials fire identically whichever device produced the input. Each
+  // `press*` models a FRESH press (keyboard fires them on `!e.repeat`; a held
+  // arrow's OS key-repeats are ignored — the direction signal is already set).
+  // ---------------------------------------------------------------------------
+
+  pressRight(): void {
+    this.rightKey.set(true);
+    this.lastDir.set('right');
+    this._pushMotion('right');
+  }
+  releaseRight(): void {
+    this.rightKey.set(false);
+    if (this.lastDir() === 'right') this.lastDir.set(this.leftKey() ? 'left' : null);
+  }
+
+  pressLeft(): void {
+    this.leftKey.set(true);
+    this.lastDir.set('left');
+    this._pushMotion('left');
+    this._detectBackstep();
+  }
+  releaseLeft(): void {
+    this.leftKey.set(false);
+    if (this.lastDir() === 'left') this.lastDir.set(this.rightKey() ? 'right' : null);
+  }
+
+  pressDown(): void {
+    this.downKey.set(true);
+    this._pushMotion('down');
+  }
+  releaseDown(): void {
+    this.downKey.set(false);
+  }
+
+  /** Up is a one-shot (jump) — it also seeds the motion buffer so `down→up`
+   * anti-air specials read a touch/keyboard Up the same. */
+  pressJump(): void {
+    this._pushMotion('up');
+    this.jumpPressed.update((n) => n + 1);
+  }
+
+  /** Set/clear the held-jump flag (joystick up). The character re-jumps on
+   * landing while this is true, so holding up keeps the character hopping. */
+  setJumpHeld(held: boolean): void {
+    this.jumpHeld.set(held);
+  }
+
+  pressLightPunch(): void {
+    this.lightPunchPressed.update((n) => n + 1);
+  }
+  pressHeavyPunch(): void {
+    this.heavyPunchPressed.update((n) => n + 1);
+  }
+  pressLightKick(): void {
+    this.lightKickPressed.update((n) => n + 1);
+  }
+  pressHeavyKick(): void {
+    this.heavyKickPressed.update((n) => n + 1);
+  }
+
   private _onKeyDown = (e: KeyboardEvent): void => {
     if (ARROW_KEYS.has(e.key)) e.preventDefault();
+    if (e.repeat) return;
     if (e.key === 'ArrowRight') {
-      this.rightKey.set(true);
-      if (!e.repeat) {
-        this.lastDir.set('right');
-        this._pushMotion('right');
-      }
+      this.pressRight();
     } else if (e.key === 'ArrowLeft') {
-      this.leftKey.set(true);
-      if (!e.repeat) {
-        this.lastDir.set('left');
-        this._pushMotion('left');
-        this._detectBackstep();
-      }
+      this.pressLeft();
     } else if (e.key === 'ArrowDown') {
-      if (!e.repeat) this._pushMotion('down');
-      this.downKey.set(true);
-    } else if (e.key === 'ArrowUp' && !e.repeat) {
-      this._pushMotion('up');
-      this.jumpPressed.update(n => n + 1);
-    } else if ((e.key === 'a' || e.key === 'A') && !e.repeat) {
-      this.lightPunchPressed.update(n => n + 1);
-    } else if ((e.key === 's' || e.key === 'S') && !e.repeat) {
-      this.heavyPunchPressed.update(n => n + 1);
-    } else if ((e.key === 'z' || e.key === 'Z') && !e.repeat) {
-      this.lightKickPressed.update(n => n + 1);
-    } else if ((e.key === 'x' || e.key === 'X') && !e.repeat) {
-      this.heavyKickPressed.update(n => n + 1);
+      this.pressDown();
+    } else if (e.key === 'ArrowUp') {
+      this.pressJump();
+    } else if (e.key === 'a' || e.key === 'A') {
+      this.pressLightPunch();
+    } else if (e.key === 's' || e.key === 'S') {
+      this.pressHeavyPunch();
+    } else if (e.key === 'z' || e.key === 'Z') {
+      this.pressLightKick();
+    } else if (e.key === 'x' || e.key === 'X') {
+      this.pressHeavyKick();
     }
   };
 
   private _onKeyUp = (e: KeyboardEvent): void => {
     if (e.key === 'ArrowRight') {
-      this.rightKey.set(false);
-      if (this.lastDir() === 'right') this.lastDir.set(this.leftKey() ? 'left' : null);
+      this.releaseRight();
     } else if (e.key === 'ArrowLeft') {
-      this.leftKey.set(false);
-      if (this.lastDir() === 'left') this.lastDir.set(this.rightKey() ? 'right' : null);
+      this.releaseLeft();
     } else if (e.key === 'ArrowDown') {
-      this.downKey.set(false);
+      this.releaseDown();
     }
   };
 }

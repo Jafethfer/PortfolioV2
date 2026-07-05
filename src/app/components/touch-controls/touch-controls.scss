@@ -1,0 +1,95 @@
+// The gamepad only exists on touch devices. Hidden by default; the coarse-
+// pointer + no-hover media query (real phones/tablets, and desktop device-mode
+// emulation) reveals it. Keyboard users never see it.
+:host {
+  display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  :host {
+    display: block;
+  }
+}
+
+.pad {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  // Sit above the scene/parallax HUD but below the stage-transition cover
+  // (z-index 9999). Same tier as the legend/mixer overlays.
+  z-index: 50;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  // Keep clear of rounded corners / home indicators on notched phones.
+  padding: 0 calc(env(safe-area-inset-left, 0px) + 3vmin)
+    calc(env(safe-area-inset-bottom, 0px) + 3vmin);
+  // The container is only a positioning frame — it must never intercept touches
+  // meant for the scene (or the parallax card drag). Each button opts back in.
+  pointer-events: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.joystick {
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  width: 42vmin;
+  height: 42vmin;
+  border-radius: 50%;
+  background: rgba(8, 12, 24, 0.4);
+  border: 0.4vmin solid rgba(255, 96, 16, 0.6);
+  box-shadow: 0 0 2vmin rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+
+  &__knob {
+    width: 19vmin;
+    height: 19vmin;
+    border-radius: 50%;
+    background: rgba(255, 96, 16, 0.85);
+    box-shadow: 0 0 2vmin rgba(0, 0, 0, 0.5);
+    // The knob is grid-centered; `transform` offsets it from that center as the
+    // thumb moves. `will-change` keeps the per-move transform on the compositor.
+    will-change: transform;
+    pointer-events: none;
+  }
+}
+
+.attacks {
+  display: grid;
+  grid-template-columns: repeat(2, 16vmin);
+  grid-template-rows: repeat(2, 16vmin);
+  gap: 2.5vmin;
+}
+
+.btn {
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(8, 12, 24, 0.55);
+  border: 0.4vmin solid rgba(255, 96, 16, 0.85);
+  box-shadow: 0 0 2vmin rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  // Feedback is instantaneous — no transition on :active so a fast tap still
+  // visibly registers.
+  transition: background 0.12s ease;
+
+  &:active {
+    background: rgba(255, 96, 16, 0.85);
+  }
+}
+
+.btn--atk {
+  border-radius: 50%;
+  font-size: 6vmin;
+}

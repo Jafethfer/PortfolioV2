@@ -2,6 +2,58 @@
   display: contents;
 }
 
+// Closed-state pill (top-right). Opens the panel.
+.legend-toggle {
+  position: fixed;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 50;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  background: rgba(255, 255, 255, 0.85);
+  color: #000;
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  &:hover {
+    background: #fff;
+  }
+}
+
+// Desktop: an anchored corner panel. On compact/touch it becomes a centered
+// dialog (block below).
+.legend-panel {
+  position: fixed;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 50;
+  width: 18rem;
+  max-width: 80vw;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 0.875rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+}
+
+.legend-close {
+  padding: 0 0.5rem;
+  line-height: 1;
+  font-size: 1.125rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+// Backdrop only exists as a real element on compact screens (see below).
+.legend-scrim {
+  display: none;
+}
+
 kbd {
   display: inline-block;
   min-width: 1.5rem;
@@ -13,4 +65,30 @@ kbd {
   font-size: 0.75rem;
   line-height: 1;
   text-align: center;
+}
+
+// Touch devices: present the open panel as a centered modal dialog with a
+// tap-to-close dim, instead of a corner panel that would overflow a short
+// landscape viewport. Mirrors the gamepad's coarse-pointer gate.
+// Touch devices: centered modal dialog with a tap-to-close dim, above the
+// on-screen gamepad (z-index 50) so the joystick doesn't poke through.
+@media (hover: none) and (pointer: coarse) {
+  .legend-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .legend-panel {
+    top: 50%;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    z-index: 61;
+    width: min(88vw, 24rem);
+    max-height: 85dvh;
+    overflow-y: auto;
+  }
 }
