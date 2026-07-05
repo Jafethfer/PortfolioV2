@@ -1,6 +1,9 @@
 @if (image()) {
   <img class="card-image" [src]="image()" [alt]="imageAlt()" />
 }
+@if (caption()) {
+  <p class="card-caption">{{ caption() }}</p>
+}
 @if (title()) {
   <h2>{{ title() }}</h2>
 }

@@ -136,7 +136,6 @@ export class Ryo extends Character {
       button: 'lightPunch',
       voices: [{ src: 'assets/sfx/ryo/light-punch.mp3', frame: 4 }],
       whiffSrc: 'assets/sfx/misc/special-travel.mp3',
-      // Light: snaps off the ground fast (short windup) but only hops low.
       travelDistancePct: 0.04,
       travelStartFrame: 4,
       travelEndFrame: 8,
@@ -151,7 +150,6 @@ export class Ryo extends Character {
       button: 'heavyPunch',
       voices: [{ src: 'assets/sfx/ryo/heavy-punch.mp3', frame: 4 }],
       whiffSrc: 'assets/sfx/misc/special-travel.mp3',
-      // Heavy: winds up longer (telegraphed) then rises much higher.
       travelDistancePct: 0.07,
       travelStartFrame: 4,
       travelEndFrame: 8,
@@ -1037,6 +1035,34 @@ export class Ryo extends Character {
         },
       ],
     },
+    victory: {
+      frames: [
+        {
+          src: 'assets/img/characters/ryo/victory/0.png',
+          w: 54,
+          h: 109,
+          anchorX: 26,
+          anchorY: 109,
+          durationMs: 420,
+        },
+        {
+          src: 'assets/img/characters/ryo/victory/1.png',
+          w: 47,
+          h: 110,
+          anchorX: 23,
+          anchorY: 110,
+          durationMs: 340,
+        },
+        {
+          src: 'assets/img/characters/ryo/victory/2.png',
+          w: 64,
+          h: 102,
+          anchorX: 31,
+          anchorY: 102,
+          durationMs: 950,
+        },
+      ],
+    },
   };
 
   // ── Zan-Retsu-Ken (mash-punch flurry) ─────────────────────────────────────
@@ -1067,5 +1093,14 @@ export class Ryo extends Character {
 
   protected override tickCustomAttack(): boolean {
     return this._flurry.tick();
+  }
+
+  override async playOutro(): Promise<void> {
+    this.scripted.set(true);
+    await this.backDash();
+    await this.backDash();
+    await this.playScriptedClip('victory', {
+      voice: { src: 'assets/sfx/ryo/victory.mp3', frame: 0 },
+    });
   }
 }

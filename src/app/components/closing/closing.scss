@@ -1,0 +1,116 @@
+// Closing screen — mirrors the Landing frame so `.page` centers it identically
+// and the run bookends with the same title-screen look. `display: contents`
+// hands the 75%-wide `.closing` to the flex parent; `container-type: inline-size`
+// makes the `cqw` type below scale with the 16:9 frame, exactly like Landing.
+:host {
+  display: contents;
+}
+
+.closing {
+  container-type: inline-size;
+  width: 75%;
+  background: radial-gradient(circle at 50% 32%, #1e2632 0%, #0a0e15 72%);
+}
+
+// Type sized in `cqw` (shared with Landing) so it scales with the frame.
+.kicker {
+  font-size: 1.4cqw;
+  letter-spacing: 0.4em;
+  margin-bottom: 2.5cqw;
+}
+
+.title {
+  font-size: 8cqw;
+  margin-bottom: 3cqw;
+}
+
+.intro {
+  max-width: 62cqw;
+  font-size: 1.7cqw;
+  margin-bottom: 3.5cqw;
+}
+
+// Contact block — a repeat of stage-3's links so the visitor never has to walk
+// back for them. Sized in `cqw` to match the rest of the closing type.
+.contact-lead {
+  font-size: 1.3cqw;
+  letter-spacing: 0.3em;
+  margin-bottom: 1.8cqw;
+}
+
+.contact-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.4cqw;
+  margin-bottom: 5cqw;
+}
+
+.contact-link {
+  display: inline-block;
+  padding: 1cqw 2.4cqw;
+  font-size: 1.5cqw;
+  font-weight: 700;
+  color: #fcd34d; // amber-300
+  text-decoration: none;
+  border: 2px solid rgba(251, 191, 36, 0.7);
+  border-radius: 0.4cqw;
+  background: rgba(251, 191, 36, 0.08);
+  transition:
+    color 0.2s,
+    background-color 0.2s;
+
+  &:hover {
+    background: #fbbf24; // amber-400
+    color: #000;
+  }
+}
+
+// Replay button — the enabled ("ready") Landing Start button, always active:
+// Bottom nav — step back into the final stage, or replay from the top.
+.closing-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1.6cqw;
+}
+
+// Shared amber button; `--primary` (Replay) adds the arcade blink to read as
+// the main call to action, so Previous stays the quieter secondary.
+.closing-btn {
+  font-size: 1.6cqw;
+  padding: 1.2cqw 4cqw;
+  border: 2px solid #fbbf24; // amber-400
+  border-radius: 0.4cqw;
+  background: rgba(251, 191, 36, 0.1);
+  color: #fcd34d; // amber-300
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    background-color 0.2s,
+    border-color 0.2s;
+
+  &:hover {
+    background: #fbbf24;
+    color: #000;
+    animation: none;
+  }
+
+  &--primary {
+    animation: replay-pulse 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes replay-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}

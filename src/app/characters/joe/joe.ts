@@ -876,6 +876,42 @@ export class Joe extends Character {
         },
       ],
     },
+    victory: {
+      frames: [
+        {
+          src: 'assets/img/characters/joe/victory/0.png',
+          w: 61,
+          h: 80,
+          anchorX: 30,
+          anchorY: 80,
+          durationMs: 200,
+        },
+        {
+          src: 'assets/img/characters/joe/victory/1.png',
+          w: 85,
+          h: 91,
+          anchorX: 42,
+          anchorY: 91,
+          durationMs: 200,
+        },
+        {
+          src: 'assets/img/characters/joe/victory/2.png',
+          w: 85,
+          h: 91,
+          anchorX: 42,
+          anchorY: 91,
+          durationMs: 200,
+        },
+        {
+          src: 'assets/img/characters/joe/victory/3.png',
+          w: 85,
+          h: 91,
+          anchorX: 42,
+          anchorY: 91,
+          durationMs: 800,
+        },
+      ],
+    },
   };
 
   // ── Bakuretsuken (mash-punch flurry) ──────────────────────────────────────
@@ -917,5 +953,14 @@ export class Joe extends Character {
 
   protected override tickCustomAttack(): boolean {
     return this._flurry.tick();
+  }
+
+  override async playOutro(): Promise<void> {
+    this.scripted.set(true);
+    await this.backDash();
+    await this.backDash();
+    await this.playScriptedClip('victory', {
+      voice: { src: 'assets/sfx/joe/victory.mp3', frame: 0 },
+    });
   }
 }

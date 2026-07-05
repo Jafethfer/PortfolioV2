@@ -45,6 +45,17 @@
   }
 }
 
+// Small image caption/disclaimer (e.g. "reference only / under NDA"). Pulled
+// up snug beneath the image and set muted + italic so it reads as a footnote,
+// not body copy.
+.card-caption {
+  margin: -1.2cqw 0 1.6cqw;
+  font-size: 1.3cqw;
+  font-style: italic;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.5);
+}
+
 h2 {
   margin: 0 0 1.5cqw;
   font-size: 3cqw;
@@ -72,10 +83,34 @@ p {
   margin-top: 2.6cqw;
 }
 
+// Logos-only card (a dedicated logo beat, e.g. Docker + Kubernetes): center
+// the row and show the marks large, mirroring the single hero-image card.
+:host.card--logos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .card-logos {
+    margin-top: 0;
+    gap: 4cqw;
+  }
+
+  .card-logos img {
+    height: 10cqw;
+  }
+}
+
 .card-logos img {
   height: 5cqw;
   width: auto;
   object-fit: contain;
+  // Brand logos are authored in their own colors — several (AWS, Express,
+  // MySQL) are dark and would vanish on the dark card. A white tile behind
+  // each keeps every mark legible in its true colors.
+  padding: 0.7cqw;
+  box-sizing: border-box;
+  background: #fff;
+  border-radius: 0.6cqw;
 }
 
 // Clickable link buttons (e.g. the closing CTA).

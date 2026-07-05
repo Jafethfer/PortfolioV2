@@ -69,9 +69,12 @@
   opacity: 0;
 }
 
-// Stage navigation. Anchored bottom-center, fades in when the user reaches
-// the last card. Hidden state is non-interactive (`pointer-events: none`)
-// so it can't catch clicks while invisible.
+// Stage navigation. Anchored bottom-center. The buttons stay BARELY visible
+// throughout the stage (a subtle "a neighbour stage is this way" affordance)
+// and ramp to full opacity once the visitor reaches the end of the stage
+// (`--visible`, driven by `atEnd`). The container never intercepts pointer
+// events (the host overlay is `pointer-events: none`); each button opts back
+// in on its own, so a faint button is still a real, clickable control.
 .stage-nav {
   position: absolute;
   bottom: 4cqw;
@@ -79,16 +82,12 @@
   transform: translateX(-50%);
   display: flex;
   gap: 2cqw;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s ease;
-
-  &--visible {
-    opacity: 1;
-    pointer-events: auto;
-  }
 
   &__btn {
+    pointer-events: auto;
+    // Barely-there resting state; hover reveals it early, and reaching the
+    // end of the stage ramps every button to full opacity (rule below).
+    opacity: 0.18;
     display: inline-flex;
     align-items: center;
     gap: 0.6cqw;
@@ -102,15 +101,23 @@
     border: 0.3cqw solid rgba(255, 96, 16, 0.9);
     border-radius: 1cqw;
     box-shadow: 0 0 2cqw rgba(255, 96, 16, 0.3);
-    transition: background 0.2s ease, transform 0.1s ease;
+    transition:
+      opacity 0.4s ease,
+      background 0.2s ease,
+      transform 0.1s ease;
 
     &:hover {
+      opacity: 1;
       background: rgba(255, 96, 16, 0.85);
     }
 
     &:active {
       transform: translateY(0.3cqw);
     }
+  }
+
+  &--visible &__btn {
+    opacity: 1;
   }
 
   &__arrow {
