@@ -201,9 +201,10 @@ export abstract class Stage {
    * Read once — the component is freshly created on each navigation. */
   private _resolveStageNeighbors(): { previous: string | null; next: string | null } {
     const stagePaths = this._router.config
-      // Only real stages count — the `''` Landing route has a component but no
-      // `characterClass`, so it's excluded from the prev/next cycle.
-      .filter((r) => !!r.component && !!r.data?.['characterClass'])
+      // The forward chain = the real stages plus the terminal `Closing` route
+      // (`data.closing`), so advancing past the last stage lands on the thanks
+      // screen. The `''` Landing route has neither flag, so it stays excluded.
+      .filter((r) => !!r.component && (!!r.data?.['characterClass'] || !!r.data?.['closing']))
       .map((r) => r.path ?? '');
     const idx = stagePaths.indexOf(this._route.snapshot.routeConfig?.path ?? '');
     return {

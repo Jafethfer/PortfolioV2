@@ -16,6 +16,7 @@
         [body]="card.body"
         [image]="card.image"
         [imageAlt]="card.imageAlt ?? ''"
+        [caption]="card.caption"
         [logos]="card.logos ?? []"
         [links]="card.links ?? []"
       />
@@ -35,9 +36,10 @@
   <span class="scroll-hint__label">Walk to explore</span>
 </div>
 
-<!-- Stage navigation. Fades in once the user reaches the last card
-     (`atEnd`). Buttons only appear when a neighbour stage exists; clicks
-     emit outputs the stage wires to the router. -->
+<!-- Stage navigation. Buttons stay barely visible throughout and ramp to full
+     opacity once the user reaches the end of the stage (`atEnd`). They render
+     only when a neighbour stage exists; clicks emit outputs the stage wires to
+     the router. -->
 <div class="stage-nav" [class.stage-nav--visible]="atEnd()">
   @if (hasPrevious()) {
     <button type="button" class="stage-nav__btn" (click)="previous.emit()">

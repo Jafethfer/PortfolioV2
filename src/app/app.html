@@ -1,7 +1,7 @@
 <div class="page">
   <router-outlet />
 </div>
-@if (!isLanding()) {
+@if (!chromeless()) {
   <app-legend />
   <app-audio-mixer />
 }

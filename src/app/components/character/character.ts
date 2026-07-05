@@ -564,6 +564,14 @@ export abstract class Character {
    * `scripted` to be engaged by the caller (so the held pose isn't overridden
    * between clips). */
   protected async backDash(): Promise<void> {
+    // Only hop back when there's a full dash of ground behind us. `accumulated`
+    // ≈ how far the character has travelled from the stage's left edge, so near
+    // the start it's ~0 and the dash would just clamp against the wall and read
+    // as a stutter. Below that room we skip — `playOutro`'s two calls then
+    // degrade cleanly to one or zero dashes and fall through to the victory
+    // pose. At the end of a stage (where the nav is normally used) there's room
+    // for both.
+    if (this.accumulated() < this.worldWidth() * this.backstepDistancePct) return;
     this._startBackstep();
     await this._wait(this._animDurationMs('backstep') + GameLoopService.TICK_MS * 2);
   }

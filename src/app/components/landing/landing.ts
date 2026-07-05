@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { StageTransitionService } from '../../services/stage-transition.service';
 import { AssetPreloadService } from '../../services/asset-preload.service';
+import { AudioService } from '../../services/audio.service';
 
 /**
  * Title / landing screen — the app's entry route (`''`). Sits in the same 16:9
@@ -20,6 +21,7 @@ import { AssetPreloadService } from '../../services/asset-preload.service';
 export class Landing {
   private readonly _transition = inject(StageTransitionService);
   private readonly _assets = inject(AssetPreloadService);
+  private readonly _audio = inject(AudioService);
 
   /** Preload progress for the loading bar; Start unlocks when `ready` is true. */
   readonly progress = this._assets.progress;
@@ -30,6 +32,11 @@ export class Landing {
     // Warm the asset cache the moment the title screen appears, so everything
     // is decoded/fetched by the time the visitor hits Start.
     this._assets.start();
+    // Silence any stage track still looping when we land here — e.g. Replay from
+    // the closing screen. The closing screen deliberately lets the last stage's
+    // music ride; the title screen should be quiet. No-op on first load (nothing
+    // playing yet); a fresh stage swaps in its own OST on the next run.
+    this._audio.pauseBgMusic();
   }
 
   /** Cover the screen with the loading grid-wipe, then reveal stage-1. No-op

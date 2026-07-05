@@ -16,19 +16,19 @@ import { AudioMixer } from './components/audio-mixer/audio-mixer';
 export class App {
   private readonly _router = inject(Router);
 
-  /** True on the `''` landing screen. Gates the root overlays (Controls legend
-   * + audio mixer) so the title screen stays clean; they return once a stage
-   * route loads. */
-  readonly isLanding = toSignal(
+  /** True on the non-interactive book-end screens (`''` landing + `end`
+   * closing). Gates the root overlays (Controls legend + audio mixer) so those
+   * screens stay clean; the overlays return once a playable stage route loads. */
+  readonly chromeless = toSignal(
     this._router.events.pipe(
       filter((e): e is NavigationEnd => e instanceof NavigationEnd),
-      map((e) => this._isLanding(e.urlAfterRedirects)),
-      startWith(this._isLanding(this._router.url)),
+      map((e) => this._isChromeless(e.urlAfterRedirects)),
+      startWith(this._isChromeless(this._router.url)),
     ),
     { initialValue: true },
   );
 
-  private _isLanding(url: string): boolean {
-    return url === '/' || url === '';
+  private _isChromeless(url: string): boolean {
+    return url === '/' || url === '' || url === '/end';
   }
 }
