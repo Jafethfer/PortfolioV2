@@ -8,9 +8,8 @@ import { InfoCardData } from '../components/info-card/info-card';
  * for each new stage that wants a parallax info section.
  *
  * The portfolio is a 3-chapter arc (see the plan): stage 1 = who I am,
- * stage 2 = what I can do, stage 3 = what I've shipped + contact. Stage 3's
- * fighter/stage isn't built yet, so `infoCardsStage3` is authored and ready
- * but not yet wired to a route — the live site currently ends on stage 2.
+ * stage 2 = what I can do, stage 3 = what I've shipped + contact. All three
+ * are built and routed (`stage-1`/`stage-2`/`stage-3` in `app.routes`).
  */
 
 /** Stage 1 — Terry. Chapter: "Who I am" — identity, approach, the personal beat. */
@@ -55,18 +54,15 @@ export const infoCardsStage2: ReadonlyArray<InfoCardData> = [
   },
   { image: 'assets/img/tech/gcp.png', imageAlt: 'Google Cloud' },
   {
-    title: 'New challenger approaching…',
-    body: 'That’s the toolkit. What I’ve built with it — the projects — are a stage still in the works. Check back soon.',
+    title: 'Final round →',
+    body: 'That’s the toolkit. Walk on to see what I’ve built with it.',
   },
 ];
 
 /**
- * Stage 3 — the "What I've shipped" chapter: projects, trajectory, and the
- * contact CTA. Authored and ready, but PARKED — the stage-3 fighter/stage
- * isn't built yet, so this array isn't wired to a route. When that stage
- * ships, add it to the router and forward this into its `<app-parallax>`.
- * NOTE: the Contact card lives here, so the live 2-stage site has no contact
- * link until stage 3 is built (deliberate — chapter split kept clean).
+ * Stage 3 — Ryo. The "What I've shipped" chapter: projects, trajectory, and
+ * the contact CTA. The Contact card — and the site's only contact link — lives
+ * here at the deliberate end of the chapter arc.
  */
 export const infoCardsStage3: ReadonlyArray<InfoCardData> = [
   {

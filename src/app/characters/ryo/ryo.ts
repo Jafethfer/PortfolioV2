@@ -9,7 +9,13 @@ import {
 } from '../../models/character';
 import { withDurations, totalDurationMs } from '../../helpers/special-frame';
 import { GameLoopService } from '../../services/game-loop.service';
-import { KO_OH_KEN_FRAMES, HAOH_SHOKOU_KEN_FRAMES, ZAN_RETSU_KEN_FRAMES } from './ryo-specials';
+import {
+  KO_OH_KEN_FRAMES,
+  HAOH_SHOKOU_KEN_FRAMES,
+  ZAN_RETSU_KEN_FRAMES,
+  HIEN_SHIPPU_KYAKU_FRAMES,
+  KOHOU_FRAMES,
+} from './ryo-specials';
 import { KoOhKen } from '../../projectiles/ko-oh-ken/ko-oh-ken';
 import { HaohShokouKen } from '../../projectiles/haoh-shokou-ken/haoh-shokou-ken';
 
@@ -80,6 +86,78 @@ export class Ryo extends Character {
           ZAN_RETSU_KEN_FRAMES,
           [70, 55, 55, 55, 55, 55, 55, 55, 70, 55, 55, 55, 55, 55, 55, 55, 55, 200],
         ),
+      },
+    },
+    // Hien-Shippu-Kyaku — quarter-circle-back kick that leaps forward on an arc.
+    // Windup frames 0–1 stay grounded; the airborne kick (2–8) carries the X
+    // travel + Y arc; frame 9 is the grounded landing recovery.
+    {
+      name: 'hienShippuKyaku',
+      motion: ['down', 'left'],
+      button: 'lightKick',
+      voices: [{ src: 'assets/sfx/ryo/hien-shippu-kyaku.mp3', frame: 2 }],
+      whiffSrc: 'assets/sfx/misc/special-travel.mp3',
+      travelDistancePct: 0.4,
+      travelStartFrame: 2,
+      // Light drops the two extra side-kick frames (source 4 & 5), so its
+      // landing lands at index 7 instead of 9.
+      travelEndFrame: 7,
+      arcHeight: 26,
+      frames: {
+        frames: withDurations(
+          HIEN_SHIPPU_KYAKU_FRAMES.filter((_, i) => i !== 4 && i !== 5),
+          [95, 80, 100, 100, 100, 100, 115, 90],
+        ),
+      },
+    },
+    {
+      name: 'hienShippuKyakuHeavy',
+      motion: ['down', 'left'],
+      button: 'heavyKick',
+      voices: [{ src: 'assets/sfx/ryo/hien-shippu-kyaku.mp3', frame: 2 }],
+      whiffSrc: 'assets/sfx/misc/special-travel.mp3',
+      travelDistancePct: 0.55,
+      travelStartFrame: 2,
+      travelEndFrame: 9,
+      arcHeight: 38,
+      frames: {
+        frames: withDurations(
+          HIEN_SHIPPU_KYAKU_FRAMES,
+          [95, 80, 100, 100, 100, 100, 100, 100, 115, 90],
+        ),
+      },
+    },
+    // Kohou — rising anti-air uppercut (down→up). Windup frames 0–3 stay
+    // grounded; the airborne rise (4–6) carries the Y arc, and frame 7 (reused
+    // jump-fall sprite) is the descent as the parabola comes back down.
+    {
+      name: 'kohou',
+      motion: ['down', 'up'],
+      button: 'lightPunch',
+      voices: [{ src: 'assets/sfx/ryo/light-punch.mp3', frame: 4 }],
+      whiffSrc: 'assets/sfx/misc/special-travel.mp3',
+      // Light: snaps off the ground fast (short windup) but only hops low.
+      travelDistancePct: 0.04,
+      travelStartFrame: 4,
+      travelEndFrame: 8,
+      arcHeight: 44,
+      frames: {
+        frames: withDurations(KOHOU_FRAMES, [26, 26, 26, 34, 85, 85, 110, 150]),
+      },
+    },
+    {
+      name: 'kohouHeavy',
+      motion: ['down', 'up'],
+      button: 'heavyPunch',
+      voices: [{ src: 'assets/sfx/ryo/heavy-punch.mp3', frame: 4 }],
+      whiffSrc: 'assets/sfx/misc/special-travel.mp3',
+      // Heavy: winds up longer (telegraphed) then rises much higher.
+      travelDistancePct: 0.07,
+      travelStartFrame: 4,
+      travelEndFrame: 8,
+      arcHeight: 60,
+      frames: {
+        frames: withDurations(KOHOU_FRAMES, [100, 90, 80, 90, 115, 115, 150, 240]),
       },
     },
   ];

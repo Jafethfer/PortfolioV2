@@ -86,3 +86,36 @@ export const HAOH_SHOKOU_KEN_FRAMES: readonly SpriteFrame[] = [
     anchorY: 100,
   },
 ];
+
+/** Hien-Shippu-Kyaku cast frames (Ryo's flying forward kick). Grounded coil +
+ * leap (0–1), the airborne kick that travels on an arc (2–8, torso-anchored so
+ * the body tracks the arc while the leg extends), then a grounded landing that
+ * reuses the standing heavy-kick recovery pose (9). */
+export const HIEN_SHIPPU_KYAKU_FRAMES: readonly SpriteFrame[] = [
+  { src: 'assets/img/characters/ryo/hien-shippu-kyaku/0.png', w: 57, h: 66, anchorX: 27, anchorY: 66 },
+  { src: 'assets/img/characters/ryo/hien-shippu-kyaku/1.png', w: 49, h: 75, anchorX: 22, anchorY: 75 },
+  { src: 'assets/img/characters/ryo/hien-shippu-kyaku/2.png', w: 114, h: 67, anchorX: 45, anchorY: 67 },
+  { src: 'assets/img/characters/ryo/hien-shippu-kyaku/3.png', w: 114, h: 67, anchorX: 45, anchorY: 67 },
+  { src: 'assets/img/characters/ryo/hien-shippu-kyaku/4.png', w: 114, h: 67, anchorX: 45, anchorY: 67 },
+  { src: 'assets/img/characters/ryo/hien-shippu-kyaku/5.png', w: 114, h: 67, anchorX: 45, anchorY: 67 },
+  { src: 'assets/img/characters/ryo/hien-shippu-kyaku/6.png', w: 69, h: 101, anchorX: 29, anchorY: 101 },
+  { src: 'assets/img/characters/ryo/hien-shippu-kyaku/7.png', w: 69, h: 94, anchorX: 29, anchorY: 94 },
+  { src: 'assets/img/characters/ryo/hien-shippu-kyaku/8.png', w: 108, h: 98, anchorX: 38, anchorY: 98 },
+  { src: 'assets/img/characters/ryo/heavy-kick/4.png', w: 52, h: 106, anchorX: 30, anchorY: 106 },
+];
+
+/** Kohou cast frames (Ryo's rising anti-air uppercut). Grounded windup (0–3),
+ * then the airborne rise up to the apex (4–6, torso-anchored so the body stays
+ * put while the fist thrusts up); frame 7 reuses the jump-fall descent sprite
+ * so the move carries its own comedown (the arc is a pure parabola — a rising
+ * anti-air supplies its own descent art; see `SpecialMove.arcHeight`). */
+export const KOHOU_FRAMES: readonly SpriteFrame[] = [
+  { src: 'assets/img/characters/ryo/kohou/0.png', w: 70, h: 91, anchorX: 31, anchorY: 91 },
+  { src: 'assets/img/characters/ryo/kohou/1.png', w: 60, h: 89, anchorX: 30, anchorY: 89 },
+  { src: 'assets/img/characters/ryo/kohou/2.png', w: 60, h: 93, anchorX: 36, anchorY: 93 },
+  { src: 'assets/img/characters/ryo/kohou/3.png', w: 70, h: 104, anchorX: 35, anchorY: 104 },
+  { src: 'assets/img/characters/ryo/kohou/4.png', w: 61, h: 121, anchorX: 27, anchorY: 121 },
+  { src: 'assets/img/characters/ryo/kohou/5.png', w: 49, h: 132, anchorX: 26, anchorY: 132 },
+  { src: 'assets/img/characters/ryo/kohou/6.png', w: 72, h: 111, anchorX: 40, anchorY: 111 },
+  { src: 'assets/img/characters/ryo/jump-fall/1.png', w: 51, h: 118, anchorX: 27, anchorY: 118 },
+];

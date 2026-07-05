@@ -19,8 +19,13 @@ import { infoCardsStage3 } from '../../constants/stage-info-cards';
 export class RyoStage extends Stage {
   protected override readonly musicSrc = 'assets/sfx/ryo-stage.mp3';
 
-  // Ryo has no specials wired yet — filled in as they're cropped.
-  protected override readonly legendSpecials: readonly LegendSpecial[] = [];
+  protected override readonly legendSpecials: readonly LegendSpecial[] = [
+    { motion: ['↓', '→'], buttons: ['A', 'S'], label: 'Ko-Oh-Ken' },
+    { motion: ['↓', '↑'], buttons: ['A', 'S'], label: 'Kohou' },
+    { motion: ['↓', '←'], buttons: ['Z', 'X'], label: 'Hien-Shippu-Kyaku' },
+    { motion: [], buttons: ['S'], label: 'Zan-Retsu-Ken (mash)' },
+    { motion: ['←', '↓', '→'], buttons: ['S'], label: 'Haoh-Shokou-Ken (super)' },
+  ];
 
   protected readonly infoCards = infoCardsStage3;
   protected readonly infoCardsY = '38%';
