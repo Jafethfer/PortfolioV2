@@ -4,7 +4,7 @@
      a positive scroll progress reveals later cards (= scrolling rightward
      through the content). Vertical (band) and horizontal (track) transforms
      are kept on separate elements so neither clobbers the other. -->
-<div class="parallax-band" [style.top]="cardsY()">
+<div #bandEl class="parallax-band" [style.top]="cardsY()">
   <div
     #trackEl
     class="parallax-track"
