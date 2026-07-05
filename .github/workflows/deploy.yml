@@ -31,7 +31,7 @@ jobs:
         run: npm run assets:manifest
 
       - name: Build
-        run: npx ng build --configuration production --base-href "/PortfolioV2/"
+        run: npx ng build --configuration production --base-href "/"
 
       - name: Prepare Pages artifact
         run: |
