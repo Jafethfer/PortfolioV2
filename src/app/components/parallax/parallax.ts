@@ -67,6 +67,12 @@ export class Parallax {
 
   readonly trackEl = viewChild.required<ElementRef<HTMLDivElement>>('trackEl');
 
+  /** The card strip. Touch drags only pan when they START inside this band —
+   * the host overlay spans the whole stage and the drag listeners live on
+   * `window` (the overlay is `pointer-events: none`), so without this gate a
+   * swipe anywhere on the scene would scroll the cards. */
+  readonly bandEl = viewChild.required<ElementRef<HTMLDivElement>>('bandEl');
+
   /** Clamped horizontal offset (px) the track is shifted left by. */
   readonly offset = signal(0);
 
@@ -145,6 +151,19 @@ export class Parallax {
     // Don't hijack the volume sliders' own thumb-drag (gamepad buttons already
     // stop their events from ever reaching this window listener).
     if ((e.target as Element).closest?.('input')) return;
+    // Only pan when the touch begins over the card strip. The overlay is a
+    // full-stage, click-through window, so the `window` listener would
+    // otherwise treat a swipe anywhere on the scene (sky, ground, character) as
+    // a card pan. Hit-test the band's rect instead.
+    const band = this.bandEl().nativeElement.getBoundingClientRect();
+    if (
+      e.clientX < band.left ||
+      e.clientX > band.right ||
+      e.clientY < band.top ||
+      e.clientY > band.bottom
+    ) {
+      return;
+    }
     if (this._measure() <= 0) return;
     this._dragPending = true;
     this._dragActive = false;
