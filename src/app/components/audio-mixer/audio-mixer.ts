@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { AudioService } from '../../services/audio.service';
+import { IS_COMPACT_POINTER } from '../../constants/viewport';
 
 /**
  * Global volume mixer — three sliders (music / SFX / voices) bound directly to
@@ -16,4 +17,13 @@ import { AudioService } from '../../services/audio.service';
 })
 export class AudioMixer {
   protected readonly audio = inject(AudioService);
+
+  /** Sliders shown by default on desktop; collapsed to a speaker button on
+   * touch so they don't cover a small landscape screen (they open as a centered
+   * dialog there — see the compact-pointer block in the stylesheet). */
+  protected readonly open = signal(!IS_COMPACT_POINTER);
+
+  protected toggle(): void {
+    this.open.update((v) => !v);
+  }
 }

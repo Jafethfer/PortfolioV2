@@ -5,10 +5,11 @@ import { filter, map, startWith } from 'rxjs';
 import { Legend } from './components/legend/legend';
 import { StageTransition } from './components/stage-transition/stage-transition';
 import { AudioMixer } from './components/audio-mixer/audio-mixer';
+import { TouchControls } from './components/touch-controls/touch-controls';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Legend, StageTransition, AudioMixer],
+  imports: [RouterOutlet, Legend, StageTransition, AudioMixer, TouchControls],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

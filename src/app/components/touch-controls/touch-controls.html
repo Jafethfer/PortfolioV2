@@ -1,0 +1,52 @@
+<div class="pad" (contextmenu)="swallow($event)">
+  <div
+    #joyBase
+    class="joystick"
+    aria-label="Movement joystick"
+    (pointerdown)="onStickDown($event)"
+    (pointermove)="onStickMove($event)"
+    (pointerup)="onStickUp($event)"
+    (pointercancel)="onStickUp($event)"
+  >
+    <div class="joystick__knob" [style.transform]="knobTransform()"></div>
+  </div>
+
+  <div class="attacks">
+    <button
+      type="button"
+      class="btn btn--atk lp"
+      aria-label="Light punch"
+      (pointerdown)="onTap($event, 'lightPunch')"
+      (pointerup)="swallow($event)"
+    >
+      A
+    </button>
+    <button
+      type="button"
+      class="btn btn--atk hp"
+      aria-label="Heavy punch"
+      (pointerdown)="onTap($event, 'heavyPunch')"
+      (pointerup)="swallow($event)"
+    >
+      S
+    </button>
+    <button
+      type="button"
+      class="btn btn--atk lk"
+      aria-label="Light kick"
+      (pointerdown)="onTap($event, 'lightKick')"
+      (pointerup)="swallow($event)"
+    >
+      Z
+    </button>
+    <button
+      type="button"
+      class="btn btn--atk hk"
+      aria-label="Heavy kick"
+      (pointerdown)="onTap($event, 'heavyKick')"
+      (pointerup)="swallow($event)"
+    >
+      X
+    </button>
+  </div>
+</div>

@@ -14,6 +14,11 @@ import {
 } from '@angular/core';
 import { InfoCard, InfoCardData } from '../info-card/info-card';
 
+/** Horizontal finger travel (px) before a touch is treated as a card-track pan
+ * rather than a tap. Keeps taps on card links / nav buttons working — the pan
+ * only engages once the swipe is unambiguous. */
+const DRAG_THRESHOLD_PX = 8;
+
 /**
  * Scroll-driven parallax overlay. A fixed window over the stage with a
  * wider horizontal track of `app-info-card`s; scrolling the wheel down
@@ -101,13 +106,90 @@ export class Parallax {
     afterNextRender(() => {
       window.addEventListener('wheel', this._onWheel, { passive: false });
       window.addEventListener('resize', this._onResize);
+      // Touch has no wheel — a horizontal swipe across the scene pans the track.
+      window.addEventListener('pointerdown', this._onPointerDown);
+      window.addEventListener('pointermove', this._onPointerMove, { passive: false });
+      window.addEventListener('pointerup', this._onPointerUp);
+      window.addEventListener('pointercancel', this._onPointerUp);
+      // Capture phase so we can cancel the click BEFORE it reaches a card link.
+      window.addEventListener('click', this._onClickCapture, true);
       this._measure();
     });
     inject(DestroyRef).onDestroy(() => {
       window.removeEventListener('wheel', this._onWheel);
       window.removeEventListener('resize', this._onResize);
+      window.removeEventListener('pointerdown', this._onPointerDown);
+      window.removeEventListener('pointermove', this._onPointerMove);
+      window.removeEventListener('pointerup', this._onPointerUp);
+      window.removeEventListener('pointercancel', this._onPointerUp);
+      window.removeEventListener('click', this._onClickCapture, true);
     });
   }
+
+  // --- Touch drag (mobile equivalent of the wheel) ---------------------------
+  private _dragPending = false;
+  private _dragActive = false;
+  private _dragStartX = 0;
+  private _dragStartY = 0;
+  private _dragLastX = 0;
+  private _dragLastY = 0;
+  /** Set when a drag ends, so the click the browser synthesizes on release is
+   * swallowed once — a pan across a card link mustn't also activate it. Reset
+   * on the next pointerdown so a genuine tap is never suppressed. */
+  private _suppressClick = false;
+
+  private readonly _onPointerDown = (e: PointerEvent): void => {
+    this._suppressClick = false;
+    // Desktop keeps the wheel; only touch/pen drive the drag.
+    if (e.pointerType === 'mouse') return;
+    // Don't hijack the volume sliders' own thumb-drag (gamepad buttons already
+    // stop their events from ever reaching this window listener).
+    if ((e.target as Element).closest?.('input')) return;
+    if (this._measure() <= 0) return;
+    this._dragPending = true;
+    this._dragActive = false;
+    this._dragStartX = e.clientX;
+    this._dragStartY = e.clientY;
+    this._dragLastX = e.clientX;
+    this._dragLastY = e.clientY;
+  };
+
+  private readonly _onClickCapture = (e: MouseEvent): void => {
+    if (!this._suppressClick) return;
+    e.preventDefault();
+    e.stopPropagation();
+    this._suppressClick = false;
+  };
+
+  private readonly _onPointerMove = (e: PointerEvent): void => {
+    if (!this._dragPending) return;
+    if (!this._dragActive) {
+      const moved = Math.hypot(e.clientX - this._dragStartX, e.clientY - this._dragStartY);
+      if (moved < DRAG_THRESHOLD_PX) return;
+      // Crossed the threshold — commit to a pan, not a tap. Re-anchor "last" to
+      // here so the threshold distance itself doesn't jump the offset.
+      this._dragActive = true;
+      this._dragLastX = e.clientX;
+      this._dragLastY = e.clientY;
+    }
+    e.preventDefault();
+    const max = this._measure();
+    // Per-move delta (like the wheel's deltaY), so repeated swipes accumulate
+    // and cover the full range. Both axes drive it: a swipe UP or LEFT advances
+    // the track (reveals later cards) — the vertical mapping mirrors scrolling
+    // the wheel down on desktop, the horizontal one is the natural strip drag.
+    const dx = e.clientX - this._dragLastX;
+    const dy = e.clientY - this._dragLastY;
+    this._dragLastX = e.clientX;
+    this._dragLastY = e.clientY;
+    this.offset.update((x) => Math.min(max, Math.max(0, x - dx - dy)));
+  };
+
+  private readonly _onPointerUp = (): void => {
+    if (this._dragActive) this._suppressClick = true;
+    this._dragPending = false;
+    this._dragActive = false;
+  };
 
   /** Re-measure the scroll range on resize. The cards are `cqw`-sized, so the
    * track width (and thus `_maxOffset`) changes with the viewport; the

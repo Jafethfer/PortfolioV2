@@ -9,7 +9,7 @@
 
 .stage {
   container-type: inline-size;
-  width: 75%;
+  width: var(--stage-width);
   position: relative;
   overflow: hidden;
   // The WebP (2.61:1) fills the stage height and overflows horizontally; the

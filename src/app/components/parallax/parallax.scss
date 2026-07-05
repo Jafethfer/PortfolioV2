@@ -5,14 +5,15 @@
 :host {
   position: absolute;
   inset: 0;
-  // Above the background + misc layers and the character/train band so the
-  // info reads as a foreground HUD. Cards are translucent so the scene
-  // still shows through behind them.
-  z-index: 10;
   overflow: hidden;
   // The overlay must not eat pointer interaction with the scene; the wheel
   // listener lives on `window`, so it still fires regardless.
   pointer-events: none;
+  // Deliberately NO z-index here: the host must not create a stacking context,
+  // otherwise it caps every child (including the stage-nav) below its own
+  // level. Instead each inner layer sets its own z-index directly, so they
+  // compete in the stage's stacking context against the character (z-40): the
+  // card band sits behind it, the nav in front (see below).
 }
 
 // Vertical placement of the card band. `top` is set per-stage via the
@@ -23,6 +24,9 @@
   left: 0;
   right: 0;
   transform: translateY(-50%);
+  // Foreground of the scene but BEHIND the character (z-40) — Terry walks in
+  // front of the translucent info cards.
+  z-index: 10;
 }
 
 .parallax-track {
@@ -43,6 +47,7 @@
   position: absolute;
   top: 2.5cqw;
   right: 2.5cqw;
+  z-index: 10;
   display: flex;
   align-items: center;
   gap: 1cqw;
@@ -82,6 +87,9 @@
   transform: translateX(-50%);
   display: flex;
   gap: 2cqw;
+  // Above the character (z-40) and projectiles (z-45) so the Next/Previous
+  // buttons stay clickable even when Terry is standing right on top of them.
+  z-index: 50;
 
   &__btn {
     pointer-events: auto;

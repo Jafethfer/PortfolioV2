@@ -10,6 +10,26 @@ video {
   max-width: none !important;
 }
 
+:root {
+  // Fit the 16:9 stage inside the viewport. On desktop it's framed at 75vw (the
+  // intentional bordered look); the height term keeps the aspect-derived height
+  // from exceeding the viewport and clipping the ground on a short window. A
+  // custom property so every stage/full-screen surface shares one formula —
+  // inherits into view-encapsulated component styles (custom properties aren't
+  // scoped by Angular's encapsulation).
+  --stage-width: min(75vw, calc(100dvh * 16 / 9));
+}
+
+// Touch devices: drop the 75vw frame and grow the stage to the LARGEST 16:9 box
+// that fits the viewport — whichever of full width / full height binds first —
+// so a phone doesn't waste the space the frame reserves on desktop. Same
+// coarse-pointer gate as the gamepad and the HUD dialogs.
+@media (hover: none) and (pointer: coarse) {
+  :root {
+    --stage-width: min(100vw, calc(100dvh * 16 / 9));
+  }
+}
+
 /* Per-stage parallax + ground animations live in each stage subclass's
  * own SCSS (e.g. `stages/terry-stage.scss`), scoped by Angular's view
  * encapsulation. The shared stage component owns only the outer-container

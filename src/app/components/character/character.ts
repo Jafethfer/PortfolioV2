@@ -1353,6 +1353,14 @@ export abstract class Character {
     this.inJump.set(false);
     this._airHeavyAttackEndTick = 0;
     this._airAttackUsed = false;
+    // Hold-to-hop: if the jump direction is still held (joystick up), leap again
+    // instead of settling — the same way holding a direction keeps walking.
+    // `_startJump` self-guards on attack state; keyboard jump never sets
+    // `jumpHeld`, so this is a touch-stick-only behavior.
+    if (this._input.jumpHeld() && !this.inAttack()) {
+      this._startJump();
+      return;
+    }
     this._snapToGroundAnimation();
   }
 

@@ -1,7 +1,11 @@
 :host {
   display: block;
   width: 100vw;
+  // `dvh` tracks the *visible* viewport as mobile browser chrome shows/hides;
+  // plain `vh` overstates the height (counts the area under the toolbar), which
+  // pushes the flex-centered stage's bottom — the ground — below the fold.
   height: 100vh;
+  height: 100dvh;
 }
 
 .page {
@@ -10,4 +14,10 @@
   align-items: center;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
+  // Suppress native touch gestures (scroll/zoom) over the scene so a swipe
+  // reaches the parallax as clean pointer events instead of being consumed by
+  // the browser and cancelled mid-drag. The HUD overlays and gamepad live
+  // outside `.page`, so their own gestures are unaffected.
+  touch-action: none;
 }

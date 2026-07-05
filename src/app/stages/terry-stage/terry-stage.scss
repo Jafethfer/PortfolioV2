@@ -15,7 +15,7 @@
 
 .stage {
   container-type: inline-size;
-  width: 75%;
+  width: var(--stage-width);
   position: relative;
   overflow: hidden;
   // The temple/water backdrop is ~3× wider than the visible stage so
