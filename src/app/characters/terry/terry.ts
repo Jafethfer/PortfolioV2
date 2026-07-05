@@ -1123,11 +1123,16 @@ export class Terry extends Character {
       whiffSrc: 'assets/sfx/misc/special-travel.mp3',
       arcHeight: 40,
       travelDistancePct: 0.05,
-      fallAfterArc: true,
       travelStartFrame: 3,
-      travelEndFrame: 8,
+      travelEndFrame: 10,
+      // Frames 0-2 windup (grounded), 3-7 the spin-up, then two descent frames
+      // (rising-tackle #1 + jump #4) the parabola rides back down to ground.
       frames: {
-        frames: withDurations(RISING_TACKLE_FRAMES.slice(0, 8), [50, 50, 50, 60, 80, 80, 80, 110]),
+        frames: [
+          ...withDurations(RISING_TACKLE_FRAMES.slice(0, 8), [50, 50, 50, 60, 80, 80, 80, 110]),
+          { ...RISING_TACKLE_FRAMES[1], durationMs: 150 },
+          { src: 'assets/img/characters/terry/jump/4.png', w: 68, h: 136, anchorX: 37, anchorY: 135, durationMs: 150 },
+        ],
       },
     },
     {
@@ -1138,14 +1143,14 @@ export class Terry extends Character {
       whiffSrc: 'assets/sfx/misc/special-travel.mp3',
       arcHeight: 120,
       travelDistancePct: 0.1,
-      fallAfterArc: true,
       travelStartFrame: 3,
-      travelEndFrame: 8,
+      travelEndFrame: 10,
       frames: {
-        frames: withDurations(
-          RISING_TACKLE_FRAMES.slice(0, 8),
-          [60, 140, 140, 80, 100, 100, 100, 130],
-        ),
+        frames: [
+          ...withDurations(RISING_TACKLE_FRAMES.slice(0, 8), [60, 140, 140, 80, 100, 100, 100, 130]),
+          { ...RISING_TACKLE_FRAMES[1], durationMs: 190 },
+          { src: 'assets/img/characters/terry/jump/4.png', w: 68, h: 136, anchorX: 37, anchorY: 135, durationMs: 190 },
+        ],
       },
     },
     {

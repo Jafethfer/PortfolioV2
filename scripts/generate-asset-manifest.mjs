@@ -11,7 +11,9 @@ import { dirname, join, relative } from 'node:path';
 const PUBLIC_DIR = 'public';
 const ASSETS_DIR = join(PUBLIC_DIR, 'assets');
 const OUT_FILE = join('src', 'app', 'generated', 'asset-manifest.ts');
-const MEDIA = /\.(png|jpe?g|webp|avif|gif|svg|mp3|wav|ogg)$/i;
+// GIFs are intentionally excluded — the pipeline converts them to animated
+// WebP (see the Ryo stage); raw GIFs are heavy source files, not shipped assets.
+const MEDIA = /\.(png|jpe?g|webp|avif|svg|mp3|wav|ogg)$/i;
 
 /** @param {string} dir @returns {string[]} absolute-ish file paths under dir */
 function walk(dir) {

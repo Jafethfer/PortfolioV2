@@ -40,9 +40,16 @@ export class JoeStage extends Stage {
   readonly groundEl = viewChild.required<ElementRef<HTMLDivElement>>('groundEl');
   readonly groundImgEl = viewChild.required<ElementRef<HTMLImageElement>>('groundImgEl');
 
-  // How many stage-widths wide the backdrop is. Drives `bgSize` and caps
-  // `bgShiftPx` so the (non-tiled) bg can't slide past its right edge.
-  protected readonly bgWidthMultiplier: number = 2;
+  // How many stage-widths wide the ground band is. Set by the ground PNG's
+  // crop: the source was trimmed on the left to 0.8 of its original width, so
+  // keeping the same on-screen pixel scale (grass line fixed under
+  // `height: auto`) means a forced width of 2 × 0.8 = 1.6 stage-widths.
+  protected readonly groundWidthMultiplier: number = 1.6;
+  // Backdrop width — matched to the ground so the two scroll in lockstep (equal
+  // total travel), a flat 1:1 camera. The bg is force-stretched by
+  // `background-size`, so narrowing it here squishes it slightly (no crop).
+  // Drives `bgSize` and caps `bgShiftPx` so the bg can't slide past its edge.
+  protected readonly bgWidthMultiplier: number = this.groundWidthMultiplier;
   // Vertical proportion of the stage the backdrop fills; the ground band takes
   // the rest.
   protected readonly bgHeightPct: number = 68;
@@ -64,11 +71,11 @@ export class JoeStage extends Stage {
   protected readonly groundCycle = this.makeFrameCycle(JOE_GROUND_FRAMES);
 
   protected override _onAfterRender(): void {
-    const ground = this.groundEl().nativeElement;
-    const groundImg = this.groundImgEl().nativeElement;
-    if (groundImg.scrollWidth > ground.clientWidth) {
-      ground.scrollLeft = (groundImg.scrollWidth - ground.clientWidth) / 2;
-    }
+    // Start the ground at its left edge (not centered) so the stage begins at
+    // the world's leftmost point — matching `bgShiftPx` starting at 0. Joe
+    // spawns near the left and can only scroll the world rightward; there's no
+    // leftward scroll room to walk back into.
+    this.groundEl().nativeElement.scrollLeft = 0;
   }
 
   protected override _onTick(): void {

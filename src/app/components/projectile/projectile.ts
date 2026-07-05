@@ -42,8 +42,9 @@ export abstract class Projectile {
    * converts this to an offset relative to its own host's left edge
    * after `afterNextRender` measures that edge. */
   readonly spawnX = input.required<number>();
-  /** Vertical offset above ground (px). Currently always 0 for Power
-   * Wave; reserved for floating projectiles. */
+  /** Vertical offset from the ground line (rendered px, negative = up),
+   * threaded from `SpecialMove.projectile.spawnOffsetY` via the stage. Lifts
+   * the projectile to the caster's hand height; 0 hugs the floor (Power Wave). */
   readonly spawnY = input(0);
   /** Direction of travel. `'left'` is reserved for when characters can
    * flip; defaults to `'right'`. `null` falls back to right. */
@@ -119,8 +120,11 @@ export abstract class Projectile {
     // left edge. The flame is centred in its cell so the visible
     // hot-spot is roughly cellWidth/2 to the right of the <img>'s left.
     // Tune `spawnOffsetX` (in sprite-px) on the SpecialMove side to
-    // compensate.
-    return `translateX(${this.accumulated()}px)`;
+    // compensate. `spawnY` (rendered px, negative = up) lifts the projectile
+    // off the ground line so it launches from the caster's hand height
+    // instead of the floor — 0 keeps a ground-hugging wave.
+    const y = this.spawnY();
+    return y ? `translate(${this.accumulated()}px, ${y}px)` : `translateX(${this.accumulated()}px)`;
   }
   frameWidth(frame: AnimationFrame): string {
     return `calc(${frame.w} * var(--projectile-height) / ${this.heightBaseline})`;

@@ -162,17 +162,11 @@ export interface SpecialMove {
   /** Peak vertical arc during the traveling portion of the lock-in. Same
    * accumulated-Y units as a jump (rendered as `y × jumpYScale` cqw), so
    * `30` is roughly half the peak of a default jump and reads as a low
-   * forward leap. Apex hits the midpoint of the travel window; curve is
-   * parabolic (rise + fall) by default, or rise-only when `fallAfterArc`
-   * is set. Omit or 0 for a flat travel. */
+   * forward leap. The curve is a parabola (rise + fall), apex at the
+   * midpoint of the travel window, Y back to 0 at travel end — so a rising
+   * anti-air must carry its own descent/landing art in the second half of
+   * its travel frames. Omit or 0 for a flat travel. */
   readonly arcHeight?: number;
-  /** When true, the arc rises only (half-sine ease-out instead of a
-   * parabola) and after the special's lock-in ends Terry transitions to
-   * the jump's descent state — using `jumpFall` for the sprite and the
-   * jump physics to bring Y back to ground. Anti-air specials like
-   * Rising Tackle use this: Terry leaps up, performs the move at peak,
-   * then physically falls back down. */
-  readonly fallAfterArc?: boolean;
   /** Optional projectile spawn. When set, the character emits a spawn
    * request on the configured frame of the special's animation; the
    * Stage subscribes and instantiates the projectile into its
