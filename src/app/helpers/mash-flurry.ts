@@ -1,4 +1,5 @@
 import { AttackButton } from '../models/character';
+import { SfxHandle } from '../services/audio.service';
 
 /**
  * A mash-punch flurry: several rapid presses of a button trigger ONE full
@@ -24,7 +25,7 @@ export interface MashFlurryHost {
   playVoice(src: string): void;
   /** Start a looping whoosh and return the element so the controller can stop
    * it when the flurry's active phase ends. */
-  playLoopingWhoosh(src: string): HTMLAudioElement | null;
+  playLoopingWhoosh(src: string): SfxHandle | null;
   /** Leave the attack lock-in and snap back to a grounded idle. */
   end(): void;
 }
@@ -70,7 +71,7 @@ export class MashFlurry {
   private _phase: 'loop' | 'finish' = 'loop';
   private _phaseEndTick = 0;
   private _variant: MashFlurryVariant | null = null;
-  private _whoosh: HTMLAudioElement | null = null;
+  private _whoosh: SfxHandle | null = null;
 
   constructor(
     private readonly host: MashFlurryHost,

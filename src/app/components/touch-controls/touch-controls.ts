@@ -11,9 +11,7 @@ import { InputService } from '../../services/input.service';
 
 type TapButton = 'jump' | 'lightPunch' | 'heavyPunch' | 'lightKick' | 'heavyKick';
 
-/** Held directions the stick currently resolves to. Left/right and up/down are
- * mutually exclusive per axis, so the eight reachable combinations map to the
- * eight compass directions. */
+/** Held directions the stick resolves to (one per axis → eight compass dirs). */
 interface Held {
   left: boolean;
   right: boolean;
@@ -26,27 +24,18 @@ const NEUTRAL: Held = { left: false, right: false, down: false, up: false };
 /** Below this fraction of the stick radius the input reads neutral, so a
  * resting thumb doesn't twitch the character. */
 const DEADZONE = 0.28;
-/** Per-axis push (~sin 22.5°) at which that axis's direction activates. Applied
- * to each axis independently, which yields an 8-way feel: a pure push east
- * lights only `right`; a push northeast lights `right` + `up` (jump-forward). */
+/** Per-axis push at which that axis's direction activates, applied per axis for
+ * an 8-way feel. */
 const AXIS_THRESHOLD = 0.38;
 
 /**
- * On-screen virtual gamepad for touch devices: an analog joystick (left) plus
- * four attack buttons (right). Purely an input surface — every control drives
- * the shared `InputService` press/release API, the same methods the keyboard
- * uses, so the character physics, motion-buffer specials, and the left-left
- * backstep all react identically regardless of device.
- *
- * Mounted once at the app root so it persists across stage navigation; shown
- * only on coarse-pointer devices (CSS media query) and hidden on the chromeless
- * book-end screens by the `@if (!chromeless())` gate in the app template.
- *
- * The stick resolves its knob position to a held-direction set and fires
- * press/release only on TRANSITIONS (not every move), so rolling the knob emits
- * a clean directional sequence into the motion buffer — e.g. rolling ⬇→↘→➡
- * pushes `down` then `right`, so a quarter-circle-forward + attack reads as a
- * special exactly as it would on a keyboard. Up is a one-shot jump.
+ * On-screen virtual gamepad for touch devices: an analog joystick plus four
+ * attack buttons. Purely an input surface — every control drives the shared
+ * `InputService` press/release API the keyboard uses, so physics and specials
+ * react identically regardless of device. Mounted once at the app root so it
+ * persists across navigation. The stick fires press/release only on
+ * transitions, so rolling the knob emits a clean directional sequence into the
+ * motion buffer; up is a one-shot jump.
  */
 @Component({
   selector: 'app-touch-controls',
@@ -110,10 +99,8 @@ export class TouchControls {
     else this._input.pressHeavyKick();
   }
 
-  /** Kill the browser's default touch behavior (scroll, double-tap zoom,
-   * synthetic mouse + long-press context menu) and stop the event bubbling to
-   * the parallax window-level drag listener, so a control never also pans the
-   * info cards. */
+  /** Kill the browser's default touch behavior and stop the event bubbling to
+   * the parallax drag listener, so a control never also pans the info cards. */
   protected swallow(e: Event): void {
     this._swallow(e);
   }
@@ -144,11 +131,9 @@ export class TouchControls {
     this._reconcile(desired);
   }
 
-  /** Fire press/release only where `desired` differs from the current held-set.
-   * Down is settled before the horizontals so a simultaneous diagonal (a fast
-   * flick into ↘/↙) still seeds the buffer as `down` → `forward` — the order a
-   * quarter-circle special needs. Up is a one-shot jump: pressed on its rising
-   * edge, with no release action. */
+  /** Fire press/release only where `desired` differs from the held-set. Down is
+   * settled before the horizontals so a diagonal flick seeds the buffer as
+   * `down` → `forward`, the order a quarter-circle special needs. */
   private _reconcile(desired: Held): void {
     const h = this._held;
     if (desired.down && !h.down) this._input.pressDown();
@@ -157,8 +142,8 @@ export class TouchControls {
     else if (!desired.left && h.left) this._input.releaseLeft();
     if (desired.right && !h.right) this._input.pressRight();
     else if (!desired.right && h.right) this._input.releaseRight();
-    // Up: fire the jump on the rising edge, and hold the flag while up stays
-    // pushed so the character keeps hopping (cleared when the stick leaves up).
+    // Up: jump on the rising edge, holding the flag while up stays pushed so
+    // the character keeps hopping.
     if (desired.up && !h.up) {
       this._input.pressJump();
       this._input.setJumpHeld(true);

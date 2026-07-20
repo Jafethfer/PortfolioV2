@@ -74,9 +74,6 @@ export class Ryo extends Character {
         spawnOffsetY: -25,
       },
     },
-    // Zan-Retsu-Ken — Ryo's mash-punch flurry. Empty motion: it never fires via
-    // the base's motion dispatch. The `MashFlurry` controller (see the bottom
-    // of the class) counts rapid heavy-punch presses and plays this clip once.
     {
       name: 'zanRetsuKen',
       motion: [],
@@ -88,9 +85,6 @@ export class Ryo extends Character {
         ),
       },
     },
-    // Hien-Shippu-Kyaku — quarter-circle-back kick that leaps forward on an arc.
-    // Windup frames 0–1 stay grounded; the airborne kick (2–8) carries the X
-    // travel + Y arc; frame 9 is the grounded landing recovery.
     {
       name: 'hienShippuKyaku',
       motion: ['down', 'left'],
@@ -99,8 +93,6 @@ export class Ryo extends Character {
       whiffSrc: 'assets/sfx/misc/special-travel.mp3',
       travelDistancePct: 0.4,
       travelStartFrame: 2,
-      // Light drops the two extra side-kick frames (source 4 & 5), so its
-      // landing lands at index 7 instead of 9.
       travelEndFrame: 7,
       arcHeight: 26,
       frames: {
@@ -127,9 +119,6 @@ export class Ryo extends Character {
         ),
       },
     },
-    // Kohou — rising anti-air uppercut (down→up). Windup frames 0–3 stay
-    // grounded; the airborne rise (4–6) carries the Y arc, and frame 7 (reused
-    // jump-fall sprite) is the descent as the parabola comes back down.
     {
       name: 'kohou',
       motion: ['down', 'up'],
@@ -672,8 +661,6 @@ export class Ryo extends Character {
         },
       ],
     },
-    // Backward jump = the forward somersault run in reverse (a backflip),
-    // reusing the same jump-forward sprites.
     jumpBackward: {
       frames: [
         {
@@ -770,8 +757,6 @@ export class Ryo extends Character {
         },
       ],
     },
-    // Post-heavy-air recovery — the base swaps to this after a heavy aerial's
-    // frames finish. Reuses the descending jump-fall sprites (row1 #6/#7).
     airHeavyRecover: {
       frames: [
         {
@@ -832,9 +817,6 @@ export class Ryo extends Character {
         },
       ],
     },
-    // Heavy air kicks reuse the light-kick sprites; the difference is the base
-    // schedules airHeavyRecover after these frames (so the extend frame gets a
-    // short duration instead of the light variant's hold-until-landing).
     airHeavyKickUp: {
       frames: [
         {
@@ -1065,11 +1047,6 @@ export class Ryo extends Character {
     },
   };
 
-  // ── Zan-Retsu-Ken (mash-punch flurry) ─────────────────────────────────────
-  // Heavy-punch-only, no finisher. Three rapid heavy-punch presses trigger ONE
-  // full playthrough of the `zanRetsuKen` clip; it ends itself when the frames
-  // run out and is re-triggerable. All the mash/timing logic lives in the
-  // shared `MashFlurry` controller — here we only supply the config.
   private readonly _flurry = this._createMashFlurry({
     variants: [
       {

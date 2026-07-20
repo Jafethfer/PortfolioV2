@@ -4,11 +4,9 @@ import { StageTransitionService } from '../../services/stage-transition.service'
 
 /**
  * Closing / "thanks for visiting" screen — the terminal route (`end`), reached
- * when the visitor advances past the final stage. Non-interactive: no
- * character, physics, or route `characterClass`, so (like `Landing`) it's kept
- * out of the gameplay chrome (legend + audio mixer) and the stage prev/next
- * cycle. Shares the title screen's typography/palette so the run bookends
- * cleanly, and offers a step back to the final stage or a Replay from the top.
+ * past the final stage. Non-interactive, so (like `Landing`) it's kept out of
+ * the gameplay chrome and the stage prev/next cycle; offers a step back to the
+ * final stage or a Replay from the top.
  */
 @Component({
   selector: 'app-closing',
@@ -20,9 +18,8 @@ export class Closing {
   private readonly _transition = inject(StageTransitionService);
   private readonly _router = inject(Router);
 
-  /** Path of the final playable stage (the one this screen follows) — the last
-   * route carrying a `characterClass`, derived from the config so it stays
-   * correct if stages are added. Empty if somehow none exist. */
+  /** Path of the final playable stage — the last route carrying a
+   * `characterClass`. Empty if none exist. */
   private readonly _lastStagePath =
     this._router.config
       .filter((r) => !!r.component && !!r.data?.['characterClass'])
