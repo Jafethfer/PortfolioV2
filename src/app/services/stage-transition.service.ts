@@ -3,43 +3,31 @@ import { Router } from '@angular/router';
 
 /**
  * Fatal-Fury-Special-style stage transition. Drives the grid-wipe overlay
- * (`<app-stage-transition>`): black tiles scatter-fill the screen, the route
- * swaps under cover, then the tiles scatter-clear to reveal the new stage.
- *
- * The overlay component is purely presentational — it just reads `covered`
- * and `active`. This service owns the timing and the actual navigation so
- * the sequencing lives in one place and any stage (or anything else) can
- * trigger a transition via `navigateTo`.
+ * (`<app-stage-transition>`): black tiles scatter-fill, the route swaps under
+ * cover, then the tiles scatter-clear. Owns the timing and the navigation so
+ * anything can trigger a transition via `navigateTo`.
  */
 @Injectable({ providedIn: 'root' })
 export class StageTransitionService {
   private readonly _router = inject(Router);
 
-  /** True while the tiles should be filled in (black). The overlay animates
-   * each tile's opacity toward this value with a per-tile stagger, so
-   * flipping it produces the scatter fill (true) / clear (false). */
+  /** True while the tiles should be filled (black); flipping it drives the
+   * scatter fill (true) / clear (false). */
   readonly covered = signal(false);
 
-  /** True for the whole transition (cover → swap → reveal). Blocks pointer
-   * input via the overlay and guards against overlapping transitions. */
+  /** True for the whole transition; blocks pointer input and guards against
+   * overlapping transitions. */
   readonly active = signal(false);
 
-  /** Cover/reveal durations (ms). Must exceed the overlay's per-tile opacity
-   * transition plus its max stagger delay, so the screen is fully black
-   * before we navigate and fully clear before we mark the transition done.
-   * Keep in sync with the timings in `stage-transition` (cell transition +
-   * `MAX_DELAY_MS`). */
+  /** Cover/reveal durations (ms). Must exceed the overlay's per-tile transition
+   * plus its max stagger delay. Keep in sync with `stage-transition`. */
   private readonly _coverMs = 720;
   private readonly _revealMs = 720;
 
-  /** Small beat after navigation so the new stage paints under the cover
-   * before the tiles start clearing (avoids a flash of the old/new swap). */
+  /** Beat after navigation so the new stage paints before the tiles clear. */
   private readonly _swapMs = 80;
 
-  /** How long to hold the fully-black "Now Loading" screen after the stage
-   * has actually swapped. The route change is near-instant, so this is a
-   * deliberate dwell to sell the loading beat (Fatal Fury keeps you on the
-   * black screen briefly). Tune to taste. */
+  /** Deliberate dwell on the black "Now Loading" screen after the swap. */
   private readonly _holdMs = 1100;
 
   /** Run the full transition around a navigation to `url`. No-ops if a

@@ -24,7 +24,7 @@ import {
 } from '../../models/character';
 import { InputService } from '../../services/input.service';
 import { GameLoopService } from '../../services/game-loop.service';
-import { AudioService, SoundCategory } from '../../services/audio.service';
+import { AudioService, SfxHandle, SoundCategory } from '../../services/audio.service';
 import { MashFlurry, MashFlurryConfig } from '../../helpers/mash-flurry';
 import { REFERENCE_WIDTH } from '../../constants/viewport';
 
@@ -315,7 +315,7 @@ export abstract class Character {
    * that cancels the jump (e.g. a `down→up+P` anti-air, where the
    * Up press fires the jump a few ms before the punch arrives) can stop
    * the whoosh — otherwise the jump SFX bleeds over into the special. */
-  private _activeJumpSfx: HTMLAudioElement | null = null;
+  private _activeJumpSfx: SfxHandle | null = null;
   private _frameStartTick = 0;
   /** Step direction (+1 forward / -1 reverse) for `bounce` (ping-pong)
    * animations. Reset to +1 whenever the animation changes. */

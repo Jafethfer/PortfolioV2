@@ -4,8 +4,7 @@ import { Direction, MotionInput } from '../models/character';
 const ARROW_KEYS = new Set(['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown']);
 
 /** Directional opposite of each motion input — used by `matchMotion` to break a
- * partial motion when a contradicting tap arrives (a 'back' can't sit inside a
- * 'toward' motion). */
+ * partial motion when a contradicting tap arrives. */
 const OPPOSITE_INPUT: Record<MotionInput, MotionInput> = {
   left: 'right',
   right: 'left',
@@ -15,15 +14,11 @@ const OPPOSITE_INPUT: Record<MotionInput, MotionInput> = {
 
 interface MotionEvent { input: MotionInput; t: number; }
 
-/** Max time the entire motion can span. 450ms feels right for a 2-input
- * special (forgiving but not so loose that random key mashing triggers it). */
+/** Max time the entire motion can span. */
 const MOTION_WINDOW_MS = 450;
-/** Cap on stored events so a long idle period of arrow-mashing doesn't grow
- * the buffer without bound. Far more than any motion needs. */
+/** Cap on stored events so arrow-mashing can't grow the buffer without bound. */
 const MOTION_BUFFER_LIMIT = 16;
-/** Max gap between the two left-arrow taps that trigger a backstep. Slightly
- * tighter than `MOTION_WINDOW_MS` so a deliberate double-tap registers but a
- * casual walk-press-release-press doesn't read as a backstep by accident. */
+/** Max gap between the two left-arrow taps that trigger a backstep. */
 const DOUBLE_TAP_WINDOW_MS = 300;
 
 /**
@@ -37,10 +32,8 @@ export class InputService {
   readonly downKey = signal(false);
   /** Increments on each ArrowUp keydown — consumers detect change to fire one-shot. */
   readonly jumpPressed = signal(0);
-  /** Whether the jump direction is being HELD. Only the on-screen joystick sets
-   * this (keyboard jump is a pure one-shot), so the character's land-time
-   * re-jump — hold up to keep hopping — is a touch-stick behavior and desktop
-   * keeps its single-jump-per-press feel. */
+  /** Whether the jump direction is being HELD (only the joystick sets this;
+   * keyboard jump is a one-shot). Drives land-time re-jump. */
   readonly jumpHeld = signal(false);
   /** Increments on each `A` keydown — one-shot for the light-punch attack. */
   readonly lightPunchPressed = signal(0);
@@ -50,16 +43,13 @@ export class InputService {
   readonly lightKickPressed = signal(0);
   /** Increments on each `X` keydown — one-shot for the heavy-kick attack. */
   readonly heavyKickPressed = signal(0);
-  /** Increments when the player double-taps ArrowLeft within
-   * `DOUBLE_TAP_WINDOW_MS`. Drives the backstep — purely motion-triggered,
-   * no attack button involved. */
+  /** Increments on an ArrowLeft double-tap within `DOUBLE_TAP_WINDOW_MS`. Drives
+   * the backstep. */
   readonly backstepPressed = signal(0);
   /** Most-recently pressed horizontal arrow. Survives keyup of the opposite. */
   readonly lastDir = signal<Direction>(null);
 
-  /** Ring-ish buffer of recent directional keydown events used by
-   * `matchMotion` to detect special-move inputs. Not a signal — consumers
-   * call `matchMotion` imperatively, so we don't need fine-grained reactivity. */
+  /** Buffer of recent directional keydowns used by `matchMotion`. */
   private _motionBuffer: MotionEvent[] = [];
 
   constructor() {
@@ -68,28 +58,11 @@ export class InputService {
   }
 
   /**
-   * Looks for `sequence` as an in-order subsequence of the recent directional
-   * keydown history, with the entire span occurring within `windowMs` of now.
-   * On match, removes the matched events so the same inputs can't trigger
-   * the move twice. Returns whether a match was consumed.
-   *
-   * Matching ignores extra keys between sequence elements — pressing Down,
-   * then accidentally tapping Up, then pressing Left still counts as
-   * `['down','left']`. This matches how arcade input is forgiving with
-   * stray buttons.
-   *
-   * Reversals break the motion — a tap OPPOSITE to a direction the motion
-   * relies on cancels it:
-   *   - opposite of the element currently being waited for, mid-motion: `down,
-   *     left, right` does NOT match `['down','right']` (the `left` contradicts
-   *     the `right` it's building toward);
-   *   - opposite of the FINAL element, after the motion completes: `down, left,
-   *     right` does NOT match `['down','left']` either (the `right` reverses
-   *     out of the finished back-motion).
-   * A cancel resets progress, so a later clean re-attempt within the same
-   * window still matches. Contradicting-but-earlier taps are fine (`left, down,
-   * right` matches `['down','right']`, which is also how the
-   * `['left','down','right']` super stays distinct from a plain quarter-circle).
+   * Matches `sequence` as an in-order subsequence of recent directional keydowns
+   * within `windowMs`, ignoring stray keys between elements. A tap opposite to a
+   * direction the motion relies on cancels it (resetting progress for a later
+   * re-attempt). Consumes the matched events on success so the move can't
+   * trigger twice. Returns whether a match was consumed.
    */
   matchMotion(sequence: readonly MotionInput[], windowMs: number = MOTION_WINDOW_MS): boolean {
     if (sequence.length === 0) return false;
@@ -105,15 +78,13 @@ export class InputService {
       if (evt.t < cutoff) continue;
       if (complete) {
         // A finished motion is only undone by a reversal against its final
-        // direction; any other trailing tap is an ignorable stray.
+        // direction; the reversal tap may itself start a fresh attempt.
         if (evt.input !== finalOpposite) continue;
         seqIdx = 0;
         matched.length = 0;
         complete = false;
-        // fall through — this reversal tap may itself start a fresh attempt.
       }
-      // A tap opposite to the direction we're waiting for cancels the partial
-      // motion; re-examine this same tap as a possible fresh start.
+      // A tap opposite to the awaited direction cancels the partial motion.
       if (seqIdx > 0 && evt.input === OPPOSITE_INPUT[sequence[seqIdx]]) {
         seqIdx = 0;
         matched.length = 0;
@@ -121,12 +92,11 @@ export class InputService {
       if (evt.input === sequence[seqIdx]) {
         matched.push(i);
         seqIdx++;
-        // Don't return yet — a later reversal can still cancel this match.
         if (seqIdx === sequence.length) complete = true;
       }
     }
     if (!complete) return false;
-    // Splice out matched indices in reverse so earlier indices stay valid.
+    // Splice in reverse so earlier indices stay valid.
     for (let j = matched.length - 1; j >= 0; j--) {
       this._motionBuffer.splice(matched[j], 1);
     }
@@ -135,8 +105,7 @@ export class InputService {
 
   private _pushMotion(input: MotionInput): void {
     this._motionBuffer.push({ input, t: performance.now() });
-    // Trim oldest entries first — both by total age (window × 2 to keep a
-    // little slack for matchMotion's windowMs argument) and by hard cap.
+    // Trim oldest entries by age (window × 2 for slack) and by hard cap.
     const cutoff = performance.now() - MOTION_WINDOW_MS * 2;
     while (this._motionBuffer.length && this._motionBuffer[0].t < cutoff) {
       this._motionBuffer.shift();
@@ -146,10 +115,8 @@ export class InputService {
     }
   }
 
-  /** Backstep is a left→left double-tap. Called right after a 'left' press is
-   * pushed: if the previous motion was also 'left' within the double-tap
-   * window, fire the signal and drop the pair so a third tap doesn't
-   * re-trigger. */
+  /** Backstep is a left→left double-tap. Fires the signal and drops the pair so
+   * a third tap doesn't re-trigger. */
   private _detectBackstep(): void {
     const buf = this._motionBuffer;
     if (buf.length < 2) return;
@@ -161,14 +128,9 @@ export class InputService {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Device-agnostic input API. Keyboard handlers and the on-screen touch gamepad
-  // both drive state through these methods, so the motion buffer, backstep
-  // double-tap, and `lastDir` fallback logic live in exactly ONE place and
-  // specials fire identically whichever device produced the input. Each
-  // `press*` models a FRESH press (keyboard fires them on `!e.repeat`; a held
-  // arrow's OS key-repeats are ignored — the direction signal is already set).
-  // ---------------------------------------------------------------------------
+  // Device-agnostic input API: keyboard handlers and the touch gamepad both
+  // drive state through these methods, so motion/backstep/`lastDir` logic lives
+  // in one place. Each `press*` models a FRESH press (repeats are ignored).
 
   pressRight(): void {
     this.rightKey.set(true);
