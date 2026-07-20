@@ -14,22 +14,15 @@ import {
 } from '@angular/core';
 import { InfoCard, InfoCardData } from '../info-card/info-card';
 
-/** Horizontal finger travel (px) before a touch is treated as a card-track pan
- * rather than a tap. Keeps taps on card links / nav buttons working — the pan
- * only engages once the swipe is unambiguous. */
+/** Horizontal finger travel (px) before a touch counts as a card-track pan
+ * rather than a tap, so taps on card links keep working. */
 const DRAG_THRESHOLD_PX = 8;
 
 /**
- * Scroll-driven parallax overlay. A fixed window over the stage with a
- * wider horizontal track of `app-info-card`s; scrolling the wheel down
- * pans the track rightward through the cards.
- *
- * The host (`:host`) is the overlay window and is `pointer-events: none`
- * so it never blocks interaction with the scene behind it. Because of
- * that, wheel events don't bubble through the host — so we listen on
- * `window` and translate vertical wheel deltas into a clamped horizontal
- * offset. `passive: false` lets us `preventDefault` so no stray page
- * scroll fights us (the page body is `overflow: hidden` anyway).
+ * Scroll-driven parallax overlay: a fixed window over the stage with a wider
+ * horizontal track of `app-info-card`s; wheel-down pans the track through them.
+ * The host is `pointer-events: none` so it never blocks the scene, which means
+ * wheel/pointer events are handled on `window` instead of bubbling through it.
  */
 @Component({
   selector: 'app-parallax',
@@ -39,38 +32,31 @@ const DRAG_THRESHOLD_PX = 8;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Parallax {
-  /** Info-card content for this stage. Required — each stage supplies its
-   * own array. */
+  /** Info-card content for this stage. */
   readonly cards = input.required<ReadonlyArray<InfoCardData>>();
 
-  /** Vertical position of the card band, as any CSS length/percentage
-   * measured from the top of the stage to the *center* of the band. Each
-   * stage tunes this to clear its own ground/background (e.g. a stage with
-   * a tall foreground floor wants the cards higher). Defaults to centered. */
+  /** Vertical position of the card band's center, as any CSS length/percentage
+   * from the top of the stage. Each stage tunes it to clear its own ground. */
   readonly cardsY = input<string>('50%');
 
   /** Normalized world-scroll progress (0 → 1) driven by the stage as the
-   * character walks forward. Mapped 1:1 onto the pixel `offset` so the
-   * cards finish exactly when the world runs out of scroll. The wheel
-   * remains a secondary input (see `_onWheel`); whichever moved last wins. */
+   * character walks. Mapped 1:1 onto the pixel `offset`; the wheel is a
+   * secondary input and whichever moved last wins. */
   readonly progress = input(0);
 
-  /** Whether a next/previous stage exists. The stage feeds these from the
-   * router config; they hide the corresponding nav button at the ends. */
+  /** Whether a next/previous stage exists; hides the nav button at the ends. */
   readonly hasNext = input(false);
   readonly hasPrevious = input(false);
 
-  /** Fired when the user clicks the respective stage-nav button. The stage
-   * handles the actual routing — this component stays navigation-agnostic. */
+  /** Fired when the user clicks a stage-nav button; the stage handles routing. */
   readonly next = output<void>();
   readonly previous = output<void>();
 
   readonly trackEl = viewChild.required<ElementRef<HTMLDivElement>>('trackEl');
 
-  /** The card strip. Touch drags only pan when they START inside this band —
-   * the host overlay spans the whole stage and the drag listeners live on
-   * `window` (the overlay is `pointer-events: none`), so without this gate a
-   * swipe anywhere on the scene would scroll the cards. */
+  /** The card strip. Touch drags only pan when they start inside this band,
+   * since the window-level listeners would otherwise treat a swipe anywhere on
+   * the scene as a card pan. */
   readonly bandEl = viewChild.required<ElementRef<HTMLDivElement>>('bandEl');
 
   /** Clamped horizontal offset (px) the track is shifted left by. */
@@ -80,17 +66,15 @@ export class Parallax {
    * Measured after render and on every wheel tick. */
   private readonly _maxOffset = signal(0);
 
-  /** Set true once we've measured the track, so `atEnd` can't read a stale
-   * `0 >= 0` as "at the end" during the first paint before measurement. */
+  /** Set true once the track is measured, so `atEnd` can't read a stale
+   * `0 >= 0` as "at the end" during the first paint. */
   private readonly _measured = signal(false);
 
-  /** True once the user has scrolled at all. Drives the fade-out of the
-   * scroll-down hint — it shows on load, then disappears the moment any
-   * scrolling begins. */
+  /** True once the user has scrolled at all; drives the scroll-hint fade-out. */
   readonly scrolled = computed(() => this.offset() > 0);
 
-  /** True when scrolled to the last card (or the cards already fit without
-   * scrolling). Drives the fade-in of the Next/Previous stage nav. */
+  /** True when scrolled to the last card (or the cards fit without scrolling);
+   * drives the fade-in of the stage nav. */
   readonly atEnd = computed(
     () => this._measured() && this.offset() >= this._maxOffset(),
   );
@@ -98,11 +82,9 @@ export class Parallax {
   private readonly _host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   constructor() {
-    // Movement-driven scrolling: map the stage's normalized world progress
-    // onto the pixel offset. Re-runs when `progress` changes (Terry walks)
-    // or when the track is (re)measured. The wheel writes `offset` directly
-    // too; while Terry is idle `progress` is constant so this effect stays
-    // dormant and the wheel value persists — last mover wins.
+    // Movement-driven scrolling: map the stage's world progress onto the pixel
+    // offset. Re-runs on `progress` change or re-measure; the wheel writes
+    // `offset` directly too, so whichever moved last wins.
     effect(() => {
       const p = this.progress();
       const max = this._maxOffset();
@@ -139,9 +121,9 @@ export class Parallax {
   private _dragStartY = 0;
   private _dragLastX = 0;
   private _dragLastY = 0;
-  /** Set when a drag ends, so the click the browser synthesizes on release is
-   * swallowed once — a pan across a card link mustn't also activate it. Reset
-   * on the next pointerdown so a genuine tap is never suppressed. */
+  /** Set when a drag ends so the synthesized release-click is swallowed once —
+   * a pan across a card link mustn't also activate it. Reset on next
+   * pointerdown so a genuine tap is never suppressed. */
   private _suppressClick = false;
 
   private readonly _onPointerDown = (e: PointerEvent): void => {
@@ -151,10 +133,8 @@ export class Parallax {
     // Don't hijack the volume sliders' own thumb-drag (gamepad buttons already
     // stop their events from ever reaching this window listener).
     if ((e.target as Element).closest?.('input')) return;
-    // Only pan when the touch begins over the card strip. The overlay is a
-    // full-stage, click-through window, so the `window` listener would
-    // otherwise treat a swipe anywhere on the scene (sky, ground, character) as
-    // a card pan. Hit-test the band's rect instead.
+    // Only pan when the touch begins over the card strip — hit-test the band's
+    // rect, since the click-through overlay spans the whole scene.
     const band = this.bandEl().nativeElement.getBoundingClientRect();
     if (
       e.clientX < band.left ||
@@ -185,18 +165,16 @@ export class Parallax {
     if (!this._dragActive) {
       const moved = Math.hypot(e.clientX - this._dragStartX, e.clientY - this._dragStartY);
       if (moved < DRAG_THRESHOLD_PX) return;
-      // Crossed the threshold — commit to a pan, not a tap. Re-anchor "last" to
-      // here so the threshold distance itself doesn't jump the offset.
+      // Crossed the threshold — commit to a pan. Re-anchor "last" here so the
+      // threshold distance doesn't jump the offset.
       this._dragActive = true;
       this._dragLastX = e.clientX;
       this._dragLastY = e.clientY;
     }
     e.preventDefault();
     const max = this._measure();
-    // Per-move delta (like the wheel's deltaY), so repeated swipes accumulate
-    // and cover the full range. Both axes drive it: a swipe UP or LEFT advances
-    // the track (reveals later cards) — the vertical mapping mirrors scrolling
-    // the wheel down on desktop, the horizontal one is the natural strip drag.
+    // Per-move delta so repeated swipes accumulate. Both axes advance the track:
+    // a swipe up or left reveals later cards.
     const dx = e.clientX - this._dragLastX;
     const dy = e.clientY - this._dragLastY;
     this._dragLastX = e.clientX;
@@ -210,18 +188,15 @@ export class Parallax {
     this._dragActive = false;
   };
 
-  /** Re-measure the scroll range on resize. The cards are `cqw`-sized, so the
-   * track width (and thus `_maxOffset`) changes with the viewport; the
-   * `offset` effect re-runs off `_maxOffset` and repositions the cards to the
-   * same `progress`. Without this the range stays frozen until the next
-   * wheel/walk tick. */
+  /** Re-measure the scroll range on resize. The cards are `cqw`-sized, so
+   * `_maxOffset` changes with the viewport and the `offset` effect re-runs to
+   * reposition the cards at the same `progress`. */
   private readonly _onResize = (): void => {
     this._measure();
   };
 
-  /** Measure how far the track overflows its window, store it, and return
-   * it. `clientWidth`/`scrollWidth` are read fresh each call so a resized
-   * window (or font/layout shift) is picked up on the next wheel tick. */
+  /** Measure how far the track overflows its window, store it, and return it.
+   * Read fresh each call so a resize or layout shift is picked up. */
   private _measure(): number {
     const track = this.trackEl().nativeElement;
     const layer = this._host.nativeElement;
@@ -235,8 +210,7 @@ export class Parallax {
     const max = this._measure();
     if (max <= 0) return;
     e.preventDefault();
-    // Clamp to [0, max] so the last card stops flush at the right edge
-    // instead of scrolling into empty space.
+    // Clamp to [0, max] so the last card stops flush at the right edge.
     this.offset.update((x) => Math.min(max, Math.max(0, x + e.deltaY)));
   };
 }

@@ -125,10 +125,6 @@ export class Joe extends Character {
         speed: 36,
       },
     },
-    // Bakuretsuken — Joe's mash-punch flurry. Empty motion: it never fires via
-    // the base's motion dispatch. The `MashFlurry` controller (see the bottom
-    // of the class) counts rapid punch presses and plays these clips once: the
-    // loop for both light and heavy, chased by the finisher for heavy only.
     {
       name: 'bakuretsuken',
       motion: [],
@@ -914,12 +910,6 @@ export class Joe extends Character {
     },
   };
 
-  // ── Bakuretsuken (mash-punch flurry) ──────────────────────────────────────
-  // Three rapid punch presses trigger ONE flurry: light plays the loop then
-  // ends; heavy plays the loop then the knockback finisher (grunt on its first
-  // frame). Re-triggerable; mashing never sustains it endlessly. All the
-  // mash/timing logic lives in the shared `MashFlurry` controller — here we
-  // only supply the per-button config.
   private readonly _flurryLoopMs =
     2 * totalDurationMs(this.specials.find((s) => s.name === 'bakuretsuken')!.frames.frames);
   private readonly _flurryFinishMs = totalDurationMs(

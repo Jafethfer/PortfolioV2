@@ -5,17 +5,14 @@ import { StageTransitionService } from '../../services/stage-transition.service'
 const COLS = 24;
 const ROWS = 14;
 
-/** Spread (ms) of the per-tile stagger. Combined with the cell's CSS opacity
- * transition this is the total fill/clear time — keep the service's
- * `_coverMs`/`_revealMs` comfortably above (cell transition + this). */
+/** Spread (ms) of the per-tile stagger. Keep the service's `_coverMs`/
+ * `_revealMs` above the cell transition plus this. */
 const MAX_DELAY_MS = 560;
 
 /**
- * Fatal-Fury-Special-style grid-wipe overlay. A full-viewport grid of black
- * tiles, each with a scattered `transition-delay`, that fade in to cover the
- * screen and fade out to reveal it. Driven entirely by the
- * `StageTransitionService` signals — this component holds no state of its
- * own beyond the precomputed tile delays.
+ * Grid-wipe overlay: a full-viewport grid of black tiles with scattered
+ * `transition-delay`s that fade in to cover the screen and out to reveal it.
+ * Driven entirely by `StageTransitionService` signals.
  */
 @Component({
   selector: 'app-stage-transition',
@@ -31,11 +28,9 @@ export class StageTransition {
   protected readonly cols = COLS;
   protected readonly rows = ROWS;
 
-  /** One entry per grid cell, each with a scattered transition-delay so the
-   * fill/clear reads as a dissolve rather than a uniform fade. A
-   * multiplicative hash scrambles tile order deterministically (no
-   * `Math.random`), and using the same delay for fill and clear means the
-   * reveal mirrors the cover's pattern. */
+  /** One entry per grid cell with a scattered transition-delay so the fill/clear
+   * reads as a dissolve. A multiplicative hash scrambles tile order
+   * deterministically; the same delay serves fill and clear. */
   protected readonly tiles = Array.from({ length: COLS * ROWS }, (_, i) => {
     const total = COLS * ROWS;
     const scatter = ((i * 2654435761) % total) / total;

@@ -3,11 +3,9 @@ import { AudioService } from '../../services/audio.service';
 import { IS_COMPACT_POINTER } from '../../constants/viewport';
 
 /**
- * Global volume mixer — three sliders (music / SFX / voices) bound directly to
- * the `AudioService` master-volume signals. Lives at the app root (outside any
- * stage) so it persists across stage navigation. Each slider's start position
- * is the channel's reference level, so on load the mix matches the pre-mixer
- * app; dragging a slider attenuates every sound in that channel live.
+ * Global volume mixer — three sliders (music / SFX / voices) bound to the
+ * `AudioService` master-volume signals. Lives at the app root so it persists
+ * across stage navigation; dragging a slider attenuates its channel live.
  */
 @Component({
   selector: 'app-audio-mixer',
@@ -18,9 +16,7 @@ import { IS_COMPACT_POINTER } from '../../constants/viewport';
 export class AudioMixer {
   protected readonly audio = inject(AudioService);
 
-  /** Sliders shown by default on desktop; collapsed to a speaker button on
-   * touch so they don't cover a small landscape screen (they open as a centered
-   * dialog there — see the compact-pointer block in the stylesheet). */
+  /** Sliders shown by default on desktop; collapsed to a speaker button on touch. */
   protected readonly open = signal(!IS_COMPACT_POINTER);
 
   protected toggle(): void {

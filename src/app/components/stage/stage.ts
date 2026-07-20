@@ -26,68 +26,39 @@ import { InputService } from '../../services/input.service';
 import { GameLoopService } from '../../services/game-loop.service';
 import { LegendService, LegendSpecial } from '../../services/legend.service';
 
-/** One image in a stage layer animation. Subclasses that animate a layer
- * (Joe's water shimmer, Joe's clapping audience) declare an array of
- * these and feed it to `makeFrameCycle` for a `currentSrc` signal +
- * `advance(tick)` method. Single-image layers don't need this — they can
- * just inline the URL. */
+/** One image in a stage layer animation. Subclasses feed an array of these to
+ * `makeFrameCycle` for a `currentSrc` signal + `advance(tick)` method. */
 export interface StageFrame {
   readonly src: string;
   readonly durationMs: number;
 }
 
 /**
- * Abstract stage base — owns the *behavior* every stage shares, not its
- * layout. Each concrete subclass supplies its own template + SCSS and
- * implements its own per-tick rules (parallax pan vs. scroll-linked bg
- * vs. anything else). This mirrors the Character abstraction: layout and
- * visuals live in the subclass; the base handles physics-side plumbing.
- *
- * What the base owns:
- *   - Character spawn into a `#characterHost` slot the subclass declares
- *   - Edge detection (`blockedRight` / `blockedLeft`) from the
- *     `#stageEl` element's bounding box
- *   - Forwarding `worldWidth` + blocked flags into the character's inputs
- *   - A single game-loop tick effect that calls `_onTick()` each frame
- *   - Generic frame-cycling utility (`makeFrameCycle`) for any subclass
- *     that wants animated layers
- *   - Optional `musicSrc` for stages that wire up `<app-music-control>`
- *
- * What every subclass must declare in its template:
- *   - `#stageEl` — the playable-area container (used for edge limits)
- *   - `#characterHost` — an `<ng-container>` slot the spawn pipeline
- *     fills in
- *
- * What every subclass typically implements (all optional):
- *   - `_onAfterRender()` — one-time DOM init (centering scroll, etc.)
- *   - `_onTick()` — per-tick logic (scroll the ground, advance frame
- *     cycles, update parallax positions, etc.)
+ * Abstract stage base — owns the behavior every stage shares (character spawn,
+ * edge detection, input forwarding, the per-tick loop, projectile lifetime),
+ * not its layout. Subclasses supply their own template + SCSS and per-tick
+ * rules. Mirrors the Character abstraction: visuals in the subclass, physics
+ * plumbing in the base. Subclasses declare `#stageEl` + `#characterHost` in
+ * their template and may override `_onAfterRender` / `_onTick` / `_onResize`.
  */
 @Directive()
 export abstract class Stage {
-  /** Background music for the stage. Optional — stages without an OST yet
-   * leave it unset and no track is registered with the mixer. Started in
-   * `_startStageMusic`; the global `<app-audio-mixer>` owns its volume. */
+  /** Background music for the stage. Optional; registered with the mixer in
+   * `_startStageMusic`, which owns its volume from then on. */
   protected readonly musicSrc?: string;
 
-  /** Special-move rows for the controls legend, describing THIS stage's
-   * character. Published to the root-level `<app-legend>` on render (the
-   * Movement / Attacks rows are universal and stay in the legend template).
-   * Default empty — a stage with no specials hides the legend's Specials
-   * section. Override per stage. */
+  /** Special-move rows for the controls legend. Published to the root-level
+   * `<app-legend>` on render; empty hides the legend's Specials section. */
   protected readonly legendSpecials: readonly LegendSpecial[] = [];
 
-  /** Per-tick scroll rates for ground panning when the character is
-   * pinned at an edge. Plain protected fields (not `input()`) because
-   * `withComponentInputBinding()` wipes any input not present in the
-   * route's `data`. Subclasses override with `protected override readonly`. */
+  /** Per-tick scroll rates for ground panning when pinned at an edge. Plain
+   * fields (not `input()`) because `withComponentInputBinding()` wipes any
+   * input absent from the route's `data`. */
   protected readonly walkScrollRate: number = 20;
   protected readonly crouchScrollRate: number = 10;
-  /** Reference stage width the scroll rates above are calibrated against; the
+  /** Reference stage width the scroll rates are calibrated against; the
    * effective rate scales by `width / referenceWidth` so the world scrolls the
-   * same FRACTION of the stage per tick on any viewport. Defaults to the shared
-   * `REFERENCE_WIDTH` (same default the character uses); override per stage if
-   * needed. */
+   * same fraction of the stage per tick on any viewport. */
   protected readonly referenceWidth: number = REFERENCE_WIDTH;
 
   readonly characterClass = input.required<Type<Character>>();
@@ -96,9 +67,8 @@ export abstract class Stage {
   readonly characterHost = viewChild.required('characterHost', { read: ViewContainerRef });
   readonly projectileHost = viewChild.required('projectileHost', { read: ViewContainerRef });
 
-  /** Shared services exposed to subclasses so they can read input state
-   * and the game-loop tick from inside `_onTick`. Kept protected (not
-   * exposed publicly) — the template never reads these directly. */
+  /** Shared services so subclasses can read input state and the tick from
+   * inside `_onTick`. */
   protected readonly input = inject(InputService);
   protected readonly loop = inject(GameLoopService);
   private readonly _router = inject(Router);
@@ -107,15 +77,13 @@ export abstract class Stage {
   private readonly _audio = inject(AudioService);
   private readonly _legend = inject(LegendService);
 
-  /** Resolved neighbour stage paths for Next/Previous navigation, derived
-   * from the router config order (single source of truth — no separate
-   * stage list to keep in sync). `null` at the first/last stage. */
+  /** Neighbour stage paths for Next/Previous nav, derived from the router
+   * config order. `null` at the first/last stage. */
   private readonly _previousPath: string | null;
   private readonly _nextPath: string | null;
 
-  /** Whether a neighbour stage exists in each direction. Forwarded into
-   * `<app-parallax [hasNext] [hasPrevious]>` so it can hide the dead-end
-   * nav button. */
+  /** Whether a neighbour stage exists in each direction. Forwarded to
+   * `<app-parallax>` so it can hide the dead-end nav button. */
   readonly hasPreviousStage: boolean;
   readonly hasNextStage: boolean;
 
@@ -123,9 +91,8 @@ export abstract class Stage {
   private _leftLimit = signal(0);
   readonly width = signal(0);
 
-  /** Screen-x limits of the playable area (px). Exposed read-only so
-   * subclasses can compute world-progress metrics (e.g. how far Terry has
-   * walked across the stage) for movement-driven effects. */
+  /** Screen-x limits of the playable area (px). Read-only so subclasses can
+   * compute world-progress metrics for movement-driven effects. */
   get rightLimit(): number {
     return this._rightLimit();
   }
@@ -137,17 +104,13 @@ export abstract class Stage {
   readonly character = signal<Character | null>(null);
   private _characterRef?: ComponentRef<Character>;
 
-  /** Live projectile component refs. Concurrency v1 is capped at 1 in
-   * `_spawnProjectile` — additional spawn requests while a projectile
-   * is on screen are dropped on the floor. Per-tick drain in the loop
-   * effect destroys instances whose `expired()` signal is true. */
+  /** Live projectile component refs. Capped at 1 in `_spawnProjectile`; the
+   * loop effect drains instances whose `expired()` signal is true. */
   private _projectileRefs = signal<ComponentRef<Projectile>[]>([]);
 
-  /** True when any projectile is on screen. Forwarded into the
-   * character as an input so its `_tryAttack` can suppress the entire
-   * cast (animation + voice cues) when the concurrency cap is hit — not
-   * just the projectile spawn. Without this, the cast animation plays
-   * pointlessly while the spawn is silently dropped. */
+  /** True when any projectile is on screen. Forwarded into the character so
+   * `_tryAttack` can suppress the whole cast (animation + voice) when the
+   * concurrency cap is hit, not just the projectile spawn. */
   readonly hasActiveProjectile = computed(() => this._projectileRefs().length > 0);
 
   readonly blockedRight = computed(() => {
@@ -178,32 +141,27 @@ export abstract class Stage {
     this._registerLegend();
   }
 
-  /** Publish this stage's specials to the root-level legend once rendered.
-   * Deferred to `afterNextRender` for the same reason as `musicSrc`:
-   * `legendSpecials` is a subclass field, not yet set while the base
-   * constructor runs. */
+  /** Publish this stage's specials to the root-level legend. Deferred to
+   * `afterNextRender` because `legendSpecials` is a subclass field, unset
+   * while the base constructor runs. */
   private _registerLegend(): void {
     afterNextRender(() => this._legend.setSpecials(this.legendSpecials));
   }
 
-  /** Register this stage's OST with the audio mixer once rendered. Deferred to
-   * `afterNextRender` because `musicSrc` is a subclass field, not yet
-   * initialized while the base constructor runs. The mixer's music slider owns
-   * the volume from here on; autoplay-blocked starts resume on first input. */
+  /** Register this stage's OST with the mixer. Deferred to `afterNextRender`
+   * because `musicSrc` is a subclass field, unset while the base constructor
+   * runs. The mixer owns the volume from here on. */
   private _startStageMusic(): void {
     afterNextRender(() => {
       if (this.musicSrc) this._audio.setBgMusic(this.musicSrc);
     });
   }
 
-  /** Resolve this stage's neighbour paths from the ordered router config. Only
-   * entries with a `component` are real stages (the `''` redirect is skipped).
-   * Read once — the component is freshly created on each navigation. */
+  /** Resolve this stage's neighbour paths from the ordered router config. */
   private _resolveStageNeighbors(): { previous: string | null; next: string | null } {
     const stagePaths = this._router.config
-      // The forward chain = the real stages plus the terminal `Closing` route
-      // (`data.closing`), so advancing past the last stage lands on the thanks
-      // screen. The `''` Landing route has neither flag, so it stays excluded.
+      // Forward chain = the real stages plus the terminal `Closing` route; the
+      // `''` Landing route has neither flag and stays excluded.
       .filter((r) => !!r.component && (!!r.data?.['characterClass'] || !!r.data?.['closing']))
       .map((r) => r.path ?? '');
     const idx = stagePaths.indexOf(this._route.snapshot.routeConfig?.path ?? '');
@@ -226,9 +184,8 @@ export abstract class Stage {
   }
 
   /** Measure the playable area's screen geometry into the limit + width
-   * signals. Driven both on first render and on viewport resize, so
-   * `worldWidth` (which sizes jump/special travel and is forwarded to the
-   * character) and the edge limits always reflect the CURRENT viewport. */
+   * signals. Runs on first render and on resize so `worldWidth` and the edge
+   * limits always reflect the current viewport. */
   private _measureStage(): void {
     const rect = this.stageEl().nativeElement.getBoundingClientRect();
     this._rightLimit.set(rect.right);
@@ -237,14 +194,12 @@ export abstract class Stage {
   }
 
   /** Re-measure stage geometry + the character's layout on window resize. The
-   * stage is sized in `vw`, so its width (and thus every viewport-relative
-   * distance derived from `worldWidth`) changes when the window does. Without
-   * this, travel/scroll distances stay frozen at the spawn-time viewport. */
+   * stage is sized in `vw`, so every `worldWidth`-derived distance changes with
+   * the window. */
   private _wireResize(): void {
     const onResize = (): void => {
-      // Capture the OLD width before re-measuring so we can hand the character
-      // the exact scale factor — `width` is the stage's own signal, updated
-      // synchronously here, so there's no async-input lag to trip over.
+      // Capture the old width before re-measuring to hand the character the
+      // exact scale factor.
       const prevWidth = this.width();
       this._measureStage();
       const ratio = prevWidth > 0 ? this.width() / prevWidth : 1;
@@ -308,9 +263,8 @@ export abstract class Stage {
     if (live.length !== refs.length) this._projectileRefs.set(live);
   }
 
-  /** Instantiate a projectile into `#projectileHost`. Concurrency v1
-   * caps the on-screen count at 1 — additional requests are dropped
-   * so a button-mash doesn't queue waves indefinitely. */
+  /** Instantiate a projectile into `#projectileHost`. Caps the on-screen count
+   * at 1; extra requests are dropped so a button-mash doesn't queue waves. */
   private _spawnProjectile(req: ProjectileSpawnRequest): void {
     if (this._projectileRefs().length > 0) return;
     const cls = req.config.componentClass as Type<Projectile>;
@@ -326,11 +280,7 @@ export abstract class Stage {
     this._projectileRefs.update((list) => [...list, ref]);
   }
 
-  /** Navigate to the next/previous stage. No-ops at the ends (the nav
-   * buttons are hidden there anyway). Bound from the parallax's
-   * `(next)` / `(previous)` outputs in each stage's template. */
-  /** Guards against a second nav trigger while the exit outro is already
-   * playing (the nav buttons stay live until the loading cover starts). */
+  /** Guards against a second nav trigger while the exit outro is playing. */
   private _leaving = false;
 
   goToNextStage(): void {
@@ -350,28 +300,21 @@ export abstract class Stage {
     this._transition.navigateTo('/' + path);
   }
 
-  /** Subclass hook — runs once after the stage view is rendered and
-   * before the character is spawned. Override to do one-time DOM init
-   * (e.g. centering a scrollable element's `scrollLeft`). */
+  /** Subclass hook — runs once after render, before the character spawns.
+   * Override for one-time DOM init. */
   protected _onAfterRender(): void {}
 
-  /** Subclass hook — called every game-loop tick after the character is
-   * spawned. Override to implement scroll/parallax/animation behavior. */
+  /** Subclass hook — called every tick after the character spawns. Override
+   * for scroll/parallax/animation behavior. */
   protected _onTick(): void {}
 
-  /** Subclass hook — runs on viewport resize, after the stage geometry and
-   * the character have re-measured. Override to re-derive any cached
-   * viewport-dependent state (e.g. a scroll-progress baseline). */
+  /** Subclass hook — runs on resize after geometry and the character have
+   * re-measured. Override to re-derive cached viewport-dependent state. */
   protected _onResize(): void {}
 
-  /** Apply a world-scroll shift to every live projectile so they stay
-   * anchored to the world (not the screen) as the camera moves.
-   * Subclasses call this from `_onTick` after scrolling, with `deltaX`
-   * = the per-tick screen offset every world-fixed point should
-   * receive. For a Terry-style train scroll: when `train.scrollLeft`
-   * increases by N (camera moves right), pass `-N` so projectiles
-   * shift left to match. Without this, projectiles drift in screen
-   * relative to the world as Terry walks at the stage edge. */
+  /** Shift every live projectile by `deltaX` so they stay anchored to the
+   * world (not the screen) as the camera scrolls. Subclasses call this from
+   * `_onTick` after scrolling; pass `-N` when the camera moves right by N. */
   protected shiftProjectiles(deltaX: number): void {
     if (deltaX === 0) return;
     for (const ref of this._projectileRefs()) {
@@ -379,11 +322,9 @@ export abstract class Stage {
     }
   }
 
-  /** Per-tick world-scroll distance (px) for the current frame, used by every
-   * stage's pinned-at-edge scroll. A special's own X velocity (already
-   * viewport-relative) takes precedence when active; otherwise the walk/crouch
-   * scroll rate, scaled by `width / referenceWidth` so the world scrolls the
-   * same fraction of the stage per tick on any viewport. */
+  /** Per-tick world-scroll distance (px) for the pinned-at-edge scroll. An
+   * active special's own X velocity takes precedence; otherwise the walk/crouch
+   * rate scaled by `width / referenceWidth`. */
   protected worldScrollRate(specialXVelocity: number): number {
     const specialV = Math.abs(specialXVelocity);
     if (specialV > 0) return specialV;
@@ -391,10 +332,9 @@ export abstract class Stage {
     return (base * this.width()) / this.referenceWidth;
   }
 
-  /** Helper for subclasses with animated layers. Returns a `currentSrc`
-   * signal (bind it to `[src]` or `[style.background-image]`) and an
-   * `advance(tick)` method to call from `_onTick`. Single-frame inputs
-   * are static — `advance` early-returns and `currentSrc` is constant. */
+  /** Helper for subclasses with animated layers. Returns a `currentSrc` signal
+   * to bind and an `advance(tick)` to call from `_onTick`. Single-frame inputs
+   * stay static. */
   protected makeFrameCycle(frames: readonly StageFrame[]): {
     readonly currentSrc: Signal<string>;
     advance(tick: number): void;

@@ -4,8 +4,6 @@
 }
 
 :host > * {
-  /* Ground line + spawn-x inherited from the active stage's :host custom props;
-     feet anchor to the same `--ground-y` the stage's projectiles use. */
   bottom: var(--ground-y, 0);
   left: var(--character-spawn-x, 20cqw);
 }

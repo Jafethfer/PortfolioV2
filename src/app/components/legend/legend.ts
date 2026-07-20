@@ -9,9 +9,8 @@ import { IS_COMPACT_POINTER } from '../../constants/viewport';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Legend {
-  /** Open by default on desktop; collapsed to a corner button on touch so the
-   * panel doesn't cover a small landscape screen (it opens as a centered dialog
-   * there — see the compact-pointer block in the stylesheet). */
+  /** Open by default on desktop; collapsed to a corner button on touch so it
+   * doesn't cover a small landscape screen. */
   readonly open = signal(!IS_COMPACT_POINTER);
 
   /** Per-character specials, published by the active stage. Movement / Attacks

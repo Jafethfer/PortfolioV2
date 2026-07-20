@@ -1,6 +1,5 @@
 import { SpriteFrame } from '../../helpers/special-frame';
 
-/** Crack Shoot frames. */
 export const CRACK_SHOOT_FRAMES: readonly SpriteFrame[] = [
   { src: 'assets/img/characters/terry/crack-shoot/0.png', w: 66,  h: 113, anchorX: 31, anchorY: 105 },
   { src: 'assets/img/characters/terry/crack-shoot/1.png', w: 84,  h: 113, anchorX: 31, anchorY: 105 },
@@ -12,7 +11,6 @@ export const CRACK_SHOOT_FRAMES: readonly SpriteFrame[] = [
   { src: 'assets/img/characters/terry/crack-shoot/7.png', w: 57,  h: 113, anchorX: 31, anchorY: 105 },
 ];
 
-/** Rising Tackle frames. */
 export const RISING_TACKLE_FRAMES: readonly SpriteFrame[] = [
   { src: 'assets/img/characters/terry/rising-tackle/0.png', w: 57, h: 119, anchorX: 24, anchorY: 118 },
   { src: 'assets/img/characters/terry/rising-tackle/1.png', w: 63, h: 119, anchorX: 28, anchorY: 118 },
@@ -26,7 +24,6 @@ export const RISING_TACKLE_FRAMES: readonly SpriteFrame[] = [
   { src: 'assets/img/characters/terry/rising-tackle/9.png', w: 64, h: 119, anchorX: 30, anchorY: 118 },
 ];
 
-/** Power Wave frames. */
 export const POWER_WAVE_FRAMES: readonly SpriteFrame[] = [
   { src: 'assets/img/characters/terry/power-wave/0.png', w: 57, h: 100, anchorX: 27, anchorY:  99 },
   { src: 'assets/img/characters/terry/power-wave/1.png', w: 80, h: 107, anchorX: 41, anchorY: 106 },

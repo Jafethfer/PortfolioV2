@@ -1125,8 +1125,6 @@ export class Terry extends Character {
       travelDistancePct: 0.05,
       travelStartFrame: 3,
       travelEndFrame: 10,
-      // Frames 0-2 windup (grounded), 3-7 the spin-up, then two descent frames
-      // (rising-tackle #1 + jump #4) the parabola rides back down to ground.
       frames: {
         frames: [
           ...withDurations(RISING_TACKLE_FRAMES.slice(0, 8), [50, 50, 50, 60, 80, 80, 80, 110]),
